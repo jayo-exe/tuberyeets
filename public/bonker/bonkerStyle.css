@@ -1,0 +1,252 @@
+@font-face {
+    font-family: 'Noto Sans';
+    font-display: swap;
+    unicode-range: U+000-5FF;
+    src: local('Noto Sans') format('ttf'), url('NotoSans-Regular.ttf') format('ttf');
+}
+
+@-webkit-keyframes throwLeft {
+    0% {
+        transform: translate(-150vw, 0vh);
+    }
+    25% {
+        transform: translate(-75vw, 10vh);
+    }
+    50% {
+        transform: translate(0vw, 0vh);
+    }
+    100% {
+        transform: translate(-30vw, -120vh);
+    }
+}
+
+@keyframes throwLeft {
+    0% {
+        transform: translate(-150vw, 0vh);
+    }
+    25% {
+        transform: translate(-75vw, 10vh);
+    }
+    50% {
+        transform: translate(0vw, 0vh);
+    }
+    100% {
+        transform: translate(-30vw, -120vh);
+    }
+}
+
+@keyframes awayLeft {
+    0% {
+        transform: translate(0vw, 0vh);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-20vw, -80vh);
+        opacity: 0.66;
+    }
+    100% {
+        transform: translate(-30vw, -120vh);
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes throwRight {
+    0% {
+        transform: translate(150vw, 0vh);
+    }
+    25% {
+        transform: translate(75vw, 10vh);
+    }
+    50% {
+        transform: translate(0vw, 0vh);
+    }
+    100% {
+        transform: translate(30vw, -120vh);
+    }
+}
+
+@keyframes awayRight {
+    0% {
+        transform: translate(0vw, 0vh);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(20vw, -80vh);
+        opacity: 0.66;
+    }
+    100% {
+        transform: translate(30vw, -120vh);
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes fallLeft {
+    0% {
+        transform: translate(0, -150vh);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(-30vw, 120vh);
+    }
+}
+
+@keyframes fallLeft {
+    0% {
+        transform: translate(0, -150vh);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(-30vw, 120vh);
+    }
+}
+
+@-webkit-keyframes fallRight {
+    0% {
+        transform: translate(0, -150vh);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(30vw, 120vh);
+    }
+}
+
+@keyframes fallRight {
+    0% {
+        transform: translate(0, -150vh);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(30vw, 120vh);
+    }
+}
+
+@-webkit-keyframes spinClockwise {
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360);
+    }
+}
+
+@keyframes spinClockwise {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes spinCounterClockwise {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes spinCounterClockwise {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+body {
+    font-family: 'Noto Sans', Verdana, Geneva, Tahoma, sans-serif;
+    color: white;
+    -webkit-text-stroke: 3px black;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.thrown {
+    position: absolute;
+}
+
+.thrown image {
+    position: absolute;
+    left: -9999px;
+    right: -9999px;
+    top: -9999px;
+    bottom: -9999px;
+}
+
+.animated, .thrown {
+    -webkit-animation-timing-function: linear !important;
+    animation-timing-function: linear !important;
+    -webkit-animation-fill-mode: both !important;
+    animation-fill-mode: both !important;
+}
+
+#guide {
+    position: absolute;
+    top: calc(50% - 25px);
+    left: calc(50% - 25px);
+    background-color: #FF84E3;
+    opacity: 0.5;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+#guideH, #guideV {
+    position: absolute;
+    background-color: black;
+    transform: rotate(45deg);
+}
+
+#guideH {
+    top: calc(50% - 1px);
+    height: 2px;
+    width: 100%;
+}
+
+#guideV {
+    left: calc(50% - 1px);
+    height: 100%;
+    width: 2px;
+}
+
+#guideText {
+    position: absolute;
+    top: calc(50% + 100px);
+    width: 100%;
+    opacity: 0.5;
+}
+
+#guideText p {
+    font-size: 2.5vw;
+    text-align: center;
+    animation: glow 3s infinite;
+}
+
+@keyframes glow {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #FF84E3;
+    }
+    100% {
+        color: white;
+    }
+}
+
+* {
+    pointer-events: none;
+}

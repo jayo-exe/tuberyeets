@@ -1,0 +1,1412 @@
+@font-face {
+    font-family: 'Cascadia Mono';
+    font-display: swap;
+    unicode-range: U+000-5FF;
+    src: url('CascadiaMono.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Sans';
+    font-display: swap;
+    unicode-range: U+000-5FF;
+    src: url('NotoSans-Regular.woff2') format('woff2');
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Noto Sans', Verdana, Geneva, Tahoma, sans-serif;
+    color: white;
+}
+
+::-webkit-scrollbar
+{
+    width: 8px;
+    background-color: black;
+}
+
+::-webkit-scrollbar-thumb
+{
+    background-color: #77FF85;
+}
+
+input[type='range'] {
+    overflow: hidden;
+    width: 100%;
+    height: 10px;
+    margin: auto;
+    -webkit-appearance: none;
+    background-color: black;
+}
+  
+input[type='range']::-webkit-slider-thumb {
+    width: 10px;
+    -webkit-appearance: none;
+    height: 10px;
+    background: #FF3CD7;
+    box-shadow: -100vw 0 0 100vw #FF84E3;
+    transition: background-color 0.25s;
+}
+  
+input[type='range']::-webkit-slider-thumb:hover {
+    background-color: #77FF85;
+}
+
+body > div {
+    margin: 0;
+    padding: 0;
+}
+
+#header {
+    height: 63px;
+    line-height: 63px;
+    display: grid;
+    grid-template-columns: 320px auto;
+    border-bottom: 1px solid #FF3CD7;
+    background-color: #0C0C0C;
+    transition: background-color 0.25s;
+}
+
+#headerLogo, #headerWhite, #headerPink {
+    position: absolute;
+    grid-column: 1;
+}
+
+#headerLogo {
+    display: flex;
+    width: 350px;
+    height: 63px;
+    background-color: black;
+    clip-path: polygon(0% 0%, 100% 0%, calc(100% - 69px) 100%, 0% 100%);
+}
+
+#headerPink {
+    width: 360px;
+    height: 63px;
+    background-color: #FF3CD7;
+    clip-path: polygon(0% 0%, 100% 0%, calc(100% - 69px) 100%, 0% 100%);
+}
+
+#headerWhite {
+    width: 365px;
+    height: 63px;
+    background-color: white;
+    clip-path: polygon(calc(100% - 8px) 0%, 100% 0%, calc(100% - 69px) 100%, calc(100% - 77px) 100%);
+}
+
+#logoJBonk {
+    margin: 8px;
+    margin-left: 16px;
+    height: 48px;
+}
+
+#headerLogo > h1 {
+    margin: 0;
+    font-size: 40px;
+}
+
+#headerStatus {
+    grid-column: 2;
+    color: white;
+}
+
+#headerStatus > h2 {
+    font-size: 30px;
+    margin: 0;
+    font-weight: normal;
+    font-family: 'Cascadia Mono', 'Consolas', 'Courier New', Courier, monospace;
+}
+
+@keyframes ready {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #77FF85;
+    }
+    100% {
+        color: white;
+    }
+}
+
+.readyText {
+    animation: ready 3s infinite;
+}
+
+@keyframes working {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #AFAFAF;
+    }
+    100% {
+        color: white;
+    }
+}
+
+.workingText {
+    animation: working 3s infinite;
+}
+
+@keyframes error {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #FF6290;
+    }
+    100% {
+        color: white;
+    }
+}
+
+.errorText {
+    animation: error 3s infinite;
+}
+
+#footer {
+    height: 28px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+#logoTypeou {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin: 8px;
+    height: 40px;
+}
+
+a {
+    color: #77FF85;
+}
+
+#body {
+    padding: 0;
+    padding-bottom: 64px;
+    background: linear-gradient(#141414, #101010);
+    height: calc(100vh - 128px);
+    position: relative;
+}
+
+#topButtons {
+    display: flex;
+    width: min-content;
+    margin: auto;
+    padding: 12px 0;
+}
+
+.topButton {
+    font-family: 'Cascadia Mono', 'Consolas', 'Courier New', Courier, monospace;
+    font-size: 20px;
+    width: 160px;
+    height: 36px;
+    max-height: 36px;
+    line-height: 36px;
+    text-align: center;
+    margin: 0 8px;
+    background-color: #1D1D1D;
+    clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0% 100%);
+    padding: 2px;
+    display: grid;
+    position: relative;
+    cursor: pointer;
+}
+
+.innerTopButton {
+    grid-column: 1;
+    grid-row: 1;
+    background-color: #0C0C0C;
+    clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0% 100%);
+}
+
+.cornerTopButton {
+    grid-column: 1;
+    grid-row: 1;
+    background-color: #FF3CD7;
+    clip-path: polygon(0% 0%, 32px 0%, 0% 32px);
+}
+
+.overlayButton {
+    background-color: #FF3CD7;
+    opacity: 0;
+    z-index: 1;
+    transition: opacity 0.2s;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.buttonSelected {
+    opacity: 0.1;
+}
+
+.overlayButton:hover {
+    opacity: 0.15;
+}
+
+#mainBody {
+    display: flex;
+    height: calc(100% - 84px);
+    position: relative;
+}
+
+#sideBar {
+    margin-left: 32px;
+    width: 320px;
+    height: calc(100% - 0px);
+    box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+#sideBarInner {
+    background-color: #1F1F1F;
+    border-top: 32px solid black;
+    width: 100%;
+    height: calc(100% - 32px);
+    overflow-y: auto;
+    position: relative;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+}
+
+.sideButton {
+    width: 256px;
+    height: 60px;
+    margin: 32px 32px;
+    box-shadow: -4px 4px 8px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.sideButtonInner {
+    background-color: #2A2A2A;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+    width: calc(100% - 32px);
+    height: calc(100% - 8px);
+    padding: 4px 16px;
+    position: relative;
+}
+
+.sideButtonInner > h2,  .sideButtonInner > p {
+    margin: 0;
+}
+
+.sideButtonInner > h2 {
+    font-size: 24px;
+}
+
+.sideButtonInner > hr {
+    margin-top: -4px;
+}
+
+.sideButtonInner > p {
+    margin-top: -8px;
+    font-size: 14px;
+}
+
+.windowCorner {
+    height: 32px;
+    width: 32px;
+    margin-top: -32px;
+    position: absolute;
+    clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
+    background-color: #FF3CD7;
+}
+
+#mainWindow {
+    flex-grow: 1;
+    margin: 0 32px;
+    height: calc(100% - 0px);
+    box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+#mainWindowInner {
+    background-color: #1F1F1F;
+    border-top: 32px solid black;
+    width: 100%;
+    height: calc(100% - 32px);
+    position: relative;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+    display: grid;
+}
+
+#mainWindowInner > div {
+    height: 100%;
+    overflow-y: auto;
+    grid-row: 1;
+    grid-column: 1;
+}
+
+#mainWindowInner > div > div {
+    padding: 32px 16px;
+    padding-right: 8px;
+}
+
+.windowBack {
+    width: 122px;
+    height: 32px;
+    padding-left: 6px;
+    line-height: 32px;
+    margin-top: -32px;
+    right: 0;
+    position: absolute;
+    background-color: #FF6290;
+    font-weight: bold;
+    color: black;
+    font-size: 20px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.windowBack:hover {
+    background-color: #77FF85;
+}
+
+.sideButtonInner > .overlayButton {
+    margin: -4px -16px;
+}
+
+.imageTable {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row {
+    margin: 16px;
+    min-width: 256px;
+}
+
+.imageRowShadow {
+    width: 256px;
+    height: 64px;
+    box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+.imageRowInner  {
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+    background-color: #2A2A2A;
+    display: grid;
+    grid-template-columns: 30px 60px auto 30px;
+    padding: 2px;
+    position: relative;
+}
+
+.soundRow .imageRowInner, .bitSoundRow .imageRowInner  {
+    grid-template-columns: 30px auto 30px;
+}
+
+.imageRowHover {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #FF3CD7;
+    transition: opacity 0.25s;
+    opacity: 0;
+    z-index: -1;
+}
+
+.new .imageRowHover {
+    background-color: #77FF85 !important;
+    cursor: pointer;
+}
+
+.new > * {
+    cursor: pointer;
+}
+
+.imageRowHover:hover {
+    opacity: 0.15;
+}
+
+.imageRowInner > .checkbox {
+    grid-row: 1;
+    grid-column: 1;
+}
+
+.imageRowInner > .cogwheel {
+    grid-row: 2;
+    grid-column: 1;
+}
+
+.imageImage {
+    grid-row: 1 / 3;
+    grid-column: 2;
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.25s;
+}
+
+.imageImage:hover {
+    transform: scale(1.1);
+}
+
+.imageRowInner > *:hover ~ .imageRowHover {
+    opacity: 0.15;
+}
+
+.imageLabel {
+    font-weight: bold;
+    margin: 0;
+    border-bottom: 1px solid white;
+    height: min-content;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.imageRowInner > .imageLabel {
+    grid-row: 1 / 3;
+    grid-column: 3;
+}
+
+.soundRow .imageRowInner > .imageLabel, .bitSoundRow .imageRowInner > .imageLabel {
+    grid-row: 1;
+    grid-column: 2;
+}
+
+.soundRow .imageRowInner > .soundVolume, .bitSoundRow .imageRowInner > .bitSoundVolume {
+    grid-row: 2;
+    grid-column: 2;
+    max-height: 29px;
+}
+
+.imageRowInner > .delete {
+    grid-row: 2;
+    grid-column: 4;
+}
+
+.soundRow .imageRowInner > .delete, .bitSoundRow .imageRowInner > .delete {
+    grid-row: 2;
+    grid-column: 3;
+}
+
+.soundRow input, .bitSoundRow input {
+    position: relative;
+    z-index: 0;
+}
+
+.checkbox {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    background-image: url("ui/checkbox.png");
+    background-size: contain;
+}
+
+.checkbox > input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    margin: 0;
+}
+
+.checkbox > img {
+    position: absolute;
+    pointer-events: none;
+    width: 100%;
+    display: none;
+}
+
+.checkbox > input:checked ~ .checkmark {
+    display: initial;
+}
+
+.checkbox > input:checked ~ .checkHover {
+    opacity: 0.25;
+}
+
+.checkHover {
+    position: absolute;
+    width: calc(100% - 14px);
+    height: calc(100% - 14px);
+    background-color: #77FF85;
+    margin: 7px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.checkHover:hover {
+    opacity: 0.5 !important;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.cogwheel {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.cogwheel > button {
+    position: absolute;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.cogwheel > img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.25s;
+}
+
+#bitImageTable .cogwheel > img:hover, #bonkSounds .cogwheel > img:hover {
+    transform: scale(1.1);
+}
+
+.cogwheel > img:hover, .customBonkRow .imageImage:hover {
+    transform: rotate(90deg);
+}
+
+.delete {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.delete > button {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: none;
+}
+
+.delete > img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    transition: transform 0.25s;
+}
+
+.delete > img:hover {
+    transform: scale(1.1);
+}
+
+.tab {
+    height: 32px;
+    line-height: 32px;
+    width: 112px;
+    padding-left: 16px;
+    margin-top: -32px;
+    position: absolute;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+    color: black;
+    font-weight: bold;
+    transition: color 0.25s;
+    cursor: pointer;
+}
+
+.tab:hover {
+    color: white;
+}
+
+.firstTab {
+    padding-left: 16px;
+    background-color: #FF3CD7;
+}
+
+.secondTab {
+    padding-left: 144px;
+    background-color: #E900C0;
+}
+
+.selectedTab {
+    background-color: #FF84E3;
+    color: white;
+}
+
+#imageDetails {
+    overflow: hidden !important;
+}
+
+#imageDetailsInner {
+    padding: 16px !important;
+    position: relative;
+    height: calc(100% - 32px);
+}
+
+#imageDetailsInner > p {
+    width: max-content;
+    min-width: 128px;
+    position: relative;
+    z-index: 1;
+}
+
+#imageDetailsInner > img {
+    position: absolute;
+    margin: auto;
+    left: -9999px;
+    right: -9999px;
+    top: -9999px;
+    bottom: -9999px;
+    width: initial;
+    height: initial;
+}
+
+#imageSettings {
+    display: flex;
+    position: absolute;
+    bottom: 16px;
+    width: calc(100% - 32px);
+    z-index: 1;
+}
+
+#imageSettings > div {
+    flex-grow: 1;
+}
+
+.imageDetailsShadow {
+    height: 128px;
+    margin: 16px auto;
+    box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+#imageSettings1 > .imageDetailsShadow
+{
+    width: 240px;
+}
+
+#imageSettings2 > .imageDetailsShadow
+{
+    width: 288px;
+}
+
+.imageDetailsInner  {
+    height: calc(100% - 16px);
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+    background-color: #2A2A2A;
+    padding: 8px 16px;
+}
+
+.settingsTable {
+    display: grid;
+    gap: 16px;
+    font-weight: bold;
+    margin: auto;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.settingsTable > p {
+    grid-column: 1;
+    margin: 0;
+}
+
+#imageSettings1 .settingsTable {
+    grid-template-columns: 80px 110px;
+}
+
+#imageSettings2 .settingsTable {
+    grid-template-columns: 64px 176px;
+}
+
+.settingsTable img {
+    margin-top: -4px;
+}
+
+#customBonkRow img {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.25s;
+}
+
+#bonkDetailsTable {
+    grid-template-columns: 64px auto auto;;
+}
+
+#bonkDetailsTable {
+    display: grid;
+    line-height: 30px;
+    gap: 8px;
+}
+
+#bonkDetailsTable > .header {
+    grid-column: 1 / 4;
+}
+
+
+
+#bonkDetailsTable > p, #eventsTable > p {
+    margin: 0;
+}
+
+#bonkDetailsTable > input {
+    width: 64px;
+}
+
+#bonkDetailsTable > button {
+    width: 64px;
+}
+
+#eventsTable > .header {
+    grid-column: 1 / 5;
+}
+
+#eventDetailsTable {
+    display: grid;
+    line-height: 30px;
+    gap: 8px;
+}
+
+#eventDetailsTable {
+    grid-template-columns: 64px auto auto;;
+}
+
+#eventDetailsTable > .header {
+    grid-column: 1 / 4;
+}
+
+#eventDetailsTable > p {
+    margin: 0;
+}
+
+#eventDetailsTable > input {
+    width: 95%;
+}
+
+#eventDetailsTable > button {
+    width: 64px;
+}
+
+.header {
+    font-weight: bold;
+    box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
+    width: 256px;
+    height: 32px;
+    line-height: 32px;
+}
+
+.headerInner {
+    width: calc(100% - 32px);
+    height: 100%;
+    padding: 0 16px;
+    background-color: #2A2A2A;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+}
+
+.headerInner > img {
+    float: right;
+    margin: 1px;
+    transition: transform 0.25s;
+}
+
+.headerInner > img:hover {
+    transform: scale(1.1);
+}
+
+.grid1 {
+    grid-column: 1;
+}
+
+.grid2 {
+    grid-column: 2;
+}
+
+.grid3 {
+    grid-column: 3;
+}
+
+.grid4 {
+    grid-column: 4;
+}
+
+.grid5 {
+    grid-column: 5;
+}
+
+.grid6 {
+    grid-column: 6;
+}
+
+.grid1-2 {
+    grid-column: 1 / 3 !important;
+}
+
+.grid1-3 {
+    grid-column: 1 / 4 !important;
+}
+
+.grid2-3 {
+    grid-column: 2 / 4;
+}
+
+.grid2-4 {
+    grid-column: 2 / 5;
+}
+
+.grid2-5 {
+    grid-column: 2 / 6;
+}
+
+.grid4-5 {
+    grid-column: 4 / 6 !important;
+}
+
+#wideWindow {
+    position: absolute;
+    width: calc(100% - 64px);
+    height: calc(100% - 64px);
+    margin: 0 32px;
+    box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+}
+
+#wideWindowInner {
+    background-color: #1F1F1F;
+    border-top: 32px solid black;
+    width: 100%;
+    height: calc(100% - 32px);
+    position: relative;
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
+}
+
+#wideWindowInner > div {
+    height: calc(100% - 64px);
+    width: calc(100% - 24px);
+    padding: 32px 16px;
+    padding-right: 8px;
+    overflow-y: scroll;
+}
+
+#nextCalibrate {
+    width: 384px !important;
+}
+
+#help {
+    position: absolute;
+}
+
+#statusWindow {
+    width: max-content !important;
+    height: max-content !important;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    overflow-y: initial !important;
+}
+
+#statusWindow h1 {
+    font-size: 40px;
+    margin: 0;
+    text-align: center;
+}
+
+#statusWindow .topButton {
+    margin: auto;
+}
+
+mark {
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    padding: 0 4px;
+}
+
+#settings {
+    position: absolute;
+    margin: auto;
+    display: grid;
+    line-height: 30px;
+    gap: 8px;
+    grid-template-columns: 256px 128px 32px 256px 128px;
+}
+
+#settings p {
+    margin: 0;
+}
+
+#testBonks {
+    position: relative;
+}
+
+#testBonksTable {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.testContainer {
+    margin-bottom: 32px;
+    margin-right: 8px;
+    padding: 0;
+    max-height: 64px;
+}
+
+.testContainer .topButton {
+    padding: 0;
+    height: min-content !important;
+    margin: 0 16px;
+}
+
+#calibrateButtons {
+    display: grid;
+}
+
+#nextCalibrate {
+    grid-column: 1;
+}
+
+#cancelCalibrate {
+    grid-column: 2;
+}
+
+@keyframes swipeLeftIn {
+    from {
+        clip-path: polygon(0% -32px, 0% -32px, 0% 100%, 0% 100%);
+    }
+
+    to {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+}
+
+@keyframes swipeLeftOut {
+    from {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+
+    to {
+        clip-path: polygon(100% -32px, 100% -32px, 100% 100%, 100% 100%);
+    }
+}
+
+@keyframes swipeRightIn {
+    from {
+        clip-path: polygon(100% -32px, 100% -32px, 100% 100%, 100% 100%);
+    }
+
+    to {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+}
+
+@keyframes swipeRightOut {
+    from {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+
+    to {
+        clip-path: polygon(0% -32px, 0% -32px, 0% 100%, 0% 100%);
+    }
+}
+
+@keyframes swipeDownIn {
+    from {
+        clip-path: polygon(0% -32px, 100% -32px, 100% -32px, 0% -32px);
+    }
+
+    to {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+}
+
+@keyframes swipeDownOut {
+    from {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+
+    to {
+        clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+    }
+}
+
+@keyframes swipeUpIn {
+    from {
+        clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+    }
+
+    to {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+}
+
+@keyframes swipeUpOut {
+    from {
+        clip-path: polygon(0% -32px, 100% -32px, 100% 100%, 0% 100%);
+    }
+
+    to {
+        clip-path: polygon(0% -32px, 100% -32px, 100% -32px, 0% -32px);
+    }
+}
+
+
+.leftIn {
+    animation-name: swipeLeftIn;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.leftOut {
+    animation-name: swipeLeftOut;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.rightIn {
+    animation-name: swipeRightIn;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.rightOut {
+    animation-name: swipeRightOut;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.upIn {
+    animation-name: swipeUpIn;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.upOut {
+    animation-name: swipeUpOut;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.downIn {
+    animation-name: swipeDownIn;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.downOut {
+    animation-name: swipeDownOut;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+
+.bonkName {
+    width: calc(100% - 48px) !important;
+    margin: 0 16px;
+}
+
+.redeemsRow, .commandsRow {
+    grid-column: 1 / 6;
+    display: grid;
+    gap: 8px;
+}
+
+.redeemsRow p, .commandsRow p {
+    margin: 0;
+    line-height: 30px;
+}
+
+.checkbox, .delete {
+    display: block;
+    margin: auto;
+}
+
+.deleteSound {
+    width: 100%;
+    display: grid;
+    white-space: nowrap;
+    gap: 8px;
+}
+
+.deleteSound p {
+    margin: 0;
+}
+
+.testCustom .innerTopButton {
+    font-size: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 8px;
+}
+
+.customBonkRow .imageImage {
+    cursor: pointer;
+}
+
+#bitImageTable .imageRowInner > div {
+    display: grid;
+    grid-column: 3 / 5;
+    grid-row: 2;
+    gap: 8px;
+    width: min-content;
+}
+
+#bitImageTable .imageRowInner > div > p {
+    grid-column: 1;
+    margin: 0;
+}
+
+.bitImageScale {
+    grid-column: 2;
+    height: 16px;
+    width: 64px;
+}
+
+.decalSettings {
+    grid-column: 3;
+    grid-row: 2;
+    width: 100%;
+    display: grid;
+    grid-template-columns: min-content 36px min-content 36px;
+    gap: 8px;
+}
+
+.decalSettings > * {
+    grid-row: 1;
+}
+
+.decalSettings > img, #bitImageTable .imageRowInner > div > img {
+    margin: auto;
+    display: block;
+    height: 16px;
+}
+
+.decalSettings > input, #bitImageTable .imageRowInner > div > input {
+    margin: auto 0;
+    display: block;
+    height: 16px;
+}
+
+.decalSettings > input::-webkit-outer-spin-button,
+.decalSettings > input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#redeemAdd, #commandAdd {
+    cursor: pointer;
+}
+
+.selectAll {
+    position: relative;
+    width: 100%;
+    margin-top: -32px;
+}
+
+.selectAll > div {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: grid;
+    gap: 8px;
+    padding: 8px 16px;
+    line-height: 32px;
+}
+
+.selectAll > div > * {
+    grid-row: 1;
+    margin: 0;
+}
+
+#testImage {
+    position: absolute;
+    right: 0;
+    top: 16px;
+    z-index: 1;
+}
+
+#user {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    gap: 8px;
+}
+
+#user > * {
+    grid-row: 1;
+    margin: auto;
+}
+
+#user > button {
+    padding: 4px 8px;
+}
+
+#logout {
+    background-color: #0C0C0C ;
+    border: 2px solid #1D1D1D;
+    color: white;
+    cursor: pointer;
+    padding: 0 8px;
+}
+
+#itchLink {
+    background-color: black;
+    padding: 8px 16px;
+}
+
+.right {
+    text-align: right;
+}
+
+.main-status-icons i {
+    padding: 4px 8px;
+}
+
+.icon-ok {
+    color: #009900;
+}
+
+.icon-error {
+    color: #990000;
+}
+
+.icon-notice {
+    color: #aaaa00;
+}
+
+.icon-info {
+    color: #333399;
+}
+
+.game-select-sublist span {
+    padding-right: 24px;
+}
+
+.folderTab {
+    right: 12px;
+    width: auto;
+    clip-path: none;
+    font-size: 14px;
+}
+
+.img-pxl {
+    image-rendering: pixelated;
+}
+
+.tooltip {
+    position: absolute;
+    z-index: 1070;
+    display: block;
+    margin: 0;
+    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,Liberation Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    text-align: start;
+    text-decoration: none;
+    text-shadow: none;
+    text-transform: none;
+    letter-spacing: normal;
+    word-break: normal;
+    word-spacing: normal;
+    white-space: normal;
+    line-break: auto;
+    font-size: .875rem;
+    word-wrap: break-word;
+    opacity: 0
+}
+
+.tooltip { top: 0; }
+
+.tooltip.show {
+    opacity: .9
+}
+
+.tooltip .arrow {
+    position: absolute;
+    display: block;
+    width: .8rem;
+    height: .4rem
+}
+
+.tooltip .arrow:before {
+    position: absolute;
+    content: "";
+    border-color: transparent;
+    border-style: solid
+}
+
+.bs-tooltip-auto[x-placement^=top],.bs-tooltip-top {
+    padding: .4rem 0
+}
+
+.bs-tooltip-auto[x-placement^=top] .arrow,.bs-tooltip-top .arrow {
+    bottom: 0
+}
+
+.bs-tooltip-auto[x-placement^=top] .arrow:before,.bs-tooltip-top .arrow:before {
+    top: 0;
+    border-width: .4rem .4rem 0;
+    border-top-color: #000
+}
+
+.bs-tooltip-auto[x-placement^=right],.bs-tooltip-right {
+    padding: 0 .4rem
+}
+
+.bs-tooltip-auto[x-placement^=right] .arrow,.bs-tooltip-right .arrow {
+    left: 0;
+    width: .4rem;
+    /* height:.8rem; */
+}
+
+.bs-tooltip-auto[x-placement^=right] .arrow:before,.bs-tooltip-right .arrow:before {
+    right: 0;
+    border-width: .4rem .4rem .4rem 0;
+    border-right-color: #000;
+}
+
+.bs-tooltip-auto[x-placement^=bottom],.bs-tooltip-bottom {
+    padding: .4rem 0
+}
+
+.bs-tooltip-auto[x-placement^=bottom] .arrow,.bs-tooltip-bottom .arrow {
+    top: 0
+}
+
+.bs-tooltip-auto[x-placement^=bottom] .arrow:before,.bs-tooltip-bottom .arrow:before {
+    bottom: 0;
+    border-width: 0 .4rem .4rem;
+    border-bottom-color: #000
+}
+
+.bs-tooltip-auto[x-placement^=left],.bs-tooltip-left {
+    padding: 0 .4rem
+}
+
+.bs-tooltip-auto[x-placement^=left] .arrow,.bs-tooltip-left .arrow {
+    right: 0;
+    width: .4rem;
+    height: .8rem
+}
+
+.bs-tooltip-auto[x-placement^=left] .arrow:before,.bs-tooltip-left .arrow:before {
+    left: 0;
+    border-width: .4rem 0 .4rem .4rem;
+    border-left-color: #000
+}
+
+.tooltip-inner {
+    max-width: 200px;
+    padding: .25rem .5rem;
+    color: #fff;
+    text-align: center;
+    background-color: #000;
+    border-radius: .25rem
+}
+
+.refresh-game {
+    transition: transform 0.25s;
+    transform-origin: center;
+}
+.refresh-game:hover {
+    transform: rotate(90deg);
+}
