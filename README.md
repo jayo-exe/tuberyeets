@@ -10,7 +10,7 @@ Once you've installed and run the application for the first time:
 - Update the __VTube Studio Port__ to match your existing setup
 - If you're having trouble connecting to the TuberYeets overlay, try changing __Browser Source Port__, as the default port may be used by some other application
 
-##OBS Setup and Calibration
+## OBS Setup and Calibration
 See the [OBS Setup and Calibration Guide](https://github.com/jayo-exe/tuberyeets/wiki/OBS-Setup-and-Calibration-Guide) for detailed instructions
 
 ### Installing Effects Packs
