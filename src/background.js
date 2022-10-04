@@ -659,7 +659,7 @@ function checkCrowdControlEventInitial(effect_object) {
     var targeted = false;
     if(effect_object.hasOwnProperty('targets')) {
       effect_object.targets.forEach((target) => {
-        if (target.name === data.cc_channel) {
+        if (target.name === data.cc_channel.toLowerCase()) {
           targeted = true;
         }
       });

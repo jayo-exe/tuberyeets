@@ -19,7 +19,7 @@
               <a href="#"
                  @click="setLibrarySection('SoundList')"
                  :class="{active: this.current_library_section == 'SoundList'}"
-              >Impact Sounds ({{ live_game_data.impacts.length }})</a>
+              >Sounds ({{ live_game_data.impacts.length }})</a>
             </li>
             <li>
               <a href="#"

@@ -75,7 +75,7 @@
           <input type="number" id="spinSpeedMin" class="grid2" min="0" v-model="live_app_data.spinSpeedMin" step="0.1">
 
           <p class="grid1">Spin Speed (Max)</p>
-          <input type="number" id="spinSpeedMax" class="grid2" min="0" value="10" step="0.1">
+          <input type="number" id="spinSpeedMax" class="grid2" min="0" v-model="live_app_data.spinSpeedMax" step="0.1">
 
           <p class="grid1">Throw Angle (Min)</p>
           <input type="number" id="throwAngleMin" class="grid2" min="-90" v-model="live_app_data.throwAngleMin" step="1">

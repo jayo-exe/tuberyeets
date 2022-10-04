@@ -4,7 +4,7 @@
     <span class="btn btn-red back-btn" @click="setSection('BonkForm')">Back</span>
 
     <div id="bonkSoundsCustom" class="body-panel">
-      <h3>Impact Sounds</h3>
+      <h3>Sounds Library</h3>
       <input id="loadSoundCustom" ref="file" type="file" accept="audio/*" multiple hidden @change="handleNewFiles">
       <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
       <hr>

@@ -3,7 +3,7 @@
     <h2>Sounds</h2>
 
     <div id="bonkSounds" class="body-panel">
-      <h3>Impact Sounds</h3>
+      <h3>Sound Library</h3>
       <input id="loadSound" type="file" ref="file" accept="audio/*" multiple hidden @change="uploadSoundFile">
       <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
       <hr>
