@@ -1,36 +1,31 @@
 <template>
-  <div id="customBonks">
-    <span id="imagesDefaultTab" class="tab firstTab selectedTab">Custom Bonks</span>
-    <span id="imagesDefaultTab" class="tab folderTab"><a @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'">Open Game Folder</a></span>
-    <div id="bonksTable" class="imageTable">
-      <div id="bonksAdd" class="new row" @click="addBonk">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage" src="ui/add.png"></img>
-            <p class="imageLabel">ADD BONK</p>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
-      </div>
-      <div v-for="(custom_bonk, key) in live_game_data.customBonks"  id="customBonkRow" class="row customBonkRow" :key="'bcb_'+key">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <label class="cogwheel">
-              <button class="testBonk tooltip-hover"
-                      @click="testCustomBonk(key)"
-
-              >Details</button>
-              <img :id="'testicon'+key" src="ui/cog.png" class="checkmark" v-b-tooltip.hover.right="'Test'">
-            </label>
-            <img class="imageImage bonkDetailsButton" src="ui/cog64.png" @click="editBonk(key)" v-b-tooltip.hover.top="'Edit'"></img>
-            <p class="imageLabel">{{ custom_bonk.name }}</p>
-            <label class="delete">
-              <button class="imageRemove" @click="removeBonk(key)" ></button>
-              <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
-            </label>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
+  <div>
+    <h2>Bonks</h2>
+    <div id="customBonks" class="body-panel">
+      <h3>Custom Bonks</h3>
+      <button class="btn btn-green add-btn" @click="addBonk">Add Bonk</button>
+      <hr>
+      <div id="bonksTable" class="imageTable">
+        <table class="listTable">
+          <thead>
+          <tr>
+            <th>Bonk Name</th>
+            <th style="width: 164px;">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(custom_bonk, key) in live_game_data.customBonks"  :key="'bcb_'+key">
+              <td>
+                <p class="imageLabel">{{ custom_bonk.name }}</p>
+              </td>
+              <td>
+                <button class="btn btn-green" @click="editBonk(key)">Edit</button>
+                <button class="btn btn-blue" @click="testCustomBonk(key)">Test</button>
+                <button class="btn btn-red" @click="removeBonk(key)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -119,9 +114,6 @@ export default {
     },
     updateGameData() {
       this.$emit("update-game-data",this.live_game_data);
-    },
-    openGameFolder() {
-      window.ipc.send("OPEN_GAME_FOLDER");
     }
   },
   mounted() {

@@ -1,30 +1,25 @@
 <template>
-  <div id="bonkImages">
-    <span id="imagesDefaultTab" class="tab firstTab selectedTab">Bonk Images</span>
-    <span id="imagesDefaultTab" class="tab folderTab"><a @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'">Open Game Folder</a></span>
-    <div id="imageTable" class="imageTable">
-      <div class="selectAll">
-        <div>
-          <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
-          <label class="checkbox">
-            <input type="checkbox" class="imageEnabled" :checked="allItemsEnabled()" @change="handleIncludeAllCheckbox">
-            <div class="checkHover"></div>
-            <img src="ui/checkmark.png" class="checkmark">
-          </label>
-        </div>
-      </div>
+  <div>
+    <h2>Items</h2>
+
+    <div id="bonkImages" class="body-panel">
+      <h3>Bonk Images</h3>
       <input id="loadImage" type="file" ref="file" accept="image/*" multiple hidden @change="handleNewFiles">
-      <div id="newImage" class="new row" @click="$refs.file.click()">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage" src="ui/add.png"></img>
-            <p class="imageLabel">ADD IMAGES</p>
-            <div class="imageRowHover"></div>
+      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Images</button>
+      <hr>
+      <div id="imageTable" class="imageTable">
+        <div class="selectAll">
+          <div>
+            <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
+            <label class="checkbox">
+              <input type="checkbox" class="imageEnabled" :checked="allItemsEnabled()" @change="handleIncludeAllCheckbox">
+              <div class="checkHover"></div>
+              <img src="ui/checkmark.png" class="checkmark">
+            </label>
           </div>
         </div>
-      </div>
-      <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRow" class="row" :key="'bi_'+bonk_item.location">
-        <div class="imageRowShadow">
+
+        <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRow" class="row" :key="'bi_'+bonk_item.location">
           <div class="imageRowInner">
             <label class="checkbox">
               <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
@@ -138,9 +133,6 @@ export default {
       console.log('Testing custom item: ' + item_index);
       let item = this.live_game_data.throws[item_index];
       window.ipc.send('TEST_CUSTOM_ITEM', item);
-    },
-    openGameFolder() {
-      window.ipc.send("OPEN_GAME_FOLDER");
     }
   },
   components: {

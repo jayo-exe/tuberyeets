@@ -1,130 +1,169 @@
 <template>
   <div id="eventDetails">
-    <span class="windowCorner"></span>
-    <span class="windowBack" @click="setSection('EventList')">BACK</span>
-    <div id="eventDetailsTable">
-
-      <div class="header">
-        <div class="headerInner">
-          Custom Event Name
-        </div>
-      </div>
-
-      <p class="grid2">Custom Event Name</p>
-      <input type="text" class="eventName grid1-3" v-model="live_game_data.crowdControlEvents[current_event].name">
-
-
-      <label class="checkbox grid1">
-        <input type="checkbox" class="eventEnabled" v-model="live_game_data.crowdControlEvents[current_event].enabled">
-        <div class="checkHover"></div>
-        <img src="ui/checkmark.png" class="checkmark">
-      </label>
-      <p class="grid2">Event Enabled</p>
-
-      <div class="header">
-        <div class="headerInner">
-          Incoming Event
-        </div>
-      </div>
-
-      <p class="grid2">Crowd Control Effect</p>
-      <select class="crowdControlEffect grid3" v-model="live_game_data.crowdControlEvents[current_event].crowdControlEffect" @change="updateCrowdControlEffect">
-        <option v-for="(effect, key) in app_game.items" :value="effect.bid" :key="'ccel'+key">{{ effect.name }}</option>
-      </select>
-
-      <div class="header">
-        <div class="headerInner">
-          Actions
-        </div>
-      </div>
-
-      <label class="checkbox grid1">
-        <input type="checkbox" class="bonkEnabled" v-model="live_game_data.crowdControlEvents[current_event].bonkEnabled">
-        <div class="checkHover"></div>
-        <img src="ui/checkmark.png" class="checkmark">
-      </label>
-      <p class="grid2">Use a Custom Bonk</p>
-      <template v-if="live_game_data.crowdControlEvents[current_event].bonkEnabled">
-        <p class="grid2">Custom Bonk Name</p>
-        <select class="bonkType grid3" v-model="live_game_data.crowdControlEvents[current_event].bonkType">
-          <option v-for="(custom_bonk, key) in live_game_data.customBonks" :value="key" :key="'vtsh'+key">{{ custom_bonk.name }}</option>
-        </select>
-      </template>
-
-      <label class="checkbox grid1" style="margin-top: 24px;">
-        <input type="checkbox" class="hotkeyEnabled" v-model="live_game_data.crowdControlEvents[current_event].hotkeyEnabled">
-        <div class="checkHover"></div>
-        <img src="ui/checkmark.png" class="checkmark">
-      </label>
-      <p class="grid2" style="margin-top: 24px;">Trigger a Hotkey <i class="fa fa-info-circle"
-                                                                     v-b-tooltip.hover.left="'Trigger a VTube Studio hotkey with this effect'"
-      ></i></p>
-
-      <template v-if="live_game_data.crowdControlEvents[current_event].hotkeyEnabled">
-        <p class="grid2">Hotkey Name</p>
-        <select class="hotkeyName grid3" v-model="live_game_data.crowdControlEvents[current_event].hotkeyName">
-          <option v-for="(hotkey, key) in live_vts_data.hotkeys" :value="hotkey" :key="'vtsh1'+key">{{ hotkey }}</option>
-        </select>
-
-        <label class="checkbox grid1" style="margin-top: 24px;">
-          <input type="checkbox" class="secondHotkeyEnabled" v-model="live_game_data.crowdControlEvents[current_event].secondHotkeyEnabled">
+    <h2>Edit Crowd Control Event</h2>
+    <span class="btn btn-red back-btn" @click="setSection('EventList')">Back</span>
+    <div class="body-panel">
+      <h3>CC Trigger Details</h3>
+      <hr>
+      <div class="eventDetailsTable">
+        <label class="checkbox grid1">
+          <input type="checkbox" class="eventEnabled" v-model="live_game_data.crowdControlEvents[current_event].enabled">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
-        <p class="grid2" style="margin-top: 24px;">Trigger a second Hotkey <i class="fa fa-info-circle"
-                                                                              v-b-tooltip.hover.left="'Trigger a second hotkey after some time.  Typically used to reverse the effects of the first hotkey'"
-        ></i></p>
+        <p class="grid2">Event Enabled</p>
 
-        <template v-if="live_game_data.crowdControlEvents[current_event].secondHotkeyEnabled">
-          <p class="grid2">Second Hotkey Name</p>
-          <select class="secondHotkeyName grid3" v-model="live_game_data.crowdControlEvents[current_event].secondHotkeyName">
-            <option v-for="(hotkey, key) in live_vts_data.hotkeys" :value="hotkey" :key="'vtsh2'+key">{{ hotkey }}</option>
-          </select>
+        <p class="grid2">Custom Event Name</p>
+        <input type="text" class="eventName grid3" v-model="live_game_data.crowdControlEvents[current_event].name">
 
-          <p class="grid2">Second Hotkey Delay (ms)</p>
-          <input type="number" min="0" value="60000" step="1" class="secondHotkeyDelay grid3" v-model="live_game_data.crowdControlEvents[current_event].secondHotkeyDelay">
-
-          <label class="checkbox grid1" style="margin-top: 24px;">
-            <input type="checkbox" class="hotkeySync" v-model="live_game_data.crowdControlEvents[current_event].hotkeySync">
-            <div class="checkHover"></div>
-            <img src="ui/checkmark.png" class="checkmark">
-          </label>
-          <p class="grid2" style="margin-top: 24px;">Sync Hotkeys with Timed Effects <i class="fa fa-info-circle"
-                                                                                        v-b-tooltip.hover.left="'For timed effects, enabled and disabling the expression will be triggered by start and stop events'"
-          ></i></p>
-        </template>
-      </template>
-
-      <label class="checkbox grid1" style="margin-top: 24px;">
-        <input type="checkbox" class="expressionEnabled" v-model="live_game_data.crowdControlEvents[current_event].expressionEnabled">
-        <div class="checkHover"></div>
-        <img src="ui/checkmark.png" class="checkmark">
-      </label>
-      <p class="grid2" style="margin-top: 24px;">Activate an Expression <i class="fa fa-info-circle"
-                                                                           v-b-tooltip.hover.left="'activate an expression on the vTube model'"
-      ></i></p>
-
-      <template v-if="live_game_data.crowdControlEvents[current_event].expressionEnabled">
-        <p class="grid2">Expression Name</p>
-        <select class="expressionName grid3" v-model="live_game_data.crowdControlEvents[current_event].expressionName">
-          <option v-for="(expression, key) in live_vts_data.expressions" :value="expression" :key="'vtse'+key">{{ expression }}</option>
+        <p class="grid2">Crowd Control Effect</p>
+        <select class="crowdControlEffect grid3" v-model="live_game_data.crowdControlEvents[current_event].crowdControlEffect" @change="updateCrowdControlEffect">
+          <option v-for="(effect, key) in app_game.items" :value="effect.bid" :key="'ccel'+key">{{ effect.name }}</option>
         </select>
+      </div>
+    </div>
 
-        <p class="grid2">Expression Duration (ms) <i class="fa fa-info-circle"
-                                                     v-b-tooltip.hover.left="'Deactivate the expression after this amount of time'"
-        ></i></p>
-        <input type="number" min="0" value="60000" step="1" class="expressionDuration grid3" v-model="live_game_data.crowdControlEvents[current_event].expressionDuration">
 
-        <label class="checkbox grid1" style="margin-top: 24px;">
-          <input type="checkbox" class="expressionSync" v-model="live_game_data.crowdControlEvents[current_event].expressionSync">
-          <div class="checkHover"></div>
-          <img src="ui/checkmark.png" class="checkmark">
-        </label>
-        <p class="grid2" style="margin-top: 24px;">Sync Expression with Timed Effects <i class="fa fa-info-circle"
-                                                                                         v-b-tooltip.hover.left="'For timed effects, enabled and disabling the expression will be triggered by start, pause, resume, and stop events'"
-        ></i></p>
-      </template>
+    <div class="body-panel" style="margin-bottom:0">
+      <h3>CC Trigger Actions</h3>
+      <hr>
+      <div class="eventDetailsTable">
+        <table class="listTable">
+          <thead>
+          <tr>
+            <th>Enabled</th>
+            <th>Starts at (ms)</th>
+            <th>Action</th>
+            <th>Value</th>
+            <th>Duration (ms)</th>
+            <th colspan="2">Sync with Timed</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>
+              <label class="checkbox">
+                <input type="checkbox" class="bonkEnabled" v-model="live_game_data.crowdControlEvents[current_event].bonkEnabled">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </td>
+            <td>0</td>
+            <td>
+              Custom Bonk
+            </td>
+            <td>
+              <select class="bonkType grid3" v-model="live_game_data.crowdControlEvents[current_event].bonkType">
+                <option :value="null">-- No Bonk Selected --</option>
+                <option v-for="(custom_bonk, key) in live_game_data.customBonks" :value="key" :key="'vtsh'+key">{{ custom_bonk.name }}</option>
+              </select>
+            </td>
+            <td></td>
+            <td colspan="2">Always</td>
 
+          </tr>
+          <tr>
+            <td>
+              <label class="checkbox">
+                <input type="checkbox" class="hotkeyEnabled" v-model="live_game_data.crowdControlEvents[current_event].hotkeyEnabled">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </td>
+            <td>0</td>
+            <td>Trigger Hotkey 1 <i class="fa fa-info-circle"
+                                    v-b-tooltip.hover.left="'Trigger a VTube Studio hotkey with this effect'"
+            ></i></td>
+            <td>
+              <select class="hotkeyName grid3" v-model="live_game_data.crowdControlEvents[current_event].hotkeyName">
+                <option :value="null">-- No Hotkey Selected --</option>
+                <option v-for="(hotkey, key) in live_vts_data.hotkeys" :value="hotkey" :key="'vtsh1'+key">{{ hotkey }}</option>
+              </select>
+            </td>
+            <td></td>
+            <td></td>
+            <td style="width: 36px;">
+              <i class="fa fa-info-circle"
+                 v-b-tooltip.hover.left="'For timed effects, Hotkey 1 is triggered when the effect starts, and Hotkey 2 is triggered when the effect stops'"
+              ></i>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="checkbox">
+                <input type="checkbox" class="secondHotkeyEnabled" v-model="live_game_data.crowdControlEvents[current_event].secondHotkeyEnabled">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </td>
+            <td>
+              <input type="number" min="0" value="60000" step="1" style="width:100px" v-model="live_game_data.crowdControlEvents[current_event].secondHotkeyDelay">
+            </td>
+            <td>
+              Trigger Hotkey 2 <i class="fa fa-info-circle"
+                                  v-b-tooltip.hover.left="'Trigger a second hotkey after some time.  Typically used to reverse the effects of the first hotkey'"
+            ></i>
+            </td>
+            <td>
+              <select class="secondHotkeyName" v-model="live_game_data.crowdControlEvents[current_event].secondHotkeyName">
+                <option :value="null">-- No Hotkey Selected --</option>
+                <option v-for="(hotkey, key) in live_vts_data.hotkeys" :value="hotkey" :key="'vtsh2'+key">{{ hotkey }}</option>
+              </select>
+            </td>
+            <td></td>
+            <td>
+              <label class="checkbox grid1">
+                <input type="checkbox" class="hotkeySync" v-model="live_game_data.crowdControlEvents[current_event].hotkeySync">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </td>
+            <td style="width: 36px;">
+              <i class="fa fa-info-circle"
+                 v-b-tooltip.hover.left="'For timed effects, Hotkey 1 is triggered when the effect starts, and Hotkey 2 is triggered when the effect stops'"
+              ></i>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="checkbox grid1">
+                <input type="checkbox" class="expressionEnabled" v-model="live_game_data.crowdControlEvents[current_event].expressionEnabled">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </td>
+            <td>0</td>
+            <td>Activate an Expression <i class="fa fa-info-circle"
+                                          v-b-tooltip.hover.left="'activate an expression on the vTube model'"
+            ></i></td>
+            <td>
+              <select class="expressionName grid3" v-model="live_game_data.crowdControlEvents[current_event].expressionName">
+                <option :value="null">-- No Expression Selected --</option>
+                <option v-for="(expression, key) in live_vts_data.expressions" :value="expression" :key="'vtse'+key">{{ expression }}</option>
+              </select>
+            </td>
+            <td>
+              <input type="number" min="0" value="60000" step="1" style="width:100px" v-model="live_game_data.crowdControlEvents[current_event].expressionDuration">
+            </td>
+            <td>
+              <label class="checkbox grid1">
+                <input type="checkbox" class="expressionSync" v-model="live_game_data.crowdControlEvents[current_event].expressionSync">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </td>
+            <td style="width: 36px;">
+              <i class="fa fa-info-circle"
+                 v-b-tooltip.hover.left="'For timed effects, enabled and disabling the expression will be triggered by start, pause, resume, and stop events'"
+              ></i>
+            </td>
+          </tr>
+
+          </tbody>
+        </table>
+
+
+      </div>
 
     </div>
   </div>

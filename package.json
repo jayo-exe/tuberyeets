@@ -24,6 +24,7 @@
     "vtubestudio": "^1.11.0",
     "vue": "^2.6.14",
     "vue-router": "^3.5.1",
+    "vue-select": "^3.20.0",
     "ws": "^8.6.0"
   },
   "devDependencies": {

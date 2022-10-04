@@ -374,7 +374,7 @@ a {
 
 .row {
     margin: 16px;
-    min-width: 256px;
+    min-width: calc(256px + 128px);
 }
 
 .imageRowShadow {
@@ -386,8 +386,9 @@ a {
 .imageRowInner  {
     width: calc(100% - 4px);
     height: calc(100% - 4px);
-    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
-    background-color: #2A2A2A;
+    background-color: #1f2037;
+    border-radius: 4px;
+    border: 1px solid #fff;
     display: grid;
     grid-template-columns: 30px 60px auto 30px;
     padding: 2px;
@@ -726,61 +727,57 @@ a {
     transition: transform 0.25s;
 }
 
-#bonkDetailsTable {
-    grid-template-columns: 64px auto auto;;
+.bonkDetailsTable {
+    grid-template-columns: 64px 220px auto;
 }
 
-#bonkDetailsTable {
+.bonkDetailsTable {
     display: grid;
     line-height: 30px;
     gap: 8px;
 }
 
-#bonkDetailsTable > .header {
+.bonkDetailsTable > .header {
     grid-column: 1 / 4;
 }
 
 
 
-#bonkDetailsTable > p, #eventsTable > p {
+.bonkDetailsTable > p, #eventsTable > p {
     margin: 0;
 }
 
-#bonkDetailsTable > input {
+.bonkDetailsTable > input {
     width: 64px;
 }
 
-#bonkDetailsTable > button {
+.bonkDetailsTable > button {
     width: 64px;
 }
 
-#eventsTable > .header {
+.eventsTable > .header {
     grid-column: 1 / 5;
 }
 
-#eventDetailsTable {
+.eventDetailsTable {
     display: grid;
     line-height: 30px;
     gap: 8px;
 }
 
-#eventDetailsTable {
-    grid-template-columns: 64px auto auto;;
-}
-
-#eventDetailsTable > .header {
+.eventDetailsTable > .header {
     grid-column: 1 / 4;
 }
 
-#eventDetailsTable > p {
+.eventDetailsTable > p {
     margin: 0;
 }
 
-#eventDetailsTable > input {
+.eventDetailsTable > input {
     width: 95%;
 }
 
-#eventDetailsTable > button {
+.eventDetailsTable > button {
     width: 64px;
 }
 
@@ -919,16 +916,15 @@ mark {
     padding: 0 4px;
 }
 
-#settings {
-    position: absolute;
+.settingsBlock {
     margin: auto;
     display: grid;
     line-height: 30px;
     gap: 8px;
-    grid-template-columns: 256px 128px 32px 256px 128px;
+    grid-template-columns: 256px 128px auto;
 }
 
-#settings p {
+.settingsBlock p {
     margin: 0;
 }
 

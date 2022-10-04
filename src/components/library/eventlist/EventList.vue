@@ -1,29 +1,35 @@
 <template>
-  <div id="events">
-    <span id="imagesDefaultTab" class="tab firstTab selectedTab" style="width:180px;">Crowd Control Events</span>
-    <span id="imagesDefaultTab" class="tab folderTab"><a @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'">Open Game Folder</a></span>
-    <div id="eventsTable" class="imageTable">
-      <div id="eventsAdd" class="new row" @click="addEvent">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage" src="ui/add.png"></img>
-            <p class="imageLabel">ADD EVENT</p>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
-      </div>
-      <div v-for="(cc_event, key) in live_game_data.crowdControlEvents" class="row ccEventRow" :key="'bcb_'+key">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage eventDetailsButton" src="ui/cog64.png" @click="editEvent(key)" v-b-tooltip.hover.top="'Edit'"></img>
-            <p class="imageLabel">{{ cc_event.name }}</p>
-            <label class="delete">
-              <button class="imageRemove" @click="removeEvent(key)"></button>
-              <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
-            </label>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
+  <div>
+    <h2>Triggers</h2>
+
+    <div id="events" class="body-panel">
+      <h3>Crowd Control Triggers</h3>
+      <button class="btn btn-green add-btn" @click="addEvent">Add Trigger</button>
+      <hr>
+      <div id="eventsTable" class="imageTable">
+        <table class="listTable">
+          <thead>
+          <tr>
+            <th>Trigger Name</th>
+            <th>Triggered By</th>
+            <th style="width: 140px;">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="(cc_event, key) in live_game_data.crowdControlEvents" :key="'bcb_'+key">
+            <td>
+              <p class="imageLabel">{{ cc_event.name }}</p>
+            </td>
+            <td>
+              <p style="margin: 0">{{ getEffectName(cc_event.crowdControlEffect) }}</p>
+            </td>
+            <td>
+              <button class="btn btn-green" @click="editEvent(key)">Edit</button>
+              <button class="btn btn-red" @click="removeEvent(key)">Delete</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -87,8 +93,14 @@ export default {
     updateGameData() {
       this.$emit("update-game-data",this.live_game_data);
     },
-    openGameFolder() {
-      window.ipc.send("OPEN_GAME_FOLDER");
+    getEffectName(bid) {
+      var effect_name = "None";
+      this.app_game.items.forEach(cc_effect => {
+        if(cc_effect.bid == bid) {
+          effect_name = cc_effect.name;
+        }
+      });
+      return effect_name;
     }
   },
   watch: {

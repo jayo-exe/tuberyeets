@@ -23,10 +23,10 @@ var mainWindow;
 async function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
-    minWidth: 1024,
-    minHeight: 768,
+    width: 1200,
+    height: 720,
+    minWidth: 1200,
+    minHeight: 720,
     icon: path.resolve(__static, 'icon.ico'),
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -791,7 +791,7 @@ function handleEffect(effect_id) {
 
   if(matchedEvent) {
     //Execute the bonk if enabled
-    if(matchedEvent.bonkEnabled && matchedEvent.bonkType.length > 0) {
+    if(matchedEvent.bonkEnabled && matchedEvent.hasOwnProperty("bonkType") && matchedEvent.bonkType.length > 0) {
       var customCount = null;
       if(current_effect.effect.parameters[0] !== undefined) {
         customCount = current_effect.effect.parameters[0];
@@ -801,17 +801,17 @@ function handleEffect(effect_id) {
     }
 
     //Execute the hotkey(s) if enabled
-    if(matchedEvent.hotkeyEnabled && matchedEvent.hotkeyName.length > 0) {
+    if(matchedEvent.hotkeyEnabled && matchedEvent.hasOwnProperty("hotkeyName") && matchedEvent.hotkeyName.length > 0) {
       //Trigger the selected hotkey
       vts.triggerHotkey(matchedEvent.hotkeyName);
-      if(matchedEvent.secondHotkeyEnabled && matchedEvent.secondHotkeyName.length > 0) {
+      if(matchedEvent.secondHotkeyEnabled && matchedEvent.hasOwnProperty("secondHotkeyName") && matchedEvent.secondHotkeyName.length > 0) {
         //Trigger the follow-up hotkey after the specified delay
         setTimeout(() => {vts.triggerHotkey(matchedEvent.secondHotkeyName)},matchedEvent.secondHotkeyDelay);
       }
     }
 
     //Execute the expression if enabled
-    if(matchedEvent.expressionEnabled && matchedEvent.expressionName.length > 0) {
+    if(matchedEvent.expressionEnabled && matchedEvent.hasOwnProperty("expressionName") && matchedEvent.expressionName.length > 0) {
       //Activate selected expression
       vts.activateExpression(matchedEvent.expressionName);
       if(parseInt(matchedEvent.expressionDuration) > 0) {

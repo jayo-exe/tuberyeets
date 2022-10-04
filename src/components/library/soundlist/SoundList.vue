@@ -1,48 +1,59 @@
 <template>
-  <div id="bonkSounds">
-    <span id="soundsDefaultTab" class="tab firstTab selectedTab">Bonk Sounds</span>
-    <span id="imagesDefaultTab" class="tab folderTab"><a @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'">Open Game Folder</a></span>
-    <div id="soundTable" class="imageTable">
-      <div class="selectAll">
-        <div>
-          <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
-          <label class="checkbox">
-            <input type="checkbox" class="imageEnabled" :checked="allItemsEnabled()" @change="handleIncludeAllCheckbox">
-            <div class="checkHover"></div>
-            <img src="ui/checkmark.png" class="checkmark">
-          </label>
-        </div>
-      </div>
+  <div>
+    <h2>Sounds</h2>
+
+    <div id="bonkSounds" class="body-panel">
+      <h3>Impact Sounds</h3>
       <input id="loadSound" type="file" ref="file" accept="audio/*" multiple hidden @change="uploadSoundFile">
-      <div id="newSound" class="new row" @click="$refs.file.click()">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage" src="ui/add.png"></img>
-            <p class="imageLabel">ADD SOUNDS</p>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
-      </div>
-      <div v-for="(bonk_impact, key) in live_game_data.impacts" class="row soundRow" :key="'bim_'+bonk_impact.location">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
+      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
+      <hr>
+      <div id="soundTable" class="imageTable">
+        <div class="selectAll">
+          <div>
+            <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
             <label class="checkbox">
-              <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
+              <input type="checkbox" class="imageEnabled" :checked="allItemsEnabled()" @change="handleIncludeAllCheckbox">
               <div class="checkHover"></div>
               <img src="ui/checkmark.png" class="checkmark">
             </label>
-            <label class="cogwheel">
-              <img src="ui/speaker.png" class="checkmark" title="Volume" v-b-tooltip.hover.right="'Volume'"></img>
-            </label>
-            <p class="imageLabel" :title="bonk_impact.location">{{ bonk_impact.location }}</p>
-            <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.impacts[key].volume">
-            <label class="delete">
-              <button class="imageRemove" @click="removeSoundFile(key)"></button>
-              <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
-            </label>
-            <div class="imageRowHover"></div>
           </div>
         </div>
+        <table class="listTable">
+          <thead>
+            <tr>
+              <th>Default</th>
+              <th>Name</th>
+              <th>Volume</th>
+              <th>Delete?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(bonk_impact, key) in live_game_data.impacts" :key="'bim_'+bonk_impact.location">
+              <td>
+                <label class="checkbox">
+                  <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
+                  <div class="checkHover"></div>
+                  <img src="ui/checkmark.png" class="checkmark">
+                </label>
+              </td>
+              <td>
+                <p class="imageLabel" :title="bonk_impact.location">{{ bonk_impact.location }}</p>
+              </td>
+              <td>
+                <label class="cogwheel">
+                  <img src="ui/speaker.png" class="checkmark" title="Volume" v-b-tooltip.hover.right="'Volume'"></img>
+                </label>
+                <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.impacts[key].volume">
+              </td>
+              <td>
+                <label class="delete">
+                  <button class="imageRemove" @click="removeSoundFile(key)"></button>
+                  <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
+                </label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -132,9 +143,6 @@ export default {
       if(this.itemIsEnabled(item_index)) {
         this.live_game_data.impacts[item_index].enabled = false;
       }
-    },
-    openGameFolder() {
-      window.ipc.send("OPEN_GAME_FOLDER");
     }
   },
   components: {

@@ -1,47 +1,8 @@
 <template>
   <div id="mainBody" class="library">
 
-    <div id="sideBar">
-      <div id="sideBarInner">
-        <span class="windowCorner"></span>
-        <div id="imagesButton" class="sideButton" @click="setSection('ItemList')">
-          <div class="sideButtonInner">
-            <div class="overlayButton" :class="{buttonSelected: current_section == 'ItemList'}"></div>
-            <h2>Items</h2>
-            <hr>
-            <p>Things to throw</p>
-          </div>
-        </div>
-        <div id="soundsButton" class="sideButton" @click="setSection('SoundList')">
-          <div class="sideButtonInner">
-            <div class="overlayButton" :class="{buttonSelected: current_section == 'SoundList'}"></div>
-            <h2>Impacts</h2>
-            <hr>
-            <p>Impactful sounds</p>
-          </div>
-        </div>
-        <div id="customButton" class="sideButton" @click="setSection('BonkList')">
-          <div class="sideButtonInner">
-            <div class="overlayButton" :class="{buttonSelected: current_section == 'BonkList'}"></div>
-            <h2>Bonks</h2>
-            <hr>
-            <p>Design and test unique bonks</p>
-          </div>
-        </div>
-        <div id="eventsButton" class="sideButton" @click="setSection('EventList')">
-          <div class="sideButtonInner">
-            <div class="overlayButton" :class="{buttonSelected: current_section == 'EventList'}"></div>
-            <h2>CC Events</h2>
-            <hr>
-            <p>Crowd Control triggers</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="mainWindow">
-      <div id="mainWindowInner">
         <component
-            v-bind:is="current_section"
+            v-bind:is="current_library_section"
             :app_data="app_data"
             :game_data="game_data"
             :app_game="app_game"
@@ -55,8 +16,6 @@
             @edit-custom-bonk="editCustomBonk"
             @edit-cc-event="editCustomEvent"
         ></component>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -77,7 +36,7 @@ import SoundList from '@/components/library/soundlist/SoundList.vue'
 
 export default {
   name: 'LibraryView',
-  props: ['app_data','app_status','game_data','vts_data','app_game'],
+  props: ['app_data','app_status','game_data','vts_data','app_game', 'current_library_section'],
   components: {
     BonkList,
     BonkForm,
@@ -96,7 +55,6 @@ export default {
       live_app_data: this.app_data,
       live_game_data: this.game_data,
       live_vts_data: this.vts_data,
-      current_section: 'BonkList',
       current_item: 0,
       current_bonk: 0,
       current_event: 0,
@@ -104,8 +62,7 @@ export default {
   },
   methods: {
     setSection(section_name) {
-      this.current_section = section_name;
-      console.log('swtiched to ' + this.current_section)
+      this.$emit('set-library-section', section_name);
     },
     editItem(item_id) {
       this.current_item = item_id;

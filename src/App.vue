@@ -1,51 +1,63 @@
 <template>
-  <div id="app">
-    <div id="header">
-      <div id="headerPink"></div>
-      <div id="headerWhite"></div>
-      <div id="headerLogo">
-        <img id="logoJBonk" src="ui/logo48_l.png">
-        <h1>'Tuber<em style="color:#373">Yeets</em></h1>
-      </div>
-      <div id="headerStatus">
-        <div id="topButtons">
-          <router-link to="/" id="libraryButton" class="topButton">
-            <div class="overlayButton"></div>
-            <div class="innerTopButton">Library</div>
-            <div class="cornerTopButton"></div>
+  <div id="app" class="wrapper">
+    <div class="sidebar">
+      <h2>TuberYeets</h2>
+      <hr />
+      <ul>
+        <li>
+          <router-link to="/">
+            <a href="#" :class="{active: this.$route.name == 'library'}">Library</a>
           </router-link>
-          <router-link to="/calibration" id="calibrateButton" class="topButton">
-            <div class="overlayButton"></div>
-            <div class="innerTopButton">Calibrate</div>
-            <div class="cornerTopButton"></div>
+          <ul v-if="this.$route.name == 'library'">
+            <li>
+              <a href="#"
+                 @click="setLibrarySection('ItemList')"
+                 :class="{active: this.current_library_section == 'ItemList'}"
+              >Items ({{ live_game_data.throws.length }})</a>
+            </li>
+            <li>
+              <a href="#"
+                 @click="setLibrarySection('SoundList')"
+                 :class="{active: this.current_library_section == 'SoundList'}"
+              >Impact Sounds ({{ live_game_data.impacts.length }})</a>
+            </li>
+            <li>
+              <a href="#"
+                 @click="setLibrarySection('BonkList')"
+                 :class="{active: this.current_library_section == 'BonkList'}"
+              >Bonks ({{ Object.keys(live_game_data.customBonks).length }})</a>
+            </li>
+            <li>
+              <a href="#"
+                 @click="setLibrarySection('EventList')"
+                 :class="{active: this.current_library_section == 'EventList'}"
+              >CC Triggers ( {{ Object.keys(live_game_data.crowdControlEvents).length }})</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <router-link to="/calibration">
+            <a href="#" :class="{active: this.$route.name == 'calibration'}" >Calibrate</a>
           </router-link>
-          <router-link to="/settings" id="settingsButton" class="topButton">
-            <div class="overlayButton"></div>
-            <div class="innerTopButton">Settings</div>
-            <div class="cornerTopButton"></div>
+        </li>
+        <li>
+          <router-link to="/settings">
+            <a href="#" :class="{active: this.$route.name == 'settings'}" >Settings</a>
           </router-link>
-        </div>
-      </div>
+        </li>
+      </ul>
     </div>
-    <div id="body">
+    <div class="body-container">
 
-
-
-      <div style="margin-left:32px; margin-bottom: 32px; padding-top: 24px;">
+      <div class="game-select">
         <!-- <img v-if="current_game.hasOwnProperty('game')" :src="current_game.game.media.thumbnail" style="max-width: 102px; max-height:140px; border: 1px solid #ddd; float: left; margin-right: 16px;" /> -->
-        Game selection:
-        <select v-model="current_game.id" @change="setCrowdControlGame">
+        Choose Game:
+        <select :disabled="game_data_loading" v-model="current_game.id" @change="setCrowdControlGame" style="font-size:0.85em;">
           <option v-for="(game, key) in games" :value="game.menuID">{{ game.name }}</option>
         </select>
         <i style="margin-left: 24px;" class="fa-solid fa-rotate refresh-game" @click="loadGameData()" v-b-tooltip.hover.left="'Reload Effect Pack'"></i>
-        <span style="padding-left: 24px;" v-if="current_game.hasOwnProperty('items')"><i class="fa-solid fa-right-left"></i> <strong>{{ current_game.items.length }}</strong> Available Crowd Control Effects</span>
-        <hr />
-        <div class="game-select-sublist">
-          <span v-if="live_game_data.hasOwnProperty('throws')"><i class="fa-solid fa-baseball"></i> <strong>{{ live_game_data.throws.length }}</strong> Items to Throw</span>
-          <span v-if="live_game_data.hasOwnProperty('impacts')"><i class="fa-solid fa-headphones"></i> <strong>{{ live_game_data.impacts.length }}</strong> Impact Sounds</span>
-          <span v-if="live_game_data.hasOwnProperty('customBonks')"><i class="fa-solid fa-skull"></i> <strong>{{ Object.keys(live_game_data.customBonks).length }}</strong> Custom Bonks</span>
-          <span v-if="live_game_data.hasOwnProperty('crowdControlEvents')"><i class="fa-solid fa-robot"></i> <strong>{{ Object.keys(live_game_data.crowdControlEvents).length }}</strong> Handled Crowd Control Events</span>
-        </div>
+        <i style="margin-left: 24px;" class="fa-solid fa-folder-open open-folder" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
+        <span style="padding-left: 24px;" v-if="current_game.hasOwnProperty('items')"><i class="fa-solid fa-right-left"></i> <strong>{{ current_game.items.length }}</strong> Crowd Control Effects</span>
         <span style="clear:both;"></span>
       </div>
 
@@ -55,13 +67,16 @@
           :vts_data="live_vts_data"
           :app_status="current_status"
           :app_game="current_game"
+          :current_library_section="current_library_section"
+          @set-library-section="setLibrarySection"
           @set-field="handleSetField"
           @update-data="saveData"
           @update-game-data="saveGameData"
       />
 
-    </div>
 
+
+    </div>
     <div id="footer">
       <span style="padding-left: 8px;">
         Status:
@@ -105,9 +120,11 @@ export default {
         type: "ready",
         param: null,
       },
+      game_data_loading: false,
       current_game: {
 
       },
+      current_library_section: "BonkList",
       games: {
 
       },
@@ -216,6 +233,7 @@ export default {
     },
     loadGameData() {
       console.log('Loading Game Data...');
+      this.game_data_loading = true;
       window.ipc.send('LOAD_GAME_DATA', this.current_game.id);
     },
     getUserDataPath() {
@@ -224,6 +242,7 @@ export default {
     },
     saveGameData(event) {
       this.autoGameSaveStatus = "changed";
+      this.game_data_loading = true;
       this.live_game_data = event;
       clearTimeout(this.autoGameSaveTimeout);
       this.autoSaveTimeout = setTimeout(() => {
@@ -295,8 +314,15 @@ export default {
         default:
           return 'icon-error';
       }
+    },
+    setLibrarySection(section_name) {
+      this.current_library_section = section_name;
+    },
+    openGameFolder() {
+      window.ipc.send("OPEN_GAME_FOLDER");
     }
   },
+
   mounted() {
     // handle reply from the backend
     window.ipc.on('GET_DATA_PATH', (payload) => {
@@ -322,6 +348,7 @@ export default {
     window.ipc.on('LOAD_GAME_DATA', (payload) => {
       this.live_game_data =  payload;
       this.autoGameSaveStatus = "ok (loaded)";
+      this.game_data_loading = false;
       console.log('Game Data Loaded!');
     });
     window.ipc.on('SAVE_GAME_DATA', (payload) => {
@@ -331,6 +358,7 @@ export default {
       } else {
         console.log('Error saving game data!');
       }
+      this.game_data_loading = false;
     });
     window.ipc.on('SET_FIELD', (payload) => {
       if(payload) {
@@ -426,8 +454,8 @@ export default {
 </script>
 
 <style>
- #app {
-   height: 100%;
-   overflow: hidden;
- }
+#app {
+  height: 100%;
+  overflow: hidden;
+}
 </style>

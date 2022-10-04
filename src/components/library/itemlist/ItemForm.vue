@@ -1,49 +1,46 @@
 <template>
-  <div id="imageDetails">
-    <span class="windowCorner"></span>
-    <span class="windowBack" @click="setSection('ItemList')">BACK</span>
-    <div id="imageDetailsInner">
-      <img class="imageImage" :src="'file://'+getThrowsPath(live_game_data.throws[current_item].location)">
-      <p class="imageLabel">{{ live_game_data.throws[current_item].location }}</p>
-      <div id="testImage">
-        <div class="testContainer">
-          <div id="testSingle" class="topButton" @click="testCustomItem(current_item)">
-            <div class="overlayButton"></div>
-            <div class="innerTopButton">TEST</div>
-            <div class="cornerTopButton"></div>
-          </div>
-        </div>
-      </div>
-      <div id="imageSettings">
-        <div id="imageSettings1">
-          <div class="imageDetailsShadow">
-            <div class="imageDetailsInner">
-              <div class="settingsTable">
-                <p>Scale <i class="fa fa-info-circle"
-                            v-b-tooltip.hover.left="'The relative size of the object compared to the input image'"
-                ></i></p>
-                <input type="number" class="imageScale" min="0" step="0.1" v-model="live_game_data.throws[current_item].scale">
-                <p>Weight <i class="fa fa-info-circle"
-                             v-b-tooltip.hover.left="'This determines how much force is applied to the vTube model on impact'"
-                ></i></p>
-                <input type="range" class="imageWeight" min="0" max="1" step="0.1" v-model="live_game_data.throws[current_item].weight">
-                <p>Volume <i class="fa fa-info-circle"
-                             v-b-tooltip.hover.left="'The volume of the impact sound'"
-                ></i></p>
-                <input class="imageSoundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.throws[current_item].volume">
+  <div>
+    <h2>Edit Item</h2>
+    <span class="btn btn-red back-btn" @click="setSection('EventList')">Back</span>
+    <div id="imageDetails" class="body-panel">
+
+      <div id="imageDetailsInner">
+        <img class="imageImage" :src="'file://'+getThrowsPath(live_game_data.throws[current_item].location)">
+        <h3>{{ live_game_data.throws[current_item].location }}</h3>
+        <button class="btn btn-blue add-btn" @click="testCustomItem(current_item)">Test Item</button>
+        <hr>
+
+        <div id="imageSettings">
+          <div id="imageSettings1">
+            <div class="imageDetailsShadow">
+              <div class="imageDetailsInner">
+                <div class="settingsTable">
+                  <p>Scale <i class="fa fa-info-circle"
+                              v-b-tooltip.hover.left="'The relative size of the object compared to the input image'"
+                  ></i></p>
+                  <input type="number" class="imageScale" min="0" step="0.1" v-model="live_game_data.throws[current_item].scale">
+                  <p>Weight <i class="fa fa-info-circle"
+                               v-b-tooltip.hover.left="'This determines how much force is applied to the vTube model on impact'"
+                  ></i></p>
+                  <input type="range" class="imageWeight" min="0" max="1" step="0.1" v-model="live_game_data.throws[current_item].weight">
+                  <p>Volume <i class="fa fa-info-circle"
+                               v-b-tooltip.hover.left="'The volume of the impact sound'"
+                  ></i></p>
+                  <input class="imageSoundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.throws[current_item].volume">
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div id="imageSettings2">
-          <div class="imageDetailsShadow">
-            <div class="imageDetailsInner">
-              <div class="settingsTable">
-                <p>Sound</p>
-                <select class="imageSoundName" v-model="live_game_data.throws[current_item].sound">
-                  <option value="">(Use default sounds)</option>
-                  <option v-for="(bonk_impact, key) in live_game_data.impacts" :value="bonk_impact.location">{{ bonk_impact.location }}</option>
-                </select>
+          <div id="imageSettings2">
+            <div class="imageDetailsShadow">
+              <div class="imageDetailsInner">
+                <div class="settingsTable">
+                  <p>Sound</p>
+                  <select class="imageSoundName" v-model="live_game_data.throws[current_item].sound">
+                    <option value="">(Use default sounds)</option>
+                    <option v-for="(bonk_impact, key) in live_game_data.impacts" :value="bonk_impact.location">{{ bonk_impact.location }}</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>

@@ -1,41 +1,42 @@
 <template>
-  <div id="bonkImagesCustom" >
-    <span class="windowCorner"></span>
-    <span class="windowBack" @click="setSection('BonkForm')">BACK</span>
-    <div id="imageTableCustom" class="imageTable">
-      <div class="selectAll">
-        <div>
-          <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
-          <label class="checkbox">
-            <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
-            <div class="checkHover"></div>
-            <img src="ui/checkmark.png" class="checkmark">
-          </label>
-        </div>
-      </div>
+  <div>
+    <h2>Select Items for Bonk</h2>
+    <span class="btn btn-red back-btn" @click="setSection('BonkForm')">Back</span>
+    <div id="bonkImagesCustom" class="body-panel">
+      <h3>Bonk Items</h3>
       <input id="loadImageCustom" type="file" ref="file" accept="image/*" multiple hidden @change="handleNewFiles">
-      <div id="newImageCustom" class="new row" @click="$refs.file.click()">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage" src="ui/add.png"></img>
-            <p class="imageLabel">ADD IMAGES</p>
-            <div class="imageRowHover"></div>
+      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Images</button>
+      <hr>
+      <div id="imageTableCustom" class="imageTable">
+
+
+          <div class="selectAll">
+            <div>
+              <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
+              <label class="checkbox">
+                <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+            </div>
           </div>
-        </div>
-      </div>
-      <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRowCustom" class="row imageRow" :key="'bi_'+bonk_item.location">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <label class="checkbox">
-              <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
-              <div class="checkHover"></div>
-              <img src="ui/checkmark.png" class="checkmark">
-            </label>
-            <img class="imageImage" :src="'file://'+getThrowsPath(bonk_item.location)"></img>
-            <p class="imageLabel" :title="bonk_item.location">{{ bonk_item.location }}</p>
-            <div class="imageRowHover"></div>
+
+          <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRowCustom" class="row imageRow" :key="'bi_'+bonk_item.location">
+            <div class="imageRowShadow">
+              <div class="imageRowInner">
+                <label class="checkbox">
+                  <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
+                  <div class="checkHover"></div>
+                  <img src="ui/checkmark.png" class="checkmark">
+                </label>
+                <img class="imageImage" :src="'file://'+getThrowsPath(bonk_item.location)"></img>
+                <p class="imageLabel" :title="bonk_item.location">{{ bonk_item.location }}</p>
+                <div class="imageRowHover"></div>
+              </div>
+            </div>
           </div>
-        </div>
+
+
       </div>
     </div>
   </div>

@@ -1,8 +1,8 @@
 <template>
-  <div id="mainBody" class="calibration">
-    <div id="wideWindow">
-      <div id="wideWindowInner">
-        <span class="tab firstTab selectedTab">Calibration</span>
+  <div id="mainBody" class="calibration body-panel">
+
+        <h3>Calibration</h3>
+        <hr>
         <div id="statusWindow">
           <h2 id="status">{{ app_status.title }}</h2>
           <div id="statusDesc" v-html="app_status.description"></div>
@@ -23,8 +23,7 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+
 
   </div>
 </template>

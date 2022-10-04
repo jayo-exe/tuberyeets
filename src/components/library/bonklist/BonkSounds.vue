@@ -1,39 +1,37 @@
 <template>
-  <div id="bonkSoundsCustom">
-    <span class="windowCorner"></span>
-    <span class="windowBack" @click="setSection('BonkForm')">BACK</span>
-    <div id="soundTableCustom" class="imageTable">
-      <div class="selectAll">
-        <div>
-          <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
-          <label class="checkbox">
-            <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
-            <div class="checkHover"></div>
-            <img src="ui/checkmark.png" class="checkmark">
-          </label>
-        </div>
-      </div>
+  <div>
+    <h2>Select Impact Sounds for Bonk</h2>
+    <span class="btn btn-red back-btn" @click="setSection('BonkForm')">Back</span>
+
+    <div id="bonkSoundsCustom" class="body-panel">
+      <h3>Impact Sounds</h3>
       <input id="loadSoundCustom" ref="file" type="file" accept="audio/*" multiple hidden @change="handleNewFiles">
-      <div id="newSoundCustom" class="new row" @click="$refs.file.click()">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
-            <img class="imageImage" src="ui/add.png"></img>
-            <p class="imageLabel">ADD SOUNDS</p>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
-      </div>
-      <div v-for="(bonk_impact, key) in live_game_data.impacts" id="soundRowCustom" class="row" :key="'bs_'+key">
-        <div class="imageRowShadow">
-          <div class="imageRowInner">
+      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
+      <hr>
+      <div id="soundTableCustom" class="imageTable">
+        <div class="selectAll">
+          <div>
+            <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
             <label class="checkbox">
-              <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
+              <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
               <div class="checkHover"></div>
               <img src="ui/checkmark.png" class="checkmark">
             </label>
-            <label class="cogwheel"></label>
-            <p class="imageLabel":title="bonk_impact.location">{{ bonk_impact.location }}</p>
-            <div class="imageRowHover"></div>
+          </div>
+        </div>
+
+        <div v-for="(bonk_impact, key) in live_game_data.impacts" id="soundRowCustom" class="row" :key="'bs_'+key">
+          <div class="imageRowShadow">
+            <div class="imageRowInner">
+              <label class="checkbox">
+                <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
+                <div class="checkHover"></div>
+                <img src="ui/checkmark.png" class="checkmark">
+              </label>
+              <label class="cogwheel"></label>
+              <p class="imageLabel":title="bonk_impact.location">{{ bonk_impact.location }}</p>
+              <div class="imageRowHover"></div>
+            </div>
           </div>
         </div>
       </div>
