@@ -11,6 +11,7 @@ import GameDataHelper from './gameDataHelper';
 import VtubeStudioAgent from './vtubeStudioAgent';
 import TimedEffectAgent from './timedEffectAgent';
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const { autoUpdater } = require('electron-updater');
 
 console.log(app.isPackaged);
 // Scheme must be registered before the app is ready
@@ -28,6 +29,7 @@ async function createWindow() {
     minWidth: 1200,
     minHeight: 720,
     icon: path.resolve(__static, 'icon.ico'),
+    title: "'TuberYeets v" + app.getVersion(),
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -83,6 +85,10 @@ async function createWindow() {
 
   mainWindow.on("close", () => {
     exiting = true;
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    autoUpdater.checkForUpdatesAndNotify();
   });
 }
 
@@ -143,6 +149,14 @@ if (isDevelopment) {
     })
   }
 }
+
+
+autoUpdater.on('update-available', () => {
+  mainWindow.webContents.send('UPDATE_AVAILABLE');
+});
+autoUpdater.on('update-downloaded', () => {
+  mainWindow.webContents.send('UPDATE_DOWNLOADED');
+});
 
 var crowdControlConnected = false;
 
@@ -404,6 +418,10 @@ ipcMain.on('GET_VTS_HOTKEYS', async (event, payload) => {
 ipcMain.on('OPEN_GAME_FOLDER', async (event, payload) => {
   console.log('got Folder Open request');
   shell.openPath(gameDataFolder);
+});
+
+ipcMain.on('RESTART', () => {
+  autoUpdater.quitAndInstall();
 });
 
 function checkFilename(game_id, folder, file_name) {

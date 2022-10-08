@@ -9,6 +9,15 @@ module.exports = defineConfig({
                 "extraFiles": [
                     "public/bonker"
                 ],
+                appId: "ca.jayo.TuberYeets",
+                publish: [
+                    {
+                        provider: "github",
+                        owner: "jayo-exe",
+                        repo: "tuberyeets",
+                        releaseType: 'draft'
+                    }
+                ],
                 nsis: {
                     allowToChangeInstallationDirectory: true,
                     oneClick: false

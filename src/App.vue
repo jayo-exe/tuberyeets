@@ -86,6 +86,14 @@
           {{ current_status.title }}
         </span>
       </span>
+      <div class="update-notification" style="float:right;">
+          <span v-if="update_available" class="footer-update" >
+            Update Available! Downloading...
+          </span>
+        <span v-if="update_downloaded" class="footer-update">
+            Update Downloaded <a href="#" @click="restartAndInstall">Restart and Install</a>
+          </span>
+      </div>
       <div style="float:right;">
         <div class="main-status-icons">
           <i class="fa-solid fa-gamepad"
@@ -97,6 +105,7 @@
              v-b-tooltip.hover.left="'Settings file: ' + autoSaveStatus"
           ></i>
         </div>
+
       </div>
     </div>
   </div>
@@ -121,6 +130,8 @@ export default {
         param: null,
       },
       game_data_loading: false,
+      update_available: false,
+      update_downloaded: false,
       current_game: {
 
       },
@@ -320,6 +331,9 @@ export default {
     },
     openGameFolder() {
       window.ipc.send("OPEN_GAME_FOLDER");
+    },
+    restartAndInstall() {
+      window.ipc.send('RESTART');
     }
   },
 
@@ -445,6 +459,12 @@ export default {
     });
     window.ipc.on('STATUS', (payload) => {
       this.setStatus(payload);
+    });
+    window.ipc.on('UPDATE_AVAILABLE', (payload) => {
+      this.update_available = true;
+    });
+    window.ipc.on('UPDATE_DOWNLOADED', (payload) => {
+      this.update_downloaded = true;
     });
     this.getUserDataPath();
     this.loadData();
