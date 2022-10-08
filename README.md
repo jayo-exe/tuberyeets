@@ -5,7 +5,7 @@
 
 ### Configuration
 Once you've installed and run the application for the first time: 
-- go to the "Settings" page, scroll down to "Advanced"
+- go to the "Settings" page, scroll down to "Connection Details"
 - Update the __Crowd Control Channel__ to your Twitch username
 - Update the __VTube Studio Port__ to match your existing setup
 - If you're having trouble connecting to the TuberYeets overlay, try changing __Browser Source Port__, as the default port may be used by some other application
@@ -36,7 +36,7 @@ npm run electron:build
 
 ## Known Issues:
 - Hotkeys trigered by effects can sync with the "Start" and "Stop" on times effects, but not the "Pause" And "Resume".  This is to avoid an issue with the VTS API where certain hotkeys will fail to engage if they are triggered too soon after another hotkey.
-- Items in the "Select Game" dropdown do not list their platform (NES, SNES, PC, etc).  This can be confusing, especially because there are two "Terraria" entries
+- Items in the "Select Game" dropdown do not list their platform (NES, SNES, PC, etc).  This can be confusingin some situations where games are listed under multiple platforms (i.e. Terraria, Minecraft)
 - Effects that use the same VTS hotkey can cause the hotkey to pre-maturely end (when the first effect ends, it activates the second hotkey to return things to "normal", even if there are other effects still happeneing that use the same hotkey.
 
 ## Possible upcoming features:
