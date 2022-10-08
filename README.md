@@ -54,5 +54,5 @@ npm run electron:build
 - A distinct TuberYeets icon
 
 ## Contributing
-- If you'd like to contribute to the development of TuberYeets, I'd love your help! Join the TuberYeets discord at [discord link to come] if you'd like to collaborate and share your ideas
+- If you'd like to contribute to the development of TuberYeets, I'd love your help! Join the TuberYeets discord at https://discord.gg/jCbKeWDrYt if you'd like to collaborate and share your ideas
 - If you're looking to develop more independently (or make a better, cooler version of this application), You're free to do so!  I've released this project under the MIT license so you aren't very restricted in how you use this code.
