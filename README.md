@@ -42,15 +42,17 @@ npm run electron:build
 ## Possible upcoming features:
 - Update system, so users won't need to uninstall and re-install the application when there is a new version
 - More direct integration with the VTS API, to directly control things like changing the currently-loaded model, handling movement, scaling, placemoent of Workshop items
+- Improved Trigger Actions, to allow users to create complex sets of TubetYeets/VTS actions in response to a Crowd Control effect
 - Support for Bidwar-driven effects
 - Support for displaying effects when Crowd Cowntrol Coins are purchased
 - Support for custom Crowd Control Game Paks
-- In-app deletion of assets (right now TuberYeets does not delete any images/sounds from the relevant folder.  For this first release I wasn't comfortable with deleting arbitrary files listing in the JSON file, this feels like a security issue.
+- In-app deletion of assets (right now TuberYeets does not delete any images/sounds from the relevant folder.  For this first release I wasn't comfortable with deleting arbitrary files listed in the JSON file.
 - Hotkey concurrency to allow VTS hotkeys to track with pause/resume, and more gracefully handle multiple effects using the same hotkeys.
 - More intuitive TuberYeets Effeck Pack sharing, importing, and exporting
 - Additional animation types for on-screen items (Rather than just throwing them towards or away from the model)
+- Integration with Twitch to allow triggers based on cheers or Channel Point redemptions
 - A distinct TuberYeets icon
 
 ## Contributing
-- If you'd like to contribute to the development of TuberYeet, I'd love your help! Join the JayoSPACE discord at [discord link] if you'd like to collaborate and share your ideas
+- If you'd like to contribute to the development of TuberYeets, I'd love your help! Join the TuberYeets discord at [discord link to come] if you'd like to collaborate and share your ideas
 - If you're looking to develop more independently (or make a better, cooler version of this application), You're free to do so!  I've released this project under the MIT license so you aren't very restricted in how you use this code.
