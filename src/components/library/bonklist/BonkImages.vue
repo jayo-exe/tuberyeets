@@ -10,33 +10,29 @@
       <div id="imageTableCustom" class="imageTable">
 
 
-          <div class="selectAll">
-            <div>
-              <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
-              <label class="checkbox">
-                <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
-              </label>
-            </div>
+        <div class="selectAll">
+          <div>
+            <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
+            <label class="checkbox">
+              <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
+              <div class="checkHover"></div>
+              <img src="ui/checkmark.png" class="checkmark">
+            </label>
           </div>
+        </div>
 
-          <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRowCustom" class="row imageRow" :key="'bi_'+bonk_item.location">
-            <div class="imageRowShadow">
-              <div class="imageRowInner">
-                <label class="checkbox">
-                  <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
-                  <div class="checkHover"></div>
-                  <img src="ui/checkmark.png" class="checkmark">
-                </label>
-                <img class="imageImage" :src="'file://'+getThrowsPath(bonk_item.location)"></img>
-                <p class="imageLabel" :title="bonk_item.location">{{ bonk_item.location }}</p>
-                <div class="imageRowHover"></div>
-              </div>
-            </div>
+        <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRowCustom" class="row imageRow" :key="'bi_'+bonk_item.location">
+          <div class="imageRowInner">
+            <label class="checkbox">
+              <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
+              <div class="checkHover"></div>
+              <img src="ui/checkmark.png" class="checkmark">
+            </label>
+            <img class="imageImage" :src="'file://'+getThrowsPath(bonk_item.location)"></img>
+            <p class="imageLabel" :title="bonk_item.location">{{ bonk_item.location }}</p>
+            <div class="imageRowHover"></div>
           </div>
-
-
+        </div>
       </div>
     </div>
   </div>

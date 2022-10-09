@@ -20,27 +20,25 @@
         </div>
 
         <div v-for="(bonk_decal, key) in live_game_data.customBonks[current_bonk].impactDecals" class="row impactDecalRow" :key="'bd_'+bonk_decal.location">
-          <div class="imageRowShadow">
-            <div class="imageRowInner">
-              <label class="checkbox">
-                <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
-              </label>
-              <img class="imageImage" :src="'file://'+getDecalsPath(bonk_decal.location)"></img>
-              <p class="imageLabel" :title="bonk_decal.location">{{ bonk_decal.location }}</p>
-              <div class="decalSettings">
-                <img src="ui/duration.png" title="Duration (s)">
-                <input type="number" class="decalDuration" min="0" v-model="live_game_data.customBonks[current_bonk].impactDecals[key].duration">
-                <img src="ui/scale.png" title="Scale">
-                <input type="number" class="decalScale" min="0" v-model="live_game_data.customBonks[current_bonk].impactDecals[key].scale">
-              </div>
-              <label class="delete">
-                <button class="imageRemove" @click="removeItem(key)"></button>
-                <img src="ui/x.png" class="checkmark"></img>
-              </label>
-              <div class="imageRowHover"></div>
+          <div class="imageRowInner">
+            <label class="checkbox">
+              <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
+              <div class="checkHover"></div>
+              <img src="ui/checkmark.png" class="checkmark">
+            </label>
+            <img class="imageImage" :src="'file://'+getDecalsPath(bonk_decal.location)"></img>
+            <p class="imageLabel" :title="bonk_decal.location">{{ bonk_decal.location }}</p>
+            <div class="decalSettings">
+              <img src="ui/duration.png" title="Duration (s)">
+              <input type="number" class="decalDuration" min="0" v-model="live_game_data.customBonks[current_bonk].impactDecals[key].duration">
+              <img src="ui/scale.png" title="Scale">
+              <input type="number" class="decalScale" min="0" v-model="live_game_data.customBonks[current_bonk].impactDecals[key].scale">
             </div>
+            <label class="delete">
+              <button class="imageRemove" @click="removeItem(key)"></button>
+              <img src="ui/x.png" class="checkmark"></img>
+            </label>
+            <div class="imageRowHover"></div>
           </div>
         </div>
       </div>

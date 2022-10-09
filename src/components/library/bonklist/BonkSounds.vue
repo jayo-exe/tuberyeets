@@ -21,17 +21,15 @@
         </div>
 
         <div v-for="(bonk_impact, key) in live_game_data.impacts" id="soundRowCustom" class="row" :key="'bs_'+key">
-          <div class="imageRowShadow">
-            <div class="imageRowInner">
-              <label class="checkbox">
-                <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
-              </label>
-              <label class="cogwheel"></label>
-              <p class="imageLabel":title="bonk_impact.location">{{ bonk_impact.location }}</p>
-              <div class="imageRowHover"></div>
-            </div>
+          <div class="imageRowInner">
+            <label class="checkbox">
+              <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
+              <div class="checkHover"></div>
+              <img src="ui/checkmark.png" class="checkmark">
+            </label>
+            <label class="cogwheel"></label>
+            <p class="imageLabel":title="bonk_impact.location">{{ bonk_impact.location }}</p>
+            <div class="imageRowHover"></div>
           </div>
         </div>
       </div>

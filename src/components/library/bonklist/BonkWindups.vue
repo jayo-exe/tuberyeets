@@ -20,21 +20,19 @@
         </div>
 
         <div id="windupSoundRow" v-for="(bonk_windup, key) in live_game_data.customBonks[current_bonk].windupSounds" class="row windupSoundRow" :key="'bw_'+key">
-          <div class="imageRowShadow">
-            <div class="imageRowInner">
-              <label class="checkbox">
-                <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
-              </label>
-              <p class="imageLabel" :title="bonk_windup.location">{{ bonk_windup.location }}</p>
-              <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.customBonks[current_bonk].windupSounds[key].volume">
-              <label class="delete">
-                <button class="imageRemove" @click="removeItem(key)"></button>
-                <img src="ui/x.png" class="checkmark"></img>
-              </label>
-              <div class="imageRowHover"></div>
-            </div>
+          <div class="imageRowInner">
+            <label class="checkbox">
+              <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
+              <div class="checkHover"></div>
+              <img src="ui/checkmark.png" class="checkmark">
+            </label>
+            <p class="imageLabel" :title="bonk_windup.location">{{ bonk_windup.location }}</p>
+            <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.customBonks[current_bonk].windupSounds[key].volume">
+            <label class="delete">
+              <button class="imageRemove" @click="removeItem(key)"></button>
+              <img src="ui/x.png" class="checkmark"></img>
+            </label>
+            <div class="imageRowHover"></div>
           </div>
         </div>
       </div>

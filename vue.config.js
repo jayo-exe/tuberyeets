@@ -20,7 +20,8 @@ module.exports = defineConfig({
                 ],
                 nsis: {
                     allowToChangeInstallationDirectory: true,
-                    oneClick: false
+                    oneClick: false,
+                    perMachine: false
                 }
             }
         }
