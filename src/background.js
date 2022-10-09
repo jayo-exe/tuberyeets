@@ -46,11 +46,12 @@ async function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools();
   } else {
     createProtocol('app')
     // Load the index.html when not in development
     mainWindow.loadURL('app://./index.html')
+    autoUpdater.checkForUpdatesAndNotify();
   }
 
   mainWindow.on("minimize", () => {
@@ -85,11 +86,6 @@ async function createWindow() {
 
   mainWindow.on("close", () => {
     exiting = true;
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    console.log('Checking for updates...');
-    autoUpdater.checkForUpdatesAndNotify();
   });
 }
 
