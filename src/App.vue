@@ -86,14 +86,6 @@
           {{ current_status.title }}
         </span>
       </span>
-      <div class="update-notification" style="float:right;">
-          <span v-if="update_available" class="footer-update" >
-            Update Available! Downloading...
-          </span>
-        <span v-if="update_downloaded" class="footer-update">
-            Update Downloaded <a href="#" @click="restartAndInstall">Restart and Install</a>
-          </span>
-      </div>
       <div style="float:right;">
         <div class="main-status-icons">
           <i class="fa-solid fa-gamepad"
@@ -106,6 +98,14 @@
           ></i>
         </div>
 
+      </div>
+      <div class="update-notification" style="float:right;">
+          <span v-if="update_available && !update_downloaded" class="footer-update" >
+            Update Available! Downloading...
+          </span>
+        <span v-if="update_downloaded" class="footer-update">
+            Update Downloaded <a href="#" @click="restartAndInstall">Restart and Install</a>
+          </span>
       </div>
     </div>
   </div>
