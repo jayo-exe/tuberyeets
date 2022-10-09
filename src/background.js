@@ -88,6 +88,7 @@ async function createWindow() {
   });
 
   mainWindow.once('ready-to-show', () => {
+    console.log('Checking for updates...');
     autoUpdater.checkForUpdatesAndNotify();
   });
 }
@@ -153,6 +154,7 @@ if (isDevelopment) {
 
 autoUpdater.on('update-available', () => {
   mainWindow.webContents.send('UPDATE_AVAILABLE');
+  console.log('Update is available!');
 });
 autoUpdater.on('update-downloaded', () => {
   mainWindow.webContents.send('UPDATE_DOWNLOADED');
@@ -418,6 +420,11 @@ ipcMain.on('GET_VTS_HOTKEYS', async (event, payload) => {
 ipcMain.on('OPEN_GAME_FOLDER', async (event, payload) => {
   console.log('got Folder Open request');
   shell.openPath(gameDataFolder);
+});
+
+ipcMain.on('CHECK_UPDATE', () => {
+  console.log('Checking for Updates...');
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 ipcMain.on('RESTART', () => {

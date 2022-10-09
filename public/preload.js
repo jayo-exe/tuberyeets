@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer, app} = require('electron');
 
 const validChannels = [
+    'CHECK_UPDATE',
     'UPDATE_AVAILABLE',
     'UPDATE_DOWNLOADED',
     'RESTART',

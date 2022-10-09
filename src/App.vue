@@ -332,6 +332,9 @@ export default {
     openGameFolder() {
       window.ipc.send("OPEN_GAME_FOLDER");
     },
+    checkForUpdate() {
+      window.ipc.send('RESTART');
+    },
     restartAndInstall() {
       window.ipc.send('RESTART');
     }
@@ -466,6 +469,7 @@ export default {
     window.ipc.on('UPDATE_DOWNLOADED', (payload) => {
       this.update_downloaded = true;
     });
+    this.checkForUpdate();
     this.getUserDataPath();
     this.loadData();
     this.getCrowdControlGames();
