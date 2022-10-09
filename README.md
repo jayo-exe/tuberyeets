@@ -36,11 +36,10 @@ npm run electron:build
 
 ## Known Issues:
 - Hotkeys trigered by effects can sync with the "Start" and "Stop" on times effects, but not the "Pause" And "Resume".  This is to avoid an issue with the VTS API where certain hotkeys will fail to engage if they are triggered too soon after another hotkey.
-- Items in the "Select Game" dropdown do not list their platform (NES, SNES, PC, etc).  This can be confusingin some situations where games are listed under multiple platforms (i.e. Terraria, Minecraft)
+- Items in the "Select Game" dropdown do not list their platform (NES, SNES, PC, etc).  This can be confusing in some situations where games are listed under multiple platforms (i.e. Terraria, Minecraft)
 - Effects that use the same VTS hotkey can cause the hotkey to pre-maturely end (when the first effect ends, it activates the second hotkey to return things to "normal", even if there are other effects still happeneing that use the same hotkey.
 
 ## Possible upcoming features:
-- Update system, so users won't need to uninstall and re-install the application when there is a new version
 - More direct integration with the VTS API, to directly control things like changing the currently-loaded model, handling movement, scaling, placemoent of Workshop items
 - Improved Trigger Actions, to allow users to create complex sets of TubetYeets/VTS actions in response to a Crowd Control effect
 - Support for Bidwar-driven effects
