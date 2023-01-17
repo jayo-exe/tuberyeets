@@ -18,7 +18,15 @@
 
         <p class="grid2">Crowd Control Effect</p>
         <select class="crowdControlEffect grid3" v-model="live_game_data.crowdControlEvents[current_event].crowdControlEffect" @change="updateCrowdControlEffect">
-          <option v-for="(effect, key) in app_game.items" :value="effect.bid" :key="'ccel'+key">{{ effect.name }}</option>
+          <template v-for="(effect_group, group_key) in app_game.items" >
+            <optgroup v-if="effect_group.hasOwnProperty('kind') && effect_group.kind == 2" :label="effect_group.name" :key="'ccelg'+group_key">
+              <option  v-for="(effect, key) in app_game.items" v-if="effect.hasOwnProperty('p') && effect.p == effect_group.bid" :value="effect.bid" :key="'ccel'+key">{{ effect.name }}</option>
+            </optgroup>
+          </template>
+          <optgroup label="Ungrouped">
+            <option  v-for="(effect, key) in app_game.items" v-if="!effect.hasOwnProperty('p') && !effect.hasOwnProperty('kind')" :value="effect.bid" :key="'ccel'+key">{{ effect.name }}</option>
+          </optgroup>
+
         </select>
       </div>
     </div>
