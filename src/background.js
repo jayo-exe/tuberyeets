@@ -8,12 +8,25 @@ import fs from 'fs';
 import { WebSocket } from 'ws';
 import { io } from "socket.io-client";
 import GameDataHelper from './gameDataHelper';
+import AppDataHelper from './appDataHelper';
 import VtubeStudioAgent from './vtubeStudioAgent';
 import TimedEffectAgent from './timedEffectAgent';
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
 
-console.log(app.isPackaged);
+const userDataPath = app.getPath('userData');
+const defaultGameDataPath = path.resolve(__static, 'data/defaultGameData.json');
+const defaultGameData = JSON.parse(fs.readFileSync(defaultGameDataPath, "utf8"));
+
+let bonkRoot = (app.isPackaged ? '../' : '')+'../public/bonker';
+let portsPath = path.resolve(__static, bonkRoot+'/ports.js');
+let bonkerPath = path.resolve(__static, bonkRoot+'/bonker.html');
+
+// Loading core data file
+let appData = new AppDataHelper(userDataPath);
+appData.loadData();
+appData.setFieldData('bonkerPath', bonkerPath);
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
@@ -55,7 +68,7 @@ async function createWindow() {
   }
 
   mainWindow.on("minimize", () => {
-    if (data.minimizeToTray)
+    if (appData.getFieldData('minimizeToTray'))
     {
       setTray();
       mainWindow.setSkipTaskbar(true);
@@ -135,8 +148,8 @@ app.on('ready', async () => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
-    process.on('message', (data) => {
-      if (data === 'graceful-exit') {
+    process.on('message', (messageData) => {
+      if (messageData === 'graceful-exit') {
         app.quit()
       }
     })
@@ -192,46 +205,9 @@ setInterval(() => {
 // Data Management
 // ----------------
 
-// Loading data from file
-// If no data exists, create data from default data file
-const userDataPath = app.getPath('userData');
-const dataPath = path.join(userDataPath, 'tuberyeets-data.json');
-const defaultDataPath = path.resolve(__static, 'data/defaultData.json');
-const defaultGameDataPath = path.resolve(__static, 'data/defaultGameData.json');
-let portsPath = path.resolve(__static, '../public/bonker/ports.js');
-let bonkerPath = path.resolve(__static, '../public/bonker/bonker.html');
-if(app.isPackaged) {
-  console.log('app is packaged!');
-  portsPath = path.resolve(__static, '../../public/bonker/ports.js');
-  bonkerPath = path.resolve(__static, '../../public/bonker/bonker.html');
-}
-
-const defaultData = JSON.parse(fs.readFileSync(defaultDataPath, "utf8"));
-const defaultGameData = JSON.parse(fs.readFileSync(defaultGameDataPath, "utf8"));
-
-if (!fs.existsSync(dataPath))
-  fs.writeFileSync(dataPath, JSON.stringify(defaultData));
-  var data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-
-// Get requested data, waiting for any current writes to finish first
-async function getData(field)
-{
-  var fdata;
-  // An error should only be thrown if the other process is in the middle of writing to the file.
-  // If so, it should finish shortly and this loop will exit.
-  while (fdata == null)
-  {
-    try {
-      fdata = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-    } catch {}
-  }
-  fdata = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-  return fdata[field];
-}
-
 function setPorts() {
   var old_port_data = fs.readFileSync(portsPath, "utf8");
-  var new_port_data = "const ports = [ " + data.portThrower + ", " + data.portVTubeStudio + " ];"
+  var new_port_data = "const ports = [ " + appData.getFieldData('portThrower') + ", " + appData.getFieldData('portVTubeStudio') + " ];"
   if(old_port_data !== new_port_data) {
     fs.writeFileSync(portsPath, new_port_data);
   }
@@ -259,28 +235,27 @@ function checkGameFolder(game_id) {
   return gamePath;
 }
 
-ipcMain.on('LOAD_DATA', (event, payload) => {
-  var fdata;
-  try {
-    fdata = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-    fdata.sys_sep = path.sep;
-    data = fdata;
-    data.bonkerPath = bonkerPath;
-    setPorts();
-  } catch {}
-  event.reply('LOAD_DATA', fdata);
-});
 ipcMain.on('GET_DATA_PATH', (event, payload) => {
   event.reply('GET_DATA_PATH', userDataPath);
 });
+
+ipcMain.on('LOAD_DATA', (event, payload) => {
+  try {
+    appData.loadData();
+    appData.setFieldData('bonkerPath', bonkerPath);
+    setPorts();
+  } catch {}
+  event.reply('LOAD_DATA', appData.getAllData());
+});
+
 ipcMain.on('SAVE_DATA', (event, payload) => {
   console.log('got save request');
   var save_success;
   try {
-    fs.writeFileSync(dataPath, JSON.stringify(payload));
-    data = payload;
+    appData.setAllData(payload);
+    appData.saveData();
     setPorts();
-    vts.setPort(payload.portVTubeStudio);
+    vts.setPort(appData.getFieldData('portVTubeStudio'));
     save_success = true;
   } catch {}
   console.log('sending save reply');
@@ -290,6 +265,7 @@ ipcMain.on('SAVE_DATA', (event, payload) => {
 var crowdControlGame = 0;
 var gameDataFolder = '';
 var gdh = new GameDataHelper();
+
 ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
   console.log('Loading game-specific data...');
   var game_id = payload;
@@ -340,8 +316,8 @@ ipcMain.on("SET_FIELD", (_, arg) =>
 
 function setData(field, value, external)
 {
-  data[field] = value;
-  fs.writeFileSync(dataPath, JSON.stringify(data));
+  appData.setFieldData(field, value);
+  appData.saveData();
   if(field == "portVTubeStudio") {
     vts.setPort(value);
   }
@@ -561,7 +537,7 @@ function createServer()
 {
   portInUse = false;
 
-  wss = new WebSocket.Server({ port: data.portThrower });
+  wss = new WebSocket.Server({ port: appData.getFieldData('portThrower') });
 
   wss.on("error", () => {
     portInUse = true;
@@ -649,8 +625,8 @@ function createCrowdControlConnection()
 
   cc_socket.on("connect", () => {
     console.log("CC Socket: Connected to Crowd Control!! Socket ID: " + cc_socket.id);
-    console.log("CC Socket: Getting events from channel " + data.cc_channel);
-    cc_socket.emit("events", data.cc_channel);
+    console.log("CC Socket: Getting events from channel " + appData.getFieldData('cc_channel'));
+    cc_socket.emit("events", appData.getFieldData('cc_channel'));
     crowdControlConnected = true;
   });
 
@@ -670,7 +646,7 @@ var effectQueue = {};
 // ----------------
 // VTube Studio Connection
 // ----------------
-const vts = new VtubeStudioAgent(data.portVTubeStudio);
+const vts = new VtubeStudioAgent(appData.getFieldData('portVTubeStudio'));
 var lastCrowdControlEventId = '';
 function checkCrowdControlEventInitial(effect_object) {
   console.log(effect_object);
@@ -680,7 +656,7 @@ function checkCrowdControlEventInitial(effect_object) {
     var targeted = false;
     if(effect_object.hasOwnProperty('targets')) {
       effect_object.targets.forEach((target) => {
-        if (target.name === data.cc_channel.toLowerCase()) {
+        if (target.name === appData.getFieldData('cc_channel').toLowerCase()) {
           targeted = true;
         }
       });
@@ -737,7 +713,7 @@ function checkCrowdControlEventUpdate(effect_object) {
           } else {
             console.log(`Handling Timed effect: "${effect_object.id}"`);
             if(matched_handler) {
-              current_effect.agent = new TimedEffectAgent(data,vts,gdh,gameDataFolder,socket,current_effect,matched_handler);
+              current_effect.agent = new TimedEffectAgent(appData.getAllData(),vts,gdh,gameDataFolder,socket,current_effect,matched_handler);
             }
           }
           break;
@@ -745,7 +721,7 @@ function checkCrowdControlEventUpdate(effect_object) {
           if(matched_handler) {
             if (!current_effect.hasOwnProperty('agent')) {
               //This is mostly to avoid errors from weirdness in the CC test effect
-              current_effect.agent = new TimedEffectAgent(data, vts, gdh, gameDataFolder, socket, current_effect, matched_handler);
+              current_effect.agent = new TimedEffectAgent(appData.getAllData(), vts, gdh, gameDataFolder, socket, current_effect, matched_handler);
             }
             try {
               current_effect.agent.start();
@@ -899,7 +875,7 @@ function calibrate()
 
 // Test Events
 ipcMain.on("TEST_SINGLE", () => single());
-ipcMain.on("TEST_BARRAGE", () => barrage(data.barrageCount));
+ipcMain.on("TEST_BARRAGE", () => barrage(appData.getFieldData('barrageCount')));
 // Testing a specific item
 ipcMain.on("TEST_CUSTOM_ITEM", (event, message) => testItem(event, message));
 ipcMain.on("TEST_CUSTOM_BONK", (_, message) => { custom(message); });
@@ -925,7 +901,7 @@ function testItem(_, item)
           "scale": item.scale,
           "sound": item.sound == null && soundIndex != -1 ? gdh.gameData.impacts[soundIndex].location : item.sound,
           "volume": item.volume,
-          "data": data,
+          "data": appData.getAllData(),
           "game_data": gdh.gameData,
           "game_data_path": gameDataFolder
 
@@ -949,7 +925,7 @@ function single()
           "scale": imageWeightScaleSoundVolume.scale,
           "sound": imageWeightScaleSoundVolume.sound,
           "volume": imageWeightScaleSoundVolume.volume,
-          "data": data,
+          "data": appData.getAllData(),
           "game_data": gdh.gameData,
           "game_data_path": gameDataFolder
         }
@@ -979,7 +955,7 @@ function barrage(customAmount)
       "scale": scales,
       "sound": sounds,
       "volume": volumes,
-      "data": data,
+      "data": appData.getAllData(),
       "game_data": gdh.gameData,
       "game_data_path": gameDataFolder
     }
@@ -1015,7 +991,7 @@ function custom(customName,customCount=null)
       "volume": volumes,
       "impactDecal": impactDecals,
       "windupSound": windupSounds,
-      "data": data,
+      "data": appData.getAllData(),
       "game_data": gdh.gameData,
       "game_data_path": gameDataFolder
     }
