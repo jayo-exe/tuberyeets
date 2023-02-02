@@ -81,7 +81,7 @@ export default {
     testCustomItem(item_index) {
       console.log('Testing custom item: ' + item_index);
       let item = this.live_game_data.throws[item_index];
-      window.ipc.send('TEST_CUSTOM_ITEM', item);
+      window.ipc.send('TEST_CUSTOM_ITEM', item.location);
     },
   },
   mounted() {

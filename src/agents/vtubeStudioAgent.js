@@ -75,7 +75,6 @@ module.exports = class VtubeStudioAgent {
     agentRegistered(agentRegistry) {
         console.log("[VTSAgent] running agentRegistered()...");
         this.agentRegistry = agentRegistry;
-        this.apiOptions.port = this.agentRegistry.getAgentFieldData(this,'port');
         if(this.agentRegistry.getAgentFieldData(this,'enabled')) {
             this.agentEnabled();
         }
@@ -83,6 +82,7 @@ module.exports = class VtubeStudioAgent {
 
     agentEnabled() {
         console.log("[VTSAgent] Agent Enabled.");
+        this.apiOptions.port = this.agentRegistry.getAgentFieldData(this,'port');
         this.apiClient = new ApiClient(this.apiOptions);
         this.apiClient.on("connect", () => {
             console.log("[VTSAgent] Connected to VTube Studio!");

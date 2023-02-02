@@ -11,6 +11,7 @@ import GameDataHelper from './gameDataHelper';
 import AppDataHelper from './appDataHelper';
 import AgentRegistry from './agentRegistry';
 import VtubeStudioAgent from './agents/vtubeStudioAgent';
+import OverlayAgent from './agents/overlayAgent';
 import TimedEffectAgent from './timedEffectAgent';
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
@@ -28,10 +29,15 @@ let appData = new AppDataHelper(userDataPath);
 appData.loadData();
 appData.setFieldData('bonkerPath', bonkerPath);
 
+let crowdControlGame = 0;
+let gameDataFolder = '';
+let gdh = new GameDataHelper();
+
 //load connections
-let agentRegistry = new AgentRegistry(appData);
+let agentRegistry = new AgentRegistry(appData,gdh);
 let agents = [
-  new VtubeStudioAgent
+  new VtubeStudioAgent,
+  new OverlayAgent
 ];
 
 
@@ -186,27 +192,26 @@ var crowdControlConnected = false;
 var exiting = false;
 setInterval(() => {
   var vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
+  var overlayStatus = agentRegistry.getAgentStatus('overlay');
+  var calibrateStage = agentRegistry.getAgent('overlay').getCalibrateStage();
   if (mainWindow != null)
   {
     var status = 0;
-    if (portInUse)
-      status = 9;
-    else if (crowdControlConnected === false)
+    if (crowdControlConnected === false)
       status = 1;
-    else if (vtsStatus !== 'connected')
+    else if (vtsStatus !== 'connected' && vtsStatus !== 'disabled')
       status = 8;
-    else if (socket == null)
+    else if (overlayStatus !== 'waiting-for-vts' && overlayStatus !== 'connected' && overlayStatus !== 'disabled')
       status = 2;
     else if (calibrateStage === 0 || calibrateStage === 1)
       status = 3;
     else if (calibrateStage === 2 || calibrateStage === 3)
       status = 4;
-    else if (connectedBonkerVTube === false)
+    else if (overlayStatus == 'waiting-for-vts')
       status = 5;
     else if (calibrateStage === -1)
       status = 7;
     if (!exiting) {
-
       mainWindow.webContents.send("STATUS", status);
     }
 
@@ -214,7 +219,6 @@ setInterval(() => {
 }, 500);
 
 setInterval(() => {
-  var vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
   if (mainWindow != null && !exiting)
   {
       mainWindow.webContents.send("AGENT_STATUS", agentRegistry.getAllAgentStatus());
@@ -281,10 +285,6 @@ ipcMain.on('SAVE_DATA', (event, payload) => {
   console.log('sending save reply');
   event.reply('SAVE_DATA', save_success);
 });
-
-var crowdControlGame = 0;
-var gameDataFolder = '';
-var gdh = new GameDataHelper();
 
 ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
   console.log('Loading game-specific data...');
@@ -545,89 +545,11 @@ function uploadWindup(game_id, file_path, file_name, current_bonk)
   return return_value;
 
 }
-// ----------------
-// Websocket Server
-// ----------------
-
-var wss, portInUse = false, socket, cc_socket, vtube_socket, connectedBonkerVTube = false;
-
-createServer();
-
-function createServer()
-{
-  portInUse = false;
-
-  wss = new WebSocket.Server({ port: appData.getFieldData('portThrower') });
-
-  wss.on("error", () => {
-    portInUse = true;
-    // Retry server creation after 3 seconds
-    setTimeout(() => {
-      createServer();
-    }, 3000);
-  });
-
-  if (!portInUse)
-  {
-    wss.on("connection", function connection(ws)
-    {
-      portInUse = false;
-      socket = ws;
-
-      socket.on("message", function message(request)
-      {
-        request = JSON.parse(request);
-
-        if (request.type == "calibrating")
-        {
-          switch (request.stage)
-          {
-            case "min":
-              if (request.size > -99)
-              {
-                calibrateStage = 0;
-                calibrate();
-              }
-              else
-              {
-                setData(request.modelID + "Min", [ request.positionX, request.positionY ], false);
-                calibrateStage = 2;
-                calibrate();
-              }
-              break;
-            case "max":
-              if (request.size < 99)
-              {
-                calibrateStage = 2;
-                calibrate();
-              }
-              else
-              {
-                setData(request.modelID + "Max", [ request.positionX, request.positionY ], false);
-                calibrateStage = 4;
-                calibrate();
-              }
-              break;
-          }
-        }
-        else if (request.type == "status")
-          connectedBonkerVTube = request.connectedBonkerVTube;
-        else if (request.type == "status")
-          connectedBonkerVTube = request.connectedBonkerVTube;
-      });
-
-      ws.on("close", function message()
-      {
-        socket = null;
-        calibrateStage = -2;
-      });
-    });
-  }
-}
 
 // ----------------
 // Crowd Control Connection
 // ----------------
+let cc_socket = null;
 createCrowdControlConnection();
 function createCrowdControlConnection()
 {
@@ -853,173 +775,48 @@ ipcMain.on("CALIBRATE_START", () => startCalibrate());
 ipcMain.on("CALIBRATE_NEXT", () => nextCalibrate());
 ipcMain.on("CALIBRATE_CANCEL", () => cancelCalibrate());
 
-var calibrateStage = -2;
 function startCalibrate()
 {
-  console.log('Starting Calibration');
-  if (socket != null && connectedBonkerVTube)
-  {
-    calibrateStage = -1;
-    calibrate();
+  if(agentRegistry.getAgentStatus('vtubestudio') == 'connected' && agentRegistry.getAgentStatus('overlay') == 'connected') {
+    return agentRegistry.getAgent('overlay').startCalibration();
   }
+
 }
 
 function nextCalibrate()
 {
-  console.log('Proceeding Calibration');
-  if (socket != null && connectedBonkerVTube)
-  {
-    calibrateStage++;
-    calibrate();
+  if(agentRegistry.getAgentStatus('vtubestudio') == 'connected' && agentRegistry.getAgentStatus('overlay') == 'connected') {
+    return agentRegistry.getAgent('overlay').nextCalibration();
   }
 }
 
 function cancelCalibrate()
 {
-  console.log('Cancelling Calibration');
-  if (socket != null && connectedBonkerVTube)
-  {
-    calibrateStage = 4;
-    calibrate();
+  if(agentRegistry.getAgentStatus('vtubestudio') == 'connected' && agentRegistry.getAgentStatus('overlay') == 'connected') {
+    return agentRegistry.getAgent('overlay').cancelCalibration();
   }
-}
-
-function calibrate()
-{
-  var request = {
-    "type": "calibrating",
-    "stage": calibrateStage
-  }
-  socket.send(JSON.stringify(request));
 }
 
 // -----
 // Bonks
 // -----
 
-// Test Events
-ipcMain.on("TEST_SINGLE", () => single());
-ipcMain.on("TEST_BARRAGE", () => barrage(appData.getFieldData('barrageCount')));
 // Testing a specific item
 ipcMain.on("TEST_CUSTOM_ITEM", (event, message) => testItem(event, message));
 ipcMain.on("TEST_CUSTOM_BONK", (_, message) => { custom(message); });
 
 function testItem(_, item)
 {
-  console.log("Testing Item");
-  if (socket != null)
-  {
-    var soundIndex = -1;
-    if (gdh.hasActiveSound())
-    {
-      do {
-        soundIndex = Math.floor(Math.random() * gdh.gameData.impacts.length);
-      } while (!gdh.gameData.impacts[soundIndex].enabled);
-    }
-
-    var request =
-        {
-          "type": "single",
-          "image": item.location,
-          "weight": item.weight,
-          "scale": item.scale,
-          "sound": item.sound == null && soundIndex != -1 ? gdh.gameData.impacts[soundIndex].location : item.sound,
-          "volume": item.volume,
-          "data": appData.getAllData(),
-          "game_data": gdh.gameData,
-          "game_data_path": gameDataFolder
-
-        }
-    socket.send(JSON.stringify(request));
+  if(agentRegistry.getAgentStatus('overlay') == 'connected') {
+    return agentRegistry.handleOutputAction('overlay','throwItem',{item: item});
   }
 }
-
-// A single random bonk
-function single()
-{
-  console.log("Sending Single");
-  if (socket != null && gdh.hasActiveImage()) {
-    const imageWeightScaleSoundVolume = gdh.getImageWeightScaleSoundVolume();
-
-    var request =
-        {
-          "type": "single",
-          "image": imageWeightScaleSoundVolume.location,
-          "weight": imageWeightScaleSoundVolume.weight,
-          "scale": imageWeightScaleSoundVolume.scale,
-          "sound": imageWeightScaleSoundVolume.sound,
-          "volume": imageWeightScaleSoundVolume.volume,
-          "data": appData.getAllData(),
-          "game_data": gdh.gameData,
-          "game_data_path": gameDataFolder
-        }
-    socket.send(JSON.stringify(request));
-  }
-}
-
-// A random barrage of bonks
-function barrage(customAmount)
-{
-  console.log("Sending Barrage");
-  if (socket != null && gdh.hasActiveImage()) {
-    const imagesWeightsScalesSoundsVolumes = gdh.getImagesWeightsScalesSoundsVolumes(customAmount);
-    var images = [], weights = [], scales = [], sounds = [], volumes = [];
-    for (var i = 0; i < imagesWeightsScalesSoundsVolumes.length; i++) {
-      images[i] = imagesWeightsScalesSoundsVolumes[i].location;
-      weights[i] = imagesWeightsScalesSoundsVolumes[i].weight;
-      scales[i] = imagesWeightsScalesSoundsVolumes[i].scale;
-      sounds[i] = imagesWeightsScalesSoundsVolumes[i].sound;
-      volumes[i] = imagesWeightsScalesSoundsVolumes[i].volume;
-    }
-
-    var request = {
-      "type": "barrage",
-      "image": images,
-      "weight": weights,
-      "scale": scales,
-      "sound": sounds,
-      "volume": volumes,
-      "data": appData.getAllData(),
-      "game_data": gdh.gameData,
-      "game_data_path": gameDataFolder
-    }
-    socket.send(JSON.stringify(request));
-  }
-}
-
-
 
 // A custom bonk test
 function custom(customName,customCount=null)
 {
-  console.log("Sending Custom");
-  if (socket != null && gdh.hasActiveImageCustom(customName)) {
-    const imagesWeightsScalesSoundsVolumes = gdh.getCustomImagesWeightsScalesSoundsVolumes(customName,customCount);
-    var images = [], weights = [], scales = [], sounds = [], volumes = [], impactDecals = [], windupSounds = [];
-    for (var i = 0; i < imagesWeightsScalesSoundsVolumes.length; i++) {
-      images[i] = imagesWeightsScalesSoundsVolumes[i].location;
-      weights[i] = imagesWeightsScalesSoundsVolumes[i].weight;
-      scales[i] = imagesWeightsScalesSoundsVolumes[i].scale;
-      sounds[i] = imagesWeightsScalesSoundsVolumes[i].sound;
-      volumes[i] = imagesWeightsScalesSoundsVolumes[i].volume;
-      impactDecals[i] = imagesWeightsScalesSoundsVolumes[i].impactDecal;
-      windupSounds[i] = imagesWeightsScalesSoundsVolumes[i].windupSound;
-    }
-
-    var request = {
-      "type": customName,
-      "image": images,
-      "weight": weights,
-      "scale": scales,
-      "sound": sounds,
-      "volume": volumes,
-      "impactDecal": impactDecals,
-      "windupSound": windupSounds,
-      "data": appData.getAllData(),
-      "game_data": gdh.gameData,
-      "game_data_path": gameDataFolder
-    }
-    socket.send(JSON.stringify(request));
+  if(agentRegistry.getAgentStatus('overlay') == 'connected') {
+    return agentRegistry.handleOutputAction('overlay','throwBonk',{bonk: customName});
   }
 }
 

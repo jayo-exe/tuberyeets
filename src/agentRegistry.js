@@ -1,10 +1,11 @@
 module.exports = class AgentRegistry {
-    constructor(appDataHelper) {
+    constructor(appDataHelper, gameDataHelper) {
         this.agents = {};
         this.inputs = {};
         this.outputs = {};
 
         this.appData = appDataHelper;
+        this.gameData = gameDataHelper;
         if(!this.appData.hasFieldData('agents')) {
             console.log("[AgentRegistry] Agent Data store not found! Creating...");
             this.appData.setFieldData('agents', {});

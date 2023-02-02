@@ -100,14 +100,6 @@ export default {
             this.live_game_data.impacts[i].customs.splice(this.live_game_data.impacts[i].customs.indexOf(item_index),1);
       }
     },
-    testSingle() {
-      console.log('Testing single random bonk');
-      window.ipc.send('TEST_SINGLE', true);
-    },
-    testBarrage() {
-      console.log('Testing single barrage');
-      window.ipc.send('TEST_BARRAGE', true);
-    },
     testCustomBonk(item_index) {
       console.log('Testing custom bonk: ' + item_index);
       window.ipc.send('TEST_CUSTOM_BONK', item_index);
