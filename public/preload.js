@@ -11,6 +11,7 @@ const validChannels = [
     'SAVE_GAME_DATA',
     'SET_FIELD',
     'STATUS',
+    'AGENT_STATUS',
     'EFFECT_QUEUE',
     'GET_DATA_PATH',
     'CALIBRATE_START',

@@ -1,1 +1,1 @@
-const ports = [ 8084, 8001 ];
+const ports = [ 8082, 8001 ];

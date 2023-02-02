@@ -18,10 +18,16 @@ module.exports = class AppDataHelper {
         if (!fs.existsSync(this.dataPath))
             fs.writeFileSync(this.dataPath, JSON.stringify(this.defaultData));
         this.appData = JSON.parse(fs.readFileSync(this.dataPath, "utf8"));
+        console.log('[AppDataHelper] App Data loaded!');
     }
 
     saveData() {
-        fs.writeFileSync(this.dataPath, JSON.stringify(this.appData));
+        try {
+            fs.writeFileSync(this.dataPath, JSON.stringify(this.appData));
+        } catch (err) {
+            console.log('Error writing App Data file:' + err.message);
+        }
+        console.log('[AppDataHelper] App Data saved!');
     }
 
     hasFieldData(field) {

@@ -46,6 +46,11 @@
           </router-link>
         </li>
       </ul>
+      <div class="agent-connections">
+        <div v-for="(agent, key) in current_agent_status">
+          <small><strong>{{agent.name}}</strong>: {{agent.status}}</small>
+        </div>
+      </div>
     </div>
     <div class="body-container">
 
@@ -129,6 +134,7 @@ export default {
         type: "ready",
         param: null,
       },
+      current_agent_status: {},
       game_data_loading: false,
       update_available: false,
       update_downloaded: false,
@@ -278,6 +284,9 @@ export default {
           }
         }
       })
+    },
+    setAgentStatus(message) {
+      this.current_agent_status = message;
     },
     getCrowdControlGames() {
       axios.get("https://api.crowdcontrol.live/available_games")
@@ -462,6 +471,9 @@ export default {
     });
     window.ipc.on('STATUS', (payload) => {
       this.setStatus(payload);
+    });
+    window.ipc.on('AGENT_STATUS', (payload) => {
+      this.setAgentStatus(payload);
     });
     window.ipc.on('UPDATE_AVAILABLE', (payload) => {
       this.update_available = true;

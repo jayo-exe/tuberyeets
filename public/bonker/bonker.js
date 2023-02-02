@@ -1,5 +1,10 @@
 // TuberYeets BRIDGE Websocket Scripts
 
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const urlPort = urlParams.get('port');
+console.log(urlMinutes);
+
 var socketBridge, bridgeIsOpen = false;
 var isCalibrating = false;
 
@@ -39,9 +44,20 @@ function endCalibration()
     }
 }
 
-var guideX = null, guideY = null;
-document.onclick = function(e)
+var guideX = null, guideY = null, dragging_target = false;
+document.onmousedown = function(e)
 {
+    dragging_target = true;
+}
+
+document.onmouseup = function(e)
+{
+    dragging_target = false;
+}
+
+document.onmousemove = function(e)
+{
+    if(!dragging_target) { return; }
     guideX = e.clientX;
     guideY = e.clientY;
     document.querySelector("#guide").style.left = (guideX - 25) + "px";
@@ -50,7 +66,7 @@ document.onclick = function(e)
 
 function connectBridge()
 {
-    socketBridge = new WebSocket("ws://localhost:" + ports[0]);
+    socketBridge = new WebSocket("ws://localhost:" + urlPort);
     socketBridge.onopen = function()
     {
         bridgeIsOpen = true;
@@ -408,34 +424,37 @@ function tryAuthorization()
         {
             console.log("Received Authentication Token");
             clearInterval(tryAuthorize);
-
-            request = {
-                "apiName": "VTubeStudioPublicAPI",
-                "apiVersion": "1.0",
-                "requestID": "1",
-                "messageType": "AuthenticationRequest",
-                "data": {
-                    "pluginName": "TuberYeets BONKER",
-                    "pluginDeveloper": "Jayo",
-                    "authenticationToken": response.data.authenticationToken
-                }
-            }
-            socketVTube.onmessage = function(event)
-            {
-                socketVTube.onmessage = null;
-                response = JSON.parse(event.data);
-                if (response.data.authenticated)
-                    vTubeIsOpen = true;
-                else
-                    tryConnectVTube = setInterval(retryConnectVTube, 1000 * 3);
-            }
-            socketVTube.send(JSON.stringify(request));
+            authorizeVTS(response.data.authenticationToken);
         }
         else if (response.messageType == "APIError" && response.data.errorID == 50)
         {
             console.log("Authentication Declined");
             clearInterval(tryAuthorize);
         }
+    }
+    socketVTube.send(JSON.stringify(request));
+}
+
+function authorizeVTS(token) {
+    request = {
+        "apiName": "VTubeStudioPublicAPI",
+        "apiVersion": "1.0",
+        "requestID": "1",
+        "messageType": "AuthenticationRequest",
+        "data": {
+            "pluginName": "TuberYeets BONKER",
+            "pluginDeveloper": "Jayo",
+            "authenticationToken": token
+        }
+    }
+    socketVTube.onmessage = function(event)
+    {
+        socketVTube.onmessage = null;
+        response = JSON.parse(event.data);
+        if (response.data.authenticated)
+            vTubeIsOpen = true;
+        else
+            tryAuthorization();
     }
     socketVTube.send(JSON.stringify(request));
 }

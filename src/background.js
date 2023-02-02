@@ -9,7 +9,8 @@ import { WebSocket } from 'ws';
 import { io } from "socket.io-client";
 import GameDataHelper from './gameDataHelper';
 import AppDataHelper from './appDataHelper';
-import VtubeStudioAgent from './vtubeStudioAgent';
+import AgentRegistry from './agentRegistry';
+import VtubeStudioAgent from './agents/vtubeStudioAgent';
 import TimedEffectAgent from './timedEffectAgent';
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
@@ -26,6 +27,13 @@ let bonkerPath = path.resolve(__static, bonkRoot+'/bonker.html');
 let appData = new AppDataHelper(userDataPath);
 appData.loadData();
 appData.setFieldData('bonkerPath', bonkerPath);
+
+//load connections
+let agentRegistry = new AgentRegistry(appData);
+let agents = [
+  new VtubeStudioAgent
+];
+
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -142,7 +150,10 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
-  createWindow()
+  agents.forEach((agent) => {
+    agentRegistry.registerAgent(agent);
+  });
+  createWindow();
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -174,6 +185,7 @@ var crowdControlConnected = false;
 // Periodically reporting status back to renderer
 var exiting = false;
 setInterval(() => {
+  var vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
   if (mainWindow != null)
   {
     var status = 0;
@@ -181,7 +193,7 @@ setInterval(() => {
       status = 9;
     else if (crowdControlConnected === false)
       status = 1;
-    else if (vts.vtsReady === false)
+    else if (vtsStatus !== 'connected')
       status = 8;
     else if (socket == null)
       status = 2;
@@ -198,6 +210,14 @@ setInterval(() => {
       mainWindow.webContents.send("STATUS", status);
     }
 
+  }
+}, 500);
+
+setInterval(() => {
+  var vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
+  if (mainWindow != null && !exiting)
+  {
+      mainWindow.webContents.send("AGENT_STATUS", agentRegistry.getAllAgentStatus());
   }
 }, 500);
 
@@ -240,6 +260,7 @@ ipcMain.on('GET_DATA_PATH', (event, payload) => {
 });
 
 ipcMain.on('LOAD_DATA', (event, payload) => {
+  console.log('got load request');
   try {
     appData.loadData();
     appData.setFieldData('bonkerPath', bonkerPath);
@@ -255,7 +276,6 @@ ipcMain.on('SAVE_DATA', (event, payload) => {
     appData.setAllData(payload);
     appData.saveData();
     setPorts();
-    vts.setPort(appData.getFieldData('portVTubeStudio'));
     save_success = true;
   } catch {}
   console.log('sending save reply');
@@ -319,7 +339,7 @@ function setData(field, value, external)
   appData.setFieldData(field, value);
   appData.saveData();
   if(field == "portVTubeStudio") {
-    vts.setPort(value);
+    agentRegistry.setAgentFieldData('vtubestudio', 'port', value);
   }
   if (external)
     mainWindow.webContents.send("doneWriting");
@@ -375,7 +395,7 @@ ipcMain.on('UPLOAD_WINDUP', (event, payload) => {
 
 ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {
   console.log('got VTS Expression request');
-  var expression_result = await vts.getExpressions();
+  var expression_result = await agentRegistry.getAgent('vtubestudio').getExpressions();
   console.log(expression_result);
   console.log('sending VTS Expression reply');
   event.reply('GET_VTS_EXPRESSIONS', {success:true,expressions:expression_result});
@@ -383,7 +403,7 @@ ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {
 
 ipcMain.on('GET_VTS_HOTKEYS', async (event, payload) => {
   console.log('got VTS Hotkey request');
-  var hotkey_result = await vts.getHotkeys();
+  var hotkey_result = await agentRegistry.getAgent('vtubestudio').getHotkeys();
   console.log(hotkey_result);
   console.log('sending VTS Hotkey reply');
   event.reply('GET_VTS_HOTKEYS', {success:true, hotkeys:hotkey_result});
@@ -590,6 +610,8 @@ function createServer()
               break;
           }
         }
+        else if (request.type == "status")
+          connectedBonkerVTube = request.connectedBonkerVTube;
         else if (request.type == "status")
           connectedBonkerVTube = request.connectedBonkerVTube;
       });
@@ -800,20 +822,22 @@ function handleEffect(effect_id) {
     //Execute the hotkey(s) if enabled
     if(matchedEvent.hotkeyEnabled && matchedEvent.hasOwnProperty("hotkeyName") && matchedEvent.hotkeyName.length > 0) {
       //Trigger the selected hotkey
-      vts.triggerHotkey(matchedEvent.hotkeyName);
+      agentRegistry.handleOutputAction('vtubestudio','hotkey',{name: matchedEvent.hotkeyName});
       if(matchedEvent.secondHotkeyEnabled && matchedEvent.hasOwnProperty("secondHotkeyName") && matchedEvent.secondHotkeyName.length > 0) {
         //Trigger the follow-up hotkey after the specified delay
-        setTimeout(() => {vts.triggerHotkey(matchedEvent.secondHotkeyName)},matchedEvent.secondHotkeyDelay);
+        setTimeout(() => {agentRegistry.getAgent('vtubestudio').triggerHotkey(matchedEvent.secondHotkeyName)},matchedEvent.secondHotkeyDelay);
       }
     }
 
     //Execute the expression if enabled
     if(matchedEvent.expressionEnabled && matchedEvent.hasOwnProperty("expressionName") && matchedEvent.expressionName.length > 0) {
       //Activate selected expression
-      vts.activateExpression(matchedEvent.expressionName);
+      agentRegistry.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'activate'});
       if(parseInt(matchedEvent.expressionDuration) > 0) {
         //Deactivate expression after the listed duration
-        setTimeout(() => {vts.deactivateExpression(matchedEvent.expressionName)},matchedEvent.expressionDuration);
+        setTimeout(() => {
+          agentRegistry.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'deactivate'});
+          },matchedEvent.expressionDuration);
       }
     }
 
