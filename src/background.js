@@ -5,11 +5,11 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path';
 import fs from 'fs';
-import { WebSocket } from 'ws';
 import { io } from "socket.io-client";
 import GameDataHelper from './gameDataHelper';
 import AppDataHelper from './appDataHelper';
 import AgentRegistry from './agentRegistry';
+import CrowdControlAgent from './agents/crowdControlAgent';
 import VtubeStudioAgent from './agents/vtubeStudioAgent';
 import OverlayAgent from './agents/overlayAgent';
 import TimedEffectAgent from './timedEffectAgent';
@@ -29,15 +29,15 @@ let appData = new AppDataHelper(userDataPath);
 appData.loadData();
 appData.setFieldData('bonkerPath', bonkerPath);
 
-let crowdControlGame = 0;
 let gameDataFolder = '';
 let gdh = new GameDataHelper();
 
 //load connections
 let agentRegistry = new AgentRegistry(appData,gdh);
 let agents = [
-  new VtubeStudioAgent,
-  new OverlayAgent
+    new CrowdControlAgent,
+    new VtubeStudioAgent,
+    new OverlayAgent
 ];
 
 
@@ -186,18 +186,18 @@ autoUpdater.on('update-downloaded', () => {
   mainWindow.webContents.send('UPDATE_DOWNLOADED');
 });
 
-var crowdControlConnected = false;
 
 // Periodically reporting status back to renderer
 var exiting = false;
 setInterval(() => {
+  var ccStatus = agentRegistry.getAgentStatus('crowdcontrol');
   var vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
   var overlayStatus = agentRegistry.getAgentStatus('overlay');
   var calibrateStage = agentRegistry.getAgent('overlay').getCalibrateStage();
   if (mainWindow != null)
   {
     var status = 0;
-    if (crowdControlConnected === false)
+    if (ccStatus !== 'connected')
       status = 1;
     else if (vtsStatus !== 'connected' && vtsStatus !== 'disabled')
       status = 8;
@@ -228,14 +228,6 @@ setInterval(() => {
 // ----------------
 // Data Management
 // ----------------
-
-function setPorts() {
-  var old_port_data = fs.readFileSync(portsPath, "utf8");
-  var new_port_data = "const ports = [ " + appData.getFieldData('portThrower') + ", " + appData.getFieldData('portVTubeStudio') + " ];"
-  if(old_port_data !== new_port_data) {
-    fs.writeFileSync(portsPath, new_port_data);
-  }
-}
 
 function checkGameFolder(game_id) {
   const gameDataPath = path.join(userDataPath, 'gamedata');
@@ -268,7 +260,6 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
   try {
     appData.loadData();
     appData.setFieldData('bonkerPath', bonkerPath);
-    setPorts();
   } catch {}
   event.reply('LOAD_DATA', appData.getAllData());
 });
@@ -279,7 +270,6 @@ ipcMain.on('SAVE_DATA', (event, payload) => {
   try {
     appData.setAllData(payload);
     appData.saveData();
-    setPorts();
     save_success = true;
   } catch {}
   console.log('sending save reply');
@@ -290,7 +280,7 @@ ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
   console.log('Loading game-specific data...');
   var game_id = payload;
   checkGameFolder(game_id);
-  crowdControlGame = game_id;
+  agentRegistry.getAgent('crowdcontrol').setGame(game_id);
   gameDataFolder = path.join(userDataPath, 'gamedata/'+game_id);
   const gameDataPath = path.join(gameDataFolder, 'data.json');
   var gdata;
@@ -545,173 +535,6 @@ function uploadWindup(game_id, file_path, file_name, current_bonk)
   return return_value;
 
 }
-
-// ----------------
-// Crowd Control Connection
-// ----------------
-let cc_socket = null;
-createCrowdControlConnection();
-function createCrowdControlConnection()
-{
-  cc_socket = io("wss://overlay-socket.crowdcontrol.live");
-  cc_socket.on("effect-initial", (args) => {
-    console.log("Socket A");
-    checkCrowdControlEventInitial(args);
-  });
-  cc_socket.on("effect-update", (args) => {
-    console.log("Socket B");
-    checkCrowdControlEventUpdate(args);
-  });
-
-  cc_socket.onAny((eventName, ...args) => {
-    console.log(eventName + " event received from Crowd Control");
-  });
-
-  cc_socket.on("connect", () => {
-    console.log("CC Socket: Connected to Crowd Control!! Socket ID: " + cc_socket.id);
-    console.log("CC Socket: Getting events from channel " + appData.getFieldData('cc_channel'));
-    cc_socket.emit("events", appData.getFieldData('cc_channel'));
-    crowdControlConnected = true;
-  });
-
-  cc_socket.on("disconnect", () => {
-    console.log("CC Socket: Disconnected from Crowd Control! ");
-    crowdControlConnected = false;
-  });
-
-  cc_socket.io.on("error", (error) => {
-    console.log("CC Socket Error: " + error);
-  });
-
-}
-
-var effectQueue = {};
-
-// ----------------
-// VTube Studio Connection
-// ----------------
-const vts = new VtubeStudioAgent(appData.getFieldData('portVTubeStudio'));
-var lastCrowdControlEventId = '';
-function checkCrowdControlEventInitial(effect_object) {
-  console.log(effect_object);
-  //Initial event feed.  We use this to add a new entity to the list
-  if (!effectQueue.hasOwnProperty(effect_object.id)) {
-
-    var targeted = false;
-    if(effect_object.hasOwnProperty('targets')) {
-      effect_object.targets.forEach((target) => {
-        if (target.name === appData.getFieldData('cc_channel').toLowerCase()) {
-          targeted = true;
-        }
-      });
-    } else {
-      targeted = true;
-    }
-
-    if(targeted == true) {
-      effectQueue[effect_object.id] = {...effect_object};
-
-      effectQueue[effect_object.id].timed_effect = false;
-      if (effect_object.effect.duration > 0) effectQueue[effect_object.id].timed_effect = true;
-      effectQueue[effect_object.id].last_update = "added";
-      console.log(`Registering CC Event: "${effect_object.id}"`);
-    }
-  }
-}
-
-function checkCrowdControlEventUpdate(effect_object) {
-
-    //This is an update to an effect.  We use this to queue/unqueue/complete effects, as well as start/stop/pause/resume timed effects
-    if (effectQueue.hasOwnProperty(effect_object.id)) {
-      var current_effect = effectQueue[effect_object.id];
-      current_effect.last_update = effect_object.type;
-      var effect_handlers =  gdh.getData("crowdControlEvents");
-      var matched_handler = null;
-      Object.entries(effect_handlers).forEach(item => {
-        const [key, effect_handler] = item;
-        if(current_effect.effect.safeName == effect_handler.triggerName && effect_handler.enabled == true) {
-          console.log(`Found matching handler for "${effect_handler.triggerName}"!`);
-          matched_handler = effect_handler;
-        }
-      });
-      console.log(`Detected effect update of type: "${effect_object.type}" for "${effect_object.id}"`);
-      console.log(effect_object);
-      switch (effect_object.type) {
-        case "queue":
-          if (current_effect.last_update !== "queue") {
-            // code block
-            console.log(`Queued effect: "${effect_object.id}"`);
-          }
-          break;
-        case "unqueue":
-          console.log(`Unqueued and removed effect: "${effect_object.id}"`);
-          delete effectQueue[effect_object.id];
-          break;
-        case "completed":
-          if (current_effect.timed_effect === false) {
-            if(matched_handler) {
-              console.log(`Handling matched effect: "${effect_object.id}"`);
-              handleEffect(effect_object.id);
-            }
-            console.log(`Completed and removed effect: "${effect_object.id}"`);
-          } else {
-            console.log(`Handling Timed effect: "${effect_object.id}"`);
-            if(matched_handler) {
-              current_effect.agent = new TimedEffectAgent(appData.getAllData(),vts,gdh,gameDataFolder,socket,current_effect,matched_handler);
-            }
-          }
-          break;
-        case "start":
-          if(matched_handler) {
-            if (!current_effect.hasOwnProperty('agent')) {
-              //This is mostly to avoid errors from weirdness in the CC test effect
-              current_effect.agent = new TimedEffectAgent(appData.getAllData(), vts, gdh, gameDataFolder, socket, current_effect, matched_handler);
-            }
-            try {
-              current_effect.agent.start();
-            } catch (e) {
-              console.log(`Effect not found in internal queue: "${effect_object.id}"`);
-            }
-          }
-          break;
-        case "pause":
-          if(matched_handler) {
-            try {
-              current_effect.agent.pause(effect_object.effect.duration);
-            } catch (e) {
-              console.log(`Effect not found in internal queue: "${effect_object.id}"`);
-            }
-          }
-          break;
-        case "resume":
-          if(matched_handler) {
-            try {
-              current_effect.agent.resume(effect_object.effect.duration);
-            } catch (e) {
-              console.log(`Effect not found in internal queue: "${effect_object.id}"`);
-            }
-          }
-          break;
-        case "stop":
-          if(matched_handler) {
-            try {
-              current_effect.agent.stop();
-              delete effectQueue[effect_object.id];
-              console.log(`Stopped and removed effect: "${effect_object.id}"`);
-            } catch (e) {
-              console.log(`Effect not found in internal queue: "${effect_object.id}"`);
-            }
-
-          }
-          break;
-        default:
-          // we don't handle this type of update
-      }
-    } else {
-      console.log(`Update for unknown effect: "${effect_object.id}"`);
-    }
-}
-
 function handleEffect(effect_id) {
   if (!effectQueue.hasOwnProperty(effect_id)) {
     console.log("Could not handle unknown event " + effect_id);
@@ -744,7 +567,7 @@ function handleEffect(effect_id) {
     //Execute the hotkey(s) if enabled
     if(matchedEvent.hotkeyEnabled && matchedEvent.hasOwnProperty("hotkeyName") && matchedEvent.hotkeyName.length > 0) {
       //Trigger the selected hotkey
-      agentRegistry.handleOutputAction('vtubestudio','hotkey',{name: matchedEvent.hotkeyName});
+      agentRegistry.eventManager.handleOutputAction('vtubestudio','hotkey',{name: matchedEvent.hotkeyName});
       if(matchedEvent.secondHotkeyEnabled && matchedEvent.hasOwnProperty("secondHotkeyName") && matchedEvent.secondHotkeyName.length > 0) {
         //Trigger the follow-up hotkey after the specified delay
         setTimeout(() => {agentRegistry.getAgent('vtubestudio').triggerHotkey(matchedEvent.secondHotkeyName)},matchedEvent.secondHotkeyDelay);
@@ -754,11 +577,11 @@ function handleEffect(effect_id) {
     //Execute the expression if enabled
     if(matchedEvent.expressionEnabled && matchedEvent.hasOwnProperty("expressionName") && matchedEvent.expressionName.length > 0) {
       //Activate selected expression
-      agentRegistry.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'activate'});
+      agentRegistry.eventManager.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'activate'});
       if(parseInt(matchedEvent.expressionDuration) > 0) {
         //Deactivate expression after the listed duration
         setTimeout(() => {
-          agentRegistry.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'deactivate'});
+          agentRegistry.eventManager.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'deactivate'});
           },matchedEvent.expressionDuration);
       }
     }
@@ -808,7 +631,7 @@ ipcMain.on("TEST_CUSTOM_BONK", (_, message) => { custom(message); });
 function testItem(_, item)
 {
   if(agentRegistry.getAgentStatus('overlay') == 'connected') {
-    return agentRegistry.handleOutputAction('overlay','throwItem',{item: item});
+    return agentRegistry.eventManager.handleOutputAction('overlay','throwItem',{item: item});
   }
 }
 
@@ -816,7 +639,7 @@ function testItem(_, item)
 function custom(customName,customCount=null)
 {
   if(agentRegistry.getAgentStatus('overlay') == 'connected') {
-    return agentRegistry.handleOutputAction('overlay','throwBonk',{bonk: customName});
+    return agentRegistry.eventManager.handleOutputAction('overlay','throwBonk',{bonk: customName});
   }
 }
 

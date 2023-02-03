@@ -1,3 +1,5 @@
+const EventManager = require('./eventManager');
+
 module.exports = class AgentRegistry {
     constructor(appDataHelper, gameDataHelper) {
         this.agents = {};
@@ -6,6 +8,7 @@ module.exports = class AgentRegistry {
 
         this.appData = appDataHelper;
         this.gameData = gameDataHelper;
+        this.eventManager = new EventManager(this);
         if(!this.appData.hasFieldData('agents')) {
             console.log("[AgentRegistry] Agent Data store not found! Creating...");
             this.appData.setFieldData('agents', {});
@@ -106,18 +109,6 @@ module.exports = class AgentRegistry {
         return all_status;
     }
 
-    handleOutputAction(agentKey,actionKey,values) {
-        let agent = this.agents[agentKey];
-        if (!agent) { return false; }
-        if (!agent.agentOutputs.hasOwnProperty(actionKey)) { return false; }
-        return agent.agentOutputs[actionKey].handler(values);
-    }
 
-    handleInputTrigger(agentKey,triggerKey,values) {
-        let agent = this.agents[agentKey];
-        if (!agent) { return false; }
-        if (!agent.agentInputs.hasOwnProperty(triggerKey)) { return false; }
-        //Todo:: pass relevant details to the EventManager once it exists
-    }
 
 }
