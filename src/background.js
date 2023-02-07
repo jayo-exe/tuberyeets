@@ -17,8 +17,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
 
 const userDataPath = app.getPath('userData');
-const defaultGameDataPath = path.resolve(__static, 'data/defaultGameData.json');
-const defaultGameData = JSON.parse(fs.readFileSync(defaultGameDataPath, "utf8"));
+
 
 let bonkRoot = (app.isPackaged ? '../' : '')+'../public/bonker';
 let portsPath = path.resolve(__static, bonkRoot+'/ports.js');
@@ -29,11 +28,10 @@ let appData = new AppDataHelper(userDataPath);
 appData.loadData();
 appData.setFieldData('bonkerPath', bonkerPath);
 
-let gameDataFolder = '';
-let gdh = new GameDataHelper();
+let gameData = new GameDataHelper();
 
 //load connections
-let agentRegistry = new AgentRegistry(appData,gdh);
+let agentRegistry = new AgentRegistry(appData,gameData);
 let agents = [
     new CrowdControlAgent,
     new VtubeStudioAgent,
@@ -46,7 +44,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ]);
 
-var mainWindow;
+let mainWindow;
 
 async function createWindow() {
   // Create the browser window.
@@ -127,7 +125,7 @@ function setTray()
   tray.on("click", () => { mainWindow.restore(); });
 }
 
-var tray = null, contextMenu;
+let tray = null, contextMenu;
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -188,15 +186,15 @@ autoUpdater.on('update-downloaded', () => {
 
 
 // Periodically reporting status back to renderer
-var exiting = false;
+let exiting = false;
 setInterval(() => {
-  var ccStatus = agentRegistry.getAgentStatus('crowdcontrol');
-  var vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
-  var overlayStatus = agentRegistry.getAgentStatus('overlay');
-  var calibrateStage = agentRegistry.getAgent('overlay').getCalibrateStage();
+  let ccStatus = agentRegistry.getAgentStatus('crowdcontrol');
+  let vtsStatus = agentRegistry.getAgentStatus('vtubestudio');
+  let overlayStatus = agentRegistry.getAgentStatus('overlay');
+  let calibrateStage = agentRegistry.getAgent('overlay').getCalibrateStage();
   if (mainWindow != null)
   {
-    var status = 0;
+    let status = 0;
     if (ccStatus !== 'connected')
       status = 1;
     else if (vtsStatus !== 'connected' && vtsStatus !== 'disabled')
@@ -229,27 +227,7 @@ setInterval(() => {
 // Data Management
 // ----------------
 
-function checkGameFolder(game_id) {
-  const gameDataPath = path.join(userDataPath, 'gamedata');
-  if (!fs.existsSync(gameDataPath))
-    fs.mkdirSync(gameDataPath);
 
-  const gamePath = path.join(gameDataPath, game_id.toString());
-  if (!fs.existsSync(gamePath))
-    fs.mkdirSync(gamePath);
-
-  if (!fs.existsSync(gamePath +'/throws/'))
-    fs.mkdirSync(gamePath +'/throws/');
-  if (!fs.existsSync(gamePath +'/decals/'))
-    fs.mkdirSync(gamePath +'/decals/');
-  if (!fs.existsSync(gamePath +'/impacts/'))
-    fs.mkdirSync(gamePath +'/impacts/');
-  if (!fs.existsSync(gamePath +'/windups/'))
-    fs.mkdirSync(gamePath +'/windups/');
-  if (!fs.existsSync(gamePath +'/data.json'))
-    fs.writeFileSync(gamePath +'/data.json', JSON.stringify(defaultGameData));
-  return gamePath;
-}
 
 ipcMain.on('GET_DATA_PATH', (event, payload) => {
   event.reply('GET_DATA_PATH', userDataPath);
@@ -266,7 +244,7 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
 
 ipcMain.on('SAVE_DATA', (event, payload) => {
   console.log('got save request');
-  var save_success;
+  let save_success;
   try {
     appData.setAllData(payload);
     appData.saveData();
@@ -277,46 +255,22 @@ ipcMain.on('SAVE_DATA', (event, payload) => {
 });
 
 ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
-  console.log('Loading game-specific data...');
-  var game_id = payload;
-  checkGameFolder(game_id);
-  agentRegistry.getAgent('crowdcontrol').setGame(game_id);
-  gameDataFolder = path.join(userDataPath, 'gamedata/'+game_id);
-  const gameDataPath = path.join(gameDataFolder, 'data.json');
-  var gdata;
-  try {
-    gdata = JSON.parse(fs.readFileSync(gameDataPath, "utf8"));
-    gdata.game_data_path = checkGameFolder(game_id);
-    gdh.setGameData(gdata);
-    console.log('Successfully Loaded game-specific data!');
-  } catch(e) {
-    console.log(e);
-  }
-  event.reply('LOAD_GAME_DATA', gdata);
+  let gameId = payload;
+  agentRegistry.getAgent('crowdcontrol').setGame(gameId);
+  gameData.loadData(gameId);
+  event.reply('LOAD_GAME_DATA', gameData.getAllData());
 });
 
 ipcMain.on('SAVE_GAME_DATA', (event, payload) => {
-  console.log('got game save request');
-  var game_id = payload.game_id;
-  var save_data = payload.data;
-  checkGameFolder(game_id);
-  const gameDataPath = path.join(userDataPath, 'gamedata/'+game_id+'/data.json');
-
-  var save_success;
-  try {
-    fs.writeFileSync(gameDataPath, JSON.stringify(save_data));
-    save_data.game_data_path = checkGameFolder(game_id);
-    gdh.setGameData(save_data);
-    save_success = true;
-  } catch {}
-
-  console.log('sending game save reply');
+  let save_data = payload.data;
+  gameData.setAllData(save_data);
+  let save_success = gameData.saveData();
   event.reply('SAVE_GAME_DATA', save_success);
 });
 
 ipcMain.on("SET_FIELD", (_, arg) =>
 {
-  var save_success;
+  let save_success;
   try {
     setData(arg[0], arg[1], true);
     save_success = true;
@@ -336,56 +290,42 @@ function setData(field, value, external)
 }
 
 ipcMain.on('UPLOAD_THROW', (event, payload) => {
-  console.log('got upload throw request');
-  var game_id = payload.game_id;
-  var file_path = payload.file_path;
-  var file_name = payload.file_name;
+  let filePath = payload.file_path;
+  let filename = payload.file_name;
 
-  var throw_result = uploadThrow(game_id,file_path,file_name);
-  console.log(throw_result);
-  console.log('sending upload throw reply');
-  event.reply('UPLOAD_THROW', throw_result);
+  let throwResult = gameData.uploadThrow(filePath,filename);
+  event.reply('UPLOAD_THROW', throwResult);
 });
 
 ipcMain.on('UPLOAD_IMPACT', (event, payload) => {
-  console.log('got upload impact request');
-  var game_id = payload.game_id;
-  var file_path = payload.file_path;
-  var file_name = payload.file_name;
+  let filePath = payload.file_path;
+  let filename = payload.file_name;
 
-  var impact_result = uploadImpact(game_id,file_path,file_name);
-  console.log(impact_result);
-  console.log('sending upload impact reply');
-  event.reply('UPLOAD_IMPACT', impact_result);
+  let impactResult = gameData.uploadImpact(filePath,filename);
+  event.reply('UPLOAD_IMPACT', impactResult);
 });
 
 ipcMain.on('UPLOAD_DECAL', (event, payload) => {
-  console.log('got upload decal request');
-  var game_id = payload.game_id;
-  var file_path = payload.file_path;
-  var file_name = payload.file_name;
-  var current_bonk = payload.current_bonk;
-  var decal_result = uploadDecal(game_id,file_path,file_name,current_bonk);
-  console.log(decal_result);
-  console.log('sending upload decal reply');
-  event.reply('UPLOAD_DECAL', decal_result);
+  let filePath = payload.file_path;
+  let filename = payload.file_name;
+  let currentBonk = payload.current_bonk;
+
+  let decalResult = gameData.uploadDecal(filePath,filename,currentBonk);
+  event.reply('UPLOAD_DECAL', decalResult);
 });
 
 ipcMain.on('UPLOAD_WINDUP', (event, payload) => {
-  console.log('got upload windup request');
-  var game_id = payload.game_id;
-  var file_path = payload.file_path;
-  var file_name = payload.file_name;
-  var current_bonk = payload.current_bonk;
-  var windup_result = uploadWindup(game_id,file_path,file_name,current_bonk);
-  console.log(windup_result);
-  console.log('sending upload windup reply');
-  event.reply('UPLOAD_WINDUP', windup_result);
+  let filePath = payload.file_path;
+  let filename = payload.file_name;
+  let currentBonk = payload.current_bonk;
+
+  let windupResult = gameData.uploadWindup(filePath,filename,currentBonk);
+  event.reply('UPLOAD_WINDUP', windupResult);
 });
 
 ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {
   console.log('got VTS Expression request');
-  var expression_result = await agentRegistry.getAgent('vtubestudio').getExpressions();
+  let expression_result = await agentRegistry.getAgent('vtubestudio').getExpressions();
   console.log(expression_result);
   console.log('sending VTS Expression reply');
   event.reply('GET_VTS_EXPRESSIONS', {success:true,expressions:expression_result});
@@ -393,7 +333,7 @@ ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {
 
 ipcMain.on('GET_VTS_HOTKEYS', async (event, payload) => {
   console.log('got VTS Hotkey request');
-  var hotkey_result = await agentRegistry.getAgent('vtubestudio').getHotkeys();
+  let hotkey_result = await agentRegistry.getAgent('vtubestudio').getHotkeys();
   console.log(hotkey_result);
   console.log('sending VTS Hotkey reply');
   event.reply('GET_VTS_HOTKEYS', {success:true, hotkeys:hotkey_result});
@@ -401,7 +341,7 @@ ipcMain.on('GET_VTS_HOTKEYS', async (event, payload) => {
 
 ipcMain.on('OPEN_GAME_FOLDER', async (event, payload) => {
   console.log('got Folder Open request');
-  shell.openPath(gameDataFolder);
+  shell.openPath(gameData.gameDataFolder);
 });
 
 ipcMain.on('CHECK_UPDATE', () => {
@@ -413,137 +353,18 @@ ipcMain.on('RESTART', () => {
   autoUpdater.quitAndInstall();
 });
 
-function checkFilename(game_id, folder, file_name) {
-  const game_path = checkGameFolder(game_id);
-  // Ensure that we're not overwriting any existing files with the same name
-  // If a file already exists, add an interating number to the end until it"s a unique filename
-  var append = "";
 
-  while (fs.existsSync(game_path + "/"+folder+"/" + file_name.substr(0, file_name.lastIndexOf(".")) + append + file_name.substr(file_name.lastIndexOf("."))))
-    append = append == "" ? 2 : (append + 1);
 
-  var filename = file_name.substr(0, file_name.lastIndexOf(".")) + append + file_name.substr(file_name.lastIndexOf("."));
-  return {
-    file_path: game_path + "/"+folder+"/" + filename,
-    file_name: filename
-  };
-}
 
-function uploadThrow(game_id, file_path, file_name)
-{
-  try {
-    var file_info = checkFilename(game_id, "throws", file_name);
-    fs.copyFileSync(file_path, file_info.file_path);
-    var throw_item = {
-      "enabled": true,
-      "location": file_info.file_name,
-      "weight": 1.0,
-      "scale": 1.0,
-      "sound": null,
-      "volume": 1.0,
-      "customs": []
-    }
-    var return_value = {
-      success: true,
-      throw_item: throw_item
-    }
-  } catch (e) {
-    var return_value = {
-      success: false,
-    };
-    console.log(e);
-  }
-
-  return return_value;
-
-}
-
-function uploadImpact(game_id, file_path, file_name)
-{
-  try {
-    var file_info = checkFilename(game_id, "impacts", file_name);
-    fs.copyFileSync(file_path, file_info.file_path);
-    var impact_item = {
-      "enabled": false,
-      "location": file_info.file_name,
-      "volume": 1.0,
-      "customs": [],
-    }
-    var return_value = {
-      success: true,
-      impact_item: impact_item,
-    }
-  } catch (e) {
-    var return_value = {
-      success: false,
-    };
-    console.log(e);
-  }
-
-  return return_value;
-
-}
-
-function uploadDecal(game_id, file_path, file_name, current_bonk)
-{
-  try {
-    var file_info = checkFilename(game_id, "decals", file_name);
-    fs.copyFileSync(file_path, file_info.file_path);
-    var decal_item = {
-      "enabled": true,
-      "location": file_info.file_name,
-      "scale": 1,
-      "duration": 0.25,
-    }
-    var return_value = {
-      success: true,
-      decal_item: decal_item,
-      current_bonk: current_bonk
-    }
-  } catch (e) {
-    var return_value = {
-      success: false,
-    };
-    console.log(e);
-  }
-
-  return return_value;
-
-}
-function uploadWindup(game_id, file_path, file_name, current_bonk)
-{
-  try {
-    var file_info = checkFilename(game_id, "windups", file_name);
-    fs.copyFileSync(file_path, file_info.file_path);
-    var windup_item = {
-      "enabled": true,
-      "location": file_info.file_name,
-      "volume": 1,
-    }
-    var return_value = {
-      success: true,
-      windup_item: windup_item,
-      current_bonk: current_bonk
-    }
-  } catch (e) {
-    var return_value = {
-      success: false,
-    };
-    console.log(e);
-  }
-
-  return return_value;
-
-}
 function handleEffect(effect_id) {
   if (!effectQueue.hasOwnProperty(effect_id)) {
     console.log("Could not handle unknown event " + effect_id);
     return false;
   }
-  var current_effect = effectQueue[effect_id];
+  let current_effect = effectQueue[effect_id];
   console.log("Handling event " + current_effect.id);
-  var customEvents = gdh.getData("crowdControlEvents");
-  var matchedEvent = null;
+  let customEvents = gameData.getFieldData("crowdControlEvents");
+  let matchedEvent = null;
   Object.entries(customEvents).forEach(item => {
     const [key, customEvent] = item;
     if(current_effect.effect.safeName == customEvent.triggerName && customEvent.enabled == true) {
@@ -556,7 +377,7 @@ function handleEffect(effect_id) {
   if(matchedEvent) {
     //Execute the bonk if enabled
     if(matchedEvent.bonkEnabled && matchedEvent.hasOwnProperty("bonkType") && matchedEvent.bonkType.length > 0) {
-      var customCount = null;
+      let customCount = null;
       if(current_effect.effect.parameters[0] !== undefined) {
         customCount = current_effect.effect.parameters[0];
       }

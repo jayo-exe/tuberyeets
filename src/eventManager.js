@@ -1,6 +1,8 @@
 module.exports = class EventManager {
     constructor(agentRegistry) {
         this.agentRegistry = agentRegistry;
+        this.appData = this.agentRegistry.appData;
+        this.gameData = this.agentRegistry.gameData;
     }
 
     handleOutputAction(agentKey,actionKey,values) {

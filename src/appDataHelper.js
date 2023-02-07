@@ -24,10 +24,12 @@ module.exports = class AppDataHelper {
     saveData() {
         try {
             fs.writeFileSync(this.dataPath, JSON.stringify(this.appData));
+            console.log('[AppDataHelper] App Data saved!');
+            return true;
         } catch (err) {
             console.log('Error writing App Data file:' + err.message);
+            return false;
         }
-        console.log('[AppDataHelper] App Data saved!');
     }
 
     hasFieldData(field) {
