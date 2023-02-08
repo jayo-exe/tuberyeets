@@ -4,23 +4,19 @@ import {app, protocol, BrowserWindow, Tray, Menu, ipcMain, shell} from 'electron
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path';
-import fs from 'fs';
-import { io } from "socket.io-client";
-import GameDataHelper from './gameDataHelper';
-import AppDataHelper from './appDataHelper';
+import GameDataHelper from './helpers/GameDataHelper';
+import AppDataHelper from './helpers/appDataHelper';
 import AgentRegistry from './agentRegistry';
 import CrowdControlAgent from './agents/crowdControlAgent';
 import VtubeStudioAgent from './agents/vtubeStudioAgent';
 import OverlayAgent from './agents/overlayAgent';
-import TimedEffectAgent from './timedEffectAgent';
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
 
 const userDataPath = app.getPath('userData');
-
+const uuid = require('uuid');
 
 let bonkRoot = (app.isPackaged ? '../' : '')+'../public/bonker';
-let portsPath = path.resolve(__static, bonkRoot+'/ports.js');
 let bonkerPath = path.resolve(__static, bonkRoot+'/bonker.html');
 
 // Loading core data file
@@ -28,7 +24,7 @@ let appData = new AppDataHelper(userDataPath);
 appData.loadData();
 appData.setFieldData('bonkerPath', bonkerPath);
 
-let gameData = new GameDataHelper();
+let gameData = new GameDataHelper(userDataPath,__static);
 
 //load connections
 let agentRegistry = new AgentRegistry(appData,gameData);
@@ -272,22 +268,12 @@ ipcMain.on("SET_FIELD", (_, arg) =>
 {
   let save_success;
   try {
-    setData(arg[0], arg[1], true);
+    appData.setFieldData(field, value);
+    appData.saveData();
     save_success = true;
   } catch {}
   _.reply('SET_FIELD', save_success);
 });
-
-function setData(field, value, external)
-{
-  appData.setFieldData(field, value);
-  appData.saveData();
-  if(field == "portVTubeStudio") {
-    agentRegistry.setAgentFieldData('vtubestudio', 'port', value);
-  }
-  if (external)
-    mainWindow.webContents.send("doneWriting");
-}
 
 ipcMain.on('UPLOAD_THROW', (event, payload) => {
   let filePath = payload.file_path;

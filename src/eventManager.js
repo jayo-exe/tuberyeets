@@ -1,8 +1,11 @@
+
+
 module.exports = class EventManager {
     constructor(agentRegistry) {
         this.agentRegistry = agentRegistry;
         this.appData = this.agentRegistry.appData;
         this.gameData = this.agentRegistry.gameData;
+        this.eventData = this.gameData.eventData;
     }
 
     handleOutputAction(agentKey,actionKey,values) {
@@ -17,7 +20,7 @@ module.exports = class EventManager {
         return agent.agentOutputs[actionKey].handler(values);
     }
 
-    handleInputTrigger(agentKey,triggerKey,script,values) {
+    handleInputTrigger(agentKey,triggerKey,scriptName,parameters) {
         let agent = this.agentRegistry.getAgent(agentKey);
         if (!agent) { return false; }
 
@@ -26,12 +29,16 @@ module.exports = class EventManager {
 
         if (!agent.agentInputs.hasOwnProperty(triggerKey)) { return false; }
 
-        console.log('[EventManager] Handling Input Trigger ' + agentKey + '.' + actionKey)
+        console.log('[EventManager] Handling Input Trigger ' + agentKey + '.' + triggerKey)
 
-        //verify script is valid for agent
-        //Look for enabled events in the loaded game that match the agent ang trigger key
-            //For each one found,check the event's conditions against the provided values
-                //For any that match, pull up the matching script
-                //Activate each action in the script
+        let matchedEvents = this.eventData.findEventsForTrigger(agentKey, triggerKey, scriptName, parameters)
+
+        for(const [eventId, event] of Object.entries(matchedEvents)) {
+            console.log('[EventManager] Running "' + scriptName + '" script for event ' + eventId)
+            let currentScript = event.scripts[scriptName];
+            for(const [actionKey, action] of Object.entries(currentScript.actions)) {
+                setTimeout(() => { this.handleOutputAction(action.agent, action.agentAction, action.settings); }, parseInt(action.delay));
+            }
+        }
     }
 }

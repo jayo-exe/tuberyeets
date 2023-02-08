@@ -1,7 +1,5 @@
-const { WebSocket } = require("ws");
 const { io } = require("socket.io-client");
 const axios = require("axios");
-const TimedEffectAgent = require("@/timedEffectAgent");
 
 module.exports = class CrowdControlAgent {
 
@@ -104,6 +102,15 @@ module.exports = class CrowdControlAgent {
                 effectOptions.push({'group': groupItem.name, 'items': groupList});
             }
         });
+
+        let noGroupList = [];
+        effectList.forEach((effectItem) => {
+            if(!effectItem.hasOwnProperty('p') && !effectItem.hasOwnProperty('kind')) {
+                noGroupList.push({'label': effectItem.name, 'value': effectItem.bid});
+            }
+        });
+        effectOptions.push({'group': 'Ungrouped', 'items': noGroupList});
+
         return effectOptions;
     }
 
@@ -173,8 +180,10 @@ module.exports = class CrowdControlAgent {
                 if(effect.effect.parameters[0] !== undefined) {
                     this.effectQueue[effect.id].triggerInfo.quantity = effect.effect.parameters[0];
                 }
+
                 this.effectQueue[effect.id].timed_effect = false;
                 if (effect.effect.duration > 0) {
+                    this.effectQueue[effect.id].timed_effect = true;
                     this.effectQueue[effect.id].triggerInfo.duration = effect.effect.duration;
                 }
                 this.effectQueue[effect.id].last_update = "added";
