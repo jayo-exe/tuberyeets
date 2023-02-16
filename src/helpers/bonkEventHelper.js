@@ -4,162 +4,121 @@ module.exports = class BonkEventHelper {
     }
 
     getCustomBonk(customName) {
-        let data = this.gameData.getAllData();
-        if(data.customBonks.hasOwnProperty(customName)) {
-            return data.customBonks[customName];
-        }
-        return false;
+        return this.gameData.read(`customBonks.${customName}`);
     }
 
     hasActiveImage()
     {
-        let data = this.gameData.getAllData();
-        if (data.throws == null || data.throws.length == 0)
-            return false;
+        let throwsData = this.gameData.read(`throws`);
+        if (throwsData == null || throwsData.length == 0) return false;
 
-        let active = false;
-        for (let i = 0; i < data.throws.length; i++)
+        for (let i = 0; i < throwsData.length; i++)
         {
-            if (data.throws[i].enabled)
-            {
-                active = true;
-                break;
-            }
+            if (throwsData[i].enabled) return true;
         }
-        return active;
+        return false;
     }
 
     hasActiveImageCustom(customName)
     {
-        let data = this.gameData.getAllData();
-        if (!data.customBonks[customName].itemsOverride)
-            return this.hasActiveImage();
+        if (this.gameData.read(`customBonks.${customName}.itemsOverride`)) return this.hasActiveImage();
 
-        if (data.throws == null || data.throws.length == 0)
-            return false;
+        let throwsData = this.gameData.read(`throws`);
+        if (throwsData == null || throwsData.length == 0) return false;
 
-        let active = false;
-        for (let i = 0; i < data.throws.length; i++)
+        for (let i = 0; i < throwsData.length; i++)
         {
-            if (data.throws[i].customs.includes(customName))
-            {
-                active = true;
-                break;
-            }
+            if (throwsData[i].customs.includes(customName)) return true;
         }
-        return active;
+        return false;
     }
 
     hasActiveImpactDecal(customName)
     {
-        let data = this.gameData.getAllData();
-        if (data.customBonks[customName].impactDecals == null || data.customBonks[customName].impactDecals.length == 0)
-            return false;
+        let decalsData = this.gameData.read(`customBonks.${customName}.impactDecals`);
+        if (decalsData == null || decalsData.length == 0) return false;
 
-        let active = false;
-        for (let i = 0; i < data.customBonks[customName].impactDecals.length; i++)
+        for (let i = 0; i < decalsData.length; i++)
         {
-            if (data.customBonks[customName].impactDecals[i].enabled)
-            {
-                active = true;
-                break;
-            }
+            if (decalsData[i].enabled) return true;
         }
-        return active;
+        return false;
     }
 
     hasActiveWindupSound(customName)
     {
-        let data = this.gameData.getAllData();
-        if (data.customBonks[customName].windupSounds == null || data.customBonks[customName].windupSounds.length == 0)
-            return false;
+        let windupsData = this.gameData.read(`customBonks.${customName}.windupSounds`);
+        if (windupsData == null || windupsData.length == 0) return false;
 
-        let active = false;
-        for (let i = 0; i < data.customBonks[customName].windupSounds.length; i++)
+        for (let i = 0; i < windupsData.length; i++)
         {
-            if (data.customBonks[customName].windupSounds[i].enabled)
-            {
-                active = true;
-                break;
-            }
+            if (windupsData[i].enabled) return true;
         }
-        return active;
+        return false;
     }
 
     hasActiveSound()
     {
-        let data = this.gameData.getAllData();
-        if (data.impacts == null || data.impacts.length == 0)
-            return false;
+        let impactsData = this.gameData.read(`impacts`);
+        if (impactsData == null || impactsData.length == 0) return false;
 
-        let active = false;
-        for (let i = 0; i < data.impacts.length; i++)
+        for (let i = 0; i < impactsData.length; i++)
         {
-            if (data.impacts[i].enabled)
-            {
-                active = true;
-                break;
-            }
+            if (impactsData[i].enabled) return true;
         }
-        return active;
+        return false;
     }
 
     hasActiveSoundCustom(customName)
     {
-        let data = this.gameData.getAllData();
-        if (!data.customBonks[customName].soundsOverride)
-            return this.hasActiveSound();
+        if (this.gameData.read(`customBonks.${customName}.soundsOverride`)) return this.hasActiveSound();
 
-        if (data.impacts == null || data.impacts.length == 0)
-            return false;
+        let impactsData = this.gameData.read(`impacts`);
+        if (impactsData == null || impactsData.length == 0) return false;
 
-        let active = false;
-        for (let i = 0; i < data.impacts.length; i++)
+        for (let i = 0; i < impactsData.length; i++)
         {
-            if (data.impacts[i].customs.includes(customName))
-            {
-                active = true;
-                break;
-            }
+            if (impactsData[i].customs.includes(customName)) return true;
         }
-        return active;
+        return false;
     }
 
     // Acquire a random image, sound, and associated properties
     getImageWeightScaleSoundVolume()
     {
-        let data = this.gameData.getAllData();
         let index;
+        let throwsData = this.gameData.read(`throws`);
+        let impactsData = this.gameData.read(`impacts`);
         do {
-            index = Math.floor(Math.random() * data.throws.length);
-        } while (!data.throws[index].enabled);
+            index = Math.floor(Math.random() * throwsData.length);
+        } while (!throwsData[index].enabled);
 
         let soundIndex = -1;
         if (this.hasActiveSound())
         {
             do {
-                soundIndex = Math.floor(Math.random() * data.impacts.length);
-            } while (!data.impacts[soundIndex].enabled);
+                soundIndex = Math.floor(Math.random() * impactsData.length);
+            } while (!impactsData[soundIndex].enabled);
         }
 
         return {
-            "location": data.throws[index].location,
-            "weight": data.throws[index].weight,
-            "scale": data.throws[index].scale,
-            "sound": data.throws[index].sound != null ? data.throws[index].sound : soundIndex != -1 ? data.impacts[soundIndex].location : null,
-            "volume": data.throws[index].volume * (soundIndex != -1 ? data.impacts[soundIndex].volume : 1)
+            "location": throwsData[index].location,
+            "weight": throwsData[index].weight,
+            "scale": throwsData[index].scale,
+            "sound": throwsData[index].sound != null ? throwsData[index].sound : soundIndex != -1 ? impactsData[soundIndex].location : null,
+            "volume": throwsData[index].volume * (soundIndex != -1 ? impactsData[soundIndex].volume : 1)
         };
     }
 
     // Acquire a set of images, sounds, and associated properties for a default barrage
     getImagesWeightsScalesSoundsVolumes(customAmount)
     {
-        let data = this.gameData.getAllData();
         let getImagesWeightsScalesSoundsVolumes = [];
 
-        let count = customAmount == null ? data.barrageCount : customAmount;
-        for (let i = 0; i < count; i++)
+        let count = customAmount == null ? this.gameData.read('barrageCount') : customAmount;
+        for (let i = 0; i < count; i++) {
             getImagesWeightsScalesSoundsVolumes.push(this.getImageWeightScaleSoundVolume());
+        }
 
         return getImagesWeightsScalesSoundsVolumes;
     }
@@ -167,72 +126,74 @@ module.exports = class BonkEventHelper {
     // Acquire an image, sound, and associated properties for a custom bonk
     getCustomImageWeightScaleSoundVolume(customName)
     {
-        let data = this.gameData.getAllData();
         let index;
-        if (data.customBonks[customName].itemsOverride && this.hasActiveImageCustom(customName))
+        let throwsData = this.gameData.read(`throws`);
+        let impactsData = this.gameData.read(`impacts`);
+        let bonkData = this.gameData.read(`customBonks.${customName}`);
+        if (bonkData.itemsOverride && this.hasActiveImageCustom(customName))
         {
             do {
-                index = Math.floor(Math.random() * data.throws.length);
-            } while (!data.throws[index].customs.includes(customName));
+                index = Math.floor(Math.random() * throwsData.length);
+            } while (!throwsData[index].customs.includes(customName));
         }
         else
         {
             do {
-                index = Math.floor(Math.random() * data.throws.length);
-            } while (!data.throws[index].enabled);
+                index = Math.floor(Math.random() * throwsData.length);
+            } while (!throwsData[index].enabled);
         }
 
         let soundIndex = -1;
-        if (data.customBonks[customName].soundsOverride && this.hasActiveSoundCustom(customName))
+        if (bonkData.soundsOverride && this.hasActiveSoundCustom(customName))
         {
             do {
-                soundIndex = Math.floor(Math.random() * data.impacts.length);
-            } while (!data.impacts[soundIndex].customs.includes(customName));
+                soundIndex = Math.floor(Math.random() * impactsData.length);
+            } while (!impactsData[soundIndex].customs.includes(customName));
         }
         else if (this.hasActiveSound())
         {
             do {
-                soundIndex = Math.floor(Math.random() * data.impacts.length);
-            } while (!data.impacts[soundIndex].enabled);
+                soundIndex = Math.floor(Math.random() * impactsData.length);
+            } while (!impactsData[soundIndex].enabled);
         }
 
         let impactDecalIndex = -1;
         if (this.hasActiveImpactDecal(customName))
         {
             do {
-                impactDecalIndex = Math.floor(Math.random() * data.customBonks[customName].impactDecals.length);
-            } while (!data.customBonks[customName].impactDecals[impactDecalIndex].enabled);
+                impactDecalIndex = Math.floor(Math.random() * bonkData.impactDecals.length);
+            } while (!bonkData.impactDecals[impactDecalIndex].enabled);
         }
 
         let windupSoundIndex = -1;
         if (this.hasActiveWindupSound(customName))
         {
             do {
-                windupSoundIndex = Math.floor(Math.random() * data.customBonks[customName].windupSounds.length);
-            } while (!data.customBonks[customName].windupSounds[windupSoundIndex].enabled);
+                windupSoundIndex = Math.floor(Math.random() * bonkData.windupSounds.length);
+            } while (!bonkData.windupSounds[windupSoundIndex].enabled);
         }
 
         return {
-            "location": data.throws[index].location,
-            "weight": data.throws[index].weight,
-            "scale": data.throws[index].scale,
-            "sound": data.throws[index].sound != null ? data.throws[index].sound : (soundIndex != -1 ? data.impacts[soundIndex].location : null),
-            "volume": data.throws[index].volume * (soundIndex != -1 ? data.impacts[soundIndex].volume : 1),
-            "impactDecal": impactDecalIndex != -1 ? data.customBonks[customName].impactDecals[impactDecalIndex] : null,
-            "windupSound": windupSoundIndex != -1 ? data.customBonks[customName].windupSounds[windupSoundIndex] : null
+            "location": throwsData[index].location,
+            "weight": throwsData[index].weight,
+            "scale": throwsData[index].scale,
+            "sound": throwsData[index].sound != null ? throwsData[index].sound : (soundIndex !== -1 ? impactsData[soundIndex].location : null),
+            "volume": throwsData[index].volume * (soundIndex !== -1 ? impactsData[soundIndex].volume : 1),
+            "impactDecal": impactDecalIndex !== -1 ? bonkData.impactDecals[impactDecalIndex] : null,
+            "windupSound": windupSoundIndex !== -1 ? bonkData.windupSounds[windupSoundIndex] : null
         };
     }
 
 // Acquire a set of images, sounds, and associated properties for a custom bonk
     getCustomImagesWeightsScalesSoundsVolumes(customName,customCount=null)
     {
-        let data = this.gameData.getAllData();
+        let bonkData = this.gameData.read(`customBonks.${customName}`);
         let getImagesWeightsScalesSoundsVolumes = [];
-        if(customCount == null) {
-            customCount = data.customBonks[customName].barrageCount;
-        }
-        for (let i = 0; i < customCount; i++)
+        if(customCount == null) customCount = bonkData.barrageCount;
+
+        for (let i = 0; i < customCount; i++) {
             getImagesWeightsScalesSoundsVolumes.push(this.getCustomImageWeightScaleSoundVolume(customName));
+        }
 
         return getImagesWeightsScalesSoundsVolumes;
     }

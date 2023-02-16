@@ -10,7 +10,8 @@
             :current_item="current_item"
             :current_bonk="current_bonk"
             :current_event="current_event"
-            @update-game-data="updateGameData"
+            @set-field="handleSetField"
+            @set-game-field="handleSetGameField"
             @set-section="setSection"
             @edit-item="editItem"
             @edit-custom-bonk="editCustomBonk"
@@ -76,12 +77,18 @@ export default {
       this.current_event = event_id;
       this.setSection("EventForm");
     },
+    handleSetField(event) {
+      this.setField(event.field, event.value);
+    },
     setField(field, value) {
       this.$emit("set-field",{field:field, value:value});
     },
-    updateGameData(data) {
-      this.$emit('update-game-data', data);
+    handleSetGameField(event) {
+      this.setGameField(event.field, event.value);
     },
+    setGameField(field, value) {
+      this.$emit("set-game-field",{field:field, value:value});
+    }
   },
   mounted() {
 

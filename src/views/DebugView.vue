@@ -40,18 +40,7 @@ export default {
   methods: {
     setField(field, value) {
       this.$emit("set-field",{field:field, value:value});
-    },
-    updateData(data) {
-      this.$emit("update-data",data);
-    },
-  },
-  watch: {
-    live_app_data: {
-      handler: function(newVal, oldVal) {
-        this.updateData(this.live_app_data);
-      },
-      deep: true
     }
-  },
+  }
 }
 </script>

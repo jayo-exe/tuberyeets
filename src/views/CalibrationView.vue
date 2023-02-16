@@ -42,9 +42,6 @@ export default {
     setField(field, value) {
       this.$emit("set-field",{field:field, value:value});
     },
-    updateData(data) {
-      this.$emit("update-data",data);
-    },
     startCalibrate() {
       console.log('Starting Calibration');
       window.ipc.send('CALIBRATE_START');
@@ -63,14 +60,6 @@ export default {
   },
   beforeDestroy() {
     this.cancelCalibrate();
-  },
-  watch: {
-    live_app_data: {
-      handler: function(newVal, oldVal) {
-        this.updateData(this.live_app_data);
-      },
-      deep: true
-    }
-  },
+  }
 }
 </script>

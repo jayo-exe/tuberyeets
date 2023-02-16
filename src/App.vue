@@ -13,24 +13,28 @@
               <a href="#"
                  @click="setLibrarySection('ItemList')"
                  :class="{active: this.current_library_section == 'ItemList'}"
-              >Items ({{ live_game_data.throws.length }})</a>
+                 v-if="live_game_data.throws"
+              >Items ({{ Object.keys(live_game_data.throws).length }})</a>
             </li>
             <li>
               <a href="#"
                  @click="setLibrarySection('SoundList')"
                  :class="{active: this.current_library_section == 'SoundList'}"
-              >Sounds ({{ live_game_data.impacts.length }})</a>
+                 v-if="live_game_data.impacts"
+              >Sounds ({{ Object.keys(live_game_data.impacts).length }})</a>
             </li>
             <li>
               <a href="#"
                  @click="setLibrarySection('BonkList')"
                  :class="{active: this.current_library_section == 'BonkList'}"
+                 v-if="live_game_data.customBonks"
               >Bonks ({{ Object.keys(live_game_data.customBonks).length }})</a>
             </li>
             <li>
               <a href="#"
                  @click="setLibrarySection('EventList')"
                  :class="{active: this.current_library_section == 'EventList'}"
+                 v-if="live_game_data.crowdControlEvents"
               >CC Triggers ( {{ Object.keys(live_game_data.crowdControlEvents).length }})</a>
             </li>
           </ul>
@@ -75,7 +79,7 @@
           :current_library_section="current_library_section"
           @set-library-section="setLibrarySection"
           @set-field="handleSetField"
-          @update-data="saveData"
+          @set-game-field="handleSetGameField"
           @update-game-data="saveGameData"
       />
 
@@ -238,16 +242,6 @@ export default {
       console.log('Loading Data...');
       window.ipc.send('LOAD_DATA', true);
     },
-    saveData(event) {
-      this.autoSaveStatus = "changed";
-      this.live_app_data = event;
-      clearTimeout(this.autoSaveTimeout);
-      this.autoSaveTimeout = setTimeout(() => {
-        this.autoSaveStatus = "saving";
-        window.ipc.send('SAVE_DATA', this.live_app_data);
-      },1000);
-
-    },
     loadGameData() {
       console.log('Loading Game Data...');
       this.game_data_loading = true;
@@ -271,8 +265,17 @@ export default {
       this.setField(event.field, event.value);
     },
     setField(field,value) {
+      this.autoSaveStatus = "changed";
       console.log('Saving Field "'+field+'"...');
-      window.ipc.send('SET_FIELD', [field, value]);
+      window.ipc.send('SET_FIELD', {'field': field, 'value': value});
+    },
+    handleSetGameField(event) {
+      this.setGameField(event.field, event.value);
+    },
+    setGameField(field,value) {
+      this.autoGameSaveStatus = "changed";
+      console.log('Saving Game Field "'+field+'"...');
+      window.ipc.send('SET_GAME_FIELD', {'field': field, 'value': value});
     },
     setStatus(message) {
       var status_id = message;
@@ -305,10 +308,7 @@ export default {
         this.current_game = response.data.menu;
 
         this.live_app_data.last_game_id = game_id;
-        this.autoSaveTimeout = setTimeout(() => {
-          this.autoSaveStatus = "saving";
-          window.ipc.send('SAVE_DATA', this.live_app_data);
-        },1000);
+        this.setField('last_game_id', game_id);
 
         this.loadGameData();
         return true;
@@ -362,10 +362,9 @@ export default {
       this.autoSaveStatus = "ok (loaded)";
       console.log('Data Loaded!');
     });
-    window.ipc.on('SAVE_DATA', (payload) => {
+    window.ipc.on('SAVE_STATUS', (payload) => {
       if(payload) {
-        console.log('Data saved!');
-        this.autoSaveStatus = "ok (saved)";
+        this.autoSaveStatus = payload;
       } else {
         console.log('Error saving data!');
       }
@@ -377,20 +376,13 @@ export default {
       this.game_data_loading = false;
       console.log('Game Data Loaded!');
     });
-    window.ipc.on('SAVE_GAME_DATA', (payload) => {
+    window.ipc.on('SAVE_GAME_STATUS', (payload) => {
       if(payload) {
-        console.log('Game Data saved!');
-        this.autoGameSaveStatus = "ok (saved)";
+        this.autoGameSaveStatus = payload;
+        if(payload == "saving") { this.game_data_loading = true; }
+        if(payload == "ok (saved)") { this.game_data_loading = false; }
       } else {
         console.log('Error saving game data!');
-      }
-      this.game_data_loading = false;
-    });
-    window.ipc.on('SET_FIELD', (payload) => {
-      if(payload) {
-        console.log('Field saved!');
-      } else {
-        console.log('Error saving field!');
       }
     });
     window.ipc.on('UPLOAD_THROW', (payload) => {

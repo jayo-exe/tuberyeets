@@ -233,7 +233,6 @@ function connectBridge()
         }
         else if (!isCalibrating && vTubeIsOpen)
         {
-            console.log('ping?');
             var request = {
                 "apiName": "VTubeStudioPublicAPI",
                 "apiVersion": "1.0",
@@ -242,17 +241,12 @@ function connectBridge()
             }
             socketVTube.onmessage = async function(event)
             {
-                console.log('pong!');
                 const tempData = JSON.parse(event.data).data;
                 const paramInfo = tempData.defaultParameters;
                 const modelID = tempData.modelID;
-                
-                const faceWidthMin = data.data[modelID + "Min"] == null ? 0 : data.data[modelID + "Min"][0];
-                const faceHeightMin = data.data[modelID + "Min"] == null ? 0 : data.data[modelID + "Min"][1];
-                const faceWidthMax = data.data[modelID + "Max"] == null ? 0 : data.data[modelID + "Max"][0];
-                const faceHeightMax = data.data[modelID + "Max"] == null ? 0 : data.data[modelID + "Max"][1];
 
-                data.data.parametersHorizontal = [];
+                let flinchParameters = {}
+                flinchParameters.parametersHorizontal = [];
                 for (var i = 0; i < parametersH.length; i++)
                 {
                     var value = 0, min = -30, max = 30;
@@ -266,10 +260,10 @@ function connectBridge()
                             break;
                         }
                     }
-                    data.data.parametersHorizontal[i] = [ parametersH[i], value, min, max ];
+                    flinchParameters.parametersHorizontal[i] = [ parametersH[i], value, min, max ];
                 }
 
-                data.data.parametersVertical = [];
+                flinchParameters.parametersVertical = [];
                 for (var i = 0; i < parametersV.length; i++)
                 {
                     var value = 0, min = -30, max = 30;
@@ -283,16 +277,16 @@ function connectBridge()
                             break;
                         }
                     }
-                    data.data.parametersVertical[i] = [ parametersV[i], value, min, max ];
+                    flinchParameters.parametersVertical[i] = [ parametersV[i], value, min, max ];
                 }
 
                 console.log("Received " + data.type);
-                var temp_data = {...data.data};
+                var temp_data = {...data.appSettings};
 
                 switch(data.type)
                 {
                     case "single":
-                        bonk(data.image, data.weight, data.scale, data.sound, data.volume, data.data, data.game_data_path, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, null);
+                        bonk(data.image, data.weight, data.scale, data.sound, data.volume, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, null);
                         break;
                     case "barrage":
                         var i = 0;
@@ -303,31 +297,31 @@ function connectBridge()
                         const volumes = data.volume;
                         const max = Math.min(images.length, sounds.length, weights.length);
                         console.log(data);
-                        barrageTick(images, weights, scales, sounds, volumes, data.data, data.game_data_path, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, [], data.data.barrageFrequency * 1000, max, 0);
+                        barrageTick(images, weights, scales, sounds, volumes, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, [], data.appSettings.barrageFrequency * 1000, max, 0);
                         break;
                     case "timed":
                         break;
                     case "sound":
-                        playSound(data.sound, data.volume, data.data.volume, data.game_data_path);
+                        playSound(data.sound, data.volume, data.masterVolume, data.game_data_path);
                         break;
                     default:
-                        if (data.game_data.customBonks[data.type].barrageCountOverride)
-                            temp_data.barrageCount = data.game_data.customBonks[data.type].barrageCount;
-                        if (data.game_data.customBonks[data.type].barrageFrequencyOverride)
-                            temp_data.barrageFrequency = data.game_data.customBonks[data.type].barrageFrequency;
-                        if (data.game_data.customBonks[data.type].throwDurationOverride)
-                            temp_data.throwDuration = data.game_data.customBonks[data.type].throwDuration;
-                        if (data.game_data.customBonks[data.type].throwAway)
-                            temp_data.throwAway = data.game_data.customBonks[data.type].throwAway;
-                        if (data.game_data.customBonks[data.type].throwAngleOverride)
+                        if (data.customBonk.barrageCountOverride)
+                            temp_data.barrageCount = data.customBonk.barrageCount;
+                        if (data.customBonk.barrageFrequencyOverride)
+                            temp_data.barrageFrequency = data.customBonk.barrageFrequency;
+                        if (data.customBonk.throwDurationOverride)
+                            temp_data.throwDuration = data.customBonk.throwDuration;
+                        if (data.customBonk.throwAway)
+                            temp_data.throwAway = data.customBonk.throwAway;
+                        if (data.customBonk.throwAngleOverride)
                         {
-                            temp_data.throwAngleMin = data.game_data.customBonks[data.type].throwAngleMin;
-                            temp_data.throwAngleMax = data.game_data.customBonks[data.type].throwAngleMax;
+                            temp_data.throwAngleMin = data.customBonk.throwAngleMin;
+                            temp_data.throwAngleMax = data.customBonk.throwAngleMax;
                         }
-                        if (data.game_data.customBonks[data.type].spinSpeedOverride)
+                        if (data.customBonk.spinSpeedOverride)
                         {
-                            temp_data.spinSpeedMin = data.game_data.customBonks[data.type].spinSpeedMin;
-                            temp_data.spinSpeedMax = data.game_data.customBonks[data.type].spinSpeedMax;
+                            temp_data.spinSpeedMin = data.customBonk.spinSpeedMin;
+                            temp_data.spinSpeedMax = data.customBonk.spinSpeedMax;
                         }
 
                         var i = 0;
@@ -345,7 +339,7 @@ function connectBridge()
                         {
                             windup = new Audio();
                             windup.src = game_folder + "/" + "windups/" + encodeURIComponent(windupSound.location);
-                            windup.volume = windupSound.volume * data.data.volume;
+                            windup.volume = windupSound.volume * data.masterVolume;
                             canPlayWindup = false;
                             windup.oncanplaythrough = function() { canPlayWindup = true; }
                         }
@@ -359,8 +353,8 @@ function connectBridge()
                             windup.play();
                             
                         setTimeout(() => {
-                            barrageTick(cImages, cWeights, cScales, cSounds, cVolumes, temp_data, data.game_data_path, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, cImpactDecals, temp_data.barrageFrequency * 1000, cMax, 0);
-                        }, data.game_data.customBonks[data.type].windupDelay * 1000);
+                            barrageTick(cImages, cWeights, cScales, cSounds, cVolumes, temp_data, data.game_data_path, data.modelCalibration, cImpactDecals, temp_data.barrageFrequency * 1000, cMax, 0);
+                        }, data.customBonk.windupDelay * 1000);
                         break;
                 }
             }
@@ -503,7 +497,7 @@ setInterval(() => {
     }
 }, 5000);
 
-function bonk(image, weight, scale, sound, volume, data, game_folder, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, impactDecal)
+function bonk(image, weight, scale, sound, volume, appSettings, game_folder, modelCalibration, flinchParameters, impactDecal)
 {
     if (vTubeIsOpen)
     {
@@ -516,25 +510,25 @@ function bonk(image, weight, scale, sound, volume, data, game_folder, faceWidthM
         socketVTube.onmessage = function(event)
         {
             const pos = JSON.parse(event.data).data.modelPosition;
-            const throwAway = data.throwAway;
+            const throwAway = appSettings.throwAway;
             if (pos != null)
             {
-                const offsetX = faceWidthMin + (((pos.size + 100) / 200) * (faceWidthMax - faceWidthMin));
-                const offsetY = faceHeightMin + (((pos.size + 100) / 200) * (faceHeightMax - faceHeightMin));
+                const offsetX = modelCalibration.faceWidthMin + (((pos.size + 100) / 200) * (modelCalibration.faceWidthMax - modelCalibration.faceWidthMin));
+                const offsetY = modelCalibration.faceHeightMin + (((pos.size + 100) / 200) * (modelCalibration.faceHeightMax - modelCalibration.faceHeightMin));
                 const xPos = (parseFloat(pos.positionX - offsetX) + 1) / 2;
                 const yPos = 1 - ((parseFloat(pos.positionY - offsetY) + 1) / 2);
                 const fromLeft = Math.random() * 1.5 - 0.25 < xPos;
                 const multH = fromLeft ? 1 : -1;
-                const angle = ((Math.random() * (data.throwAngleMax - data.throwAngleMin)) + data.throwAngleMin) * multH;
-                const sizeScale = data.itemScaleMin + (((pos.size + 100) / 200) * (data.itemScaleMax - data.itemScaleMin));
-                const eyeState = data.closeEyes ? 1 : (data.openEyes ? 2 : 0);
+                const angle = ((Math.random() * (appSettings.throwAngleMax - appSettings.throwAngleMin)) + appSettings.throwAngleMin) * multH;
+                const sizeScale = appSettings.itemScaleMin + (((pos.size + 100) / 200) * (appSettings.itemScaleMax - appSettings.itemScaleMin));
+                const eyeState = appSettings.closeEyes ? 1 : (appSettings.openEyes ? 2 : 0);
 
                 var audio, canPlayAudio;
                 if (sound != null)
                 {
                     audio = new Audio();
                     audio.src =  game_folder + "/" + "impacts/" + encodeURIComponent(sound);
-                    audio.volume = volume * data.volume;
+                    audio.volume = volume * appSettings.volume;
                     canPlayAudio = false;
                     audio.oncanplaythrough = function() { canPlayAudio = true; }
                 }
@@ -582,22 +576,22 @@ function bonk(image, weight, scale, sound, volume, data, game_folder, faceWidthM
                     movement.classList.add("animated");
                     var animName = (throwAway ? "away" : "throw") + (fromLeft ? "Left" : "Right");
                     movement.style.animationName = animName;
-                    movement.style.animationDuration = data.throwDuration + "s";
-                    movement.style.animationDelay = (data.delay / 1000) + "s";
+                    movement.style.animationDuration = appSettings.throwDuration + "s";
+                    movement.style.animationDelay = (appSettings.delay / 1000) + "s";
                     var thrown = document.createElement("img");
                     thrown.classList.add("animated");
                     thrown.src = game_folder + "/" + "throws/" + encodeURIComponent(image);
                     thrown.style.width = img.width * scale * sizeScale + "px";
                     thrown.style.height = img.height * scale * sizeScale + "px";
-                    if (data.spinSpeedMax - data.spinSpeedMin == 0)
+                    if (appSettings.spinSpeedMax - appSettings.spinSpeedMin == 0)
                         thrown.style.transform = "rotate(" + -angle + "deg)";
                     else
                     {
                         var animName = "spin" + (Math.random() < 0.5 ? "Clockwise " : "CounterClockwise ");
-                        var preSpinSpeed = (parseFloat(data.spinSpeedMin) + (Math.random() * (parseFloat(data.spinSpeedMax) - parseFloat(data.spinSpeedMin))));
+                        var preSpinSpeed = (parseFloat(appSettings.spinSpeedMin) + (Math.random() * (parseFloat(appSettings.spinSpeedMax) - parseFloat(appSettings.spinSpeedMin))));
                         var finalSpinSpeed = (1 / preSpinSpeed);
-                        console.log("MinSpeed determined: " + data.spinSpeedMin)
-                        console.log("MaxSpeed determined: " + data.spinSpeedMax)
+                        console.log("MinSpeed determined: " + appSettings.spinSpeedMin)
+                        console.log("MaxSpeed determined: " + appSettings.spinSpeedMax)
                         console.log("PreSpeed determined: " + preSpinSpeed)
                         console.log("SpinSpeed determined: " + finalSpinSpeed)
                         thrown.style.animation = animName + finalSpinSpeed + "s";
@@ -610,15 +604,15 @@ function bonk(image, weight, scale, sound, volume, data, game_folder, faceWidthM
                     document.querySelector("body").appendChild(root);
                     
                     if(!throwAway) {
-                        setTimeout(function() { flinch(multH, angle, weight, data.parametersHorizontal, data.parametersVertical, data.returnSpeed, eyeState); }, data.throwDuration * 500, data.throwAngleMin, data.throwAngleMax);
+                        setTimeout(function() { flinch(multH, angle, weight, flinchParameters.parametersHorizontal, flinchParameters.parametersVertical, appSettings.returnSpeed, eyeState); }, appSettings.throwDuration * 500, appSettings.throwAngleMin, appSettings.throwAngleMax);
                     }
                 
                     if (sound != null)
-                        var soundDelay = data.throwDuration * 500;
+                        var soundDelay = appSettings.throwDuration * 500;
                         if(throwAway) {
                             soundDelay = 10;
                         }
-                        setTimeout(function() { audio.play(); }, (soundDelay) + data.delay);
+                        setTimeout(function() { audio.play(); }, (soundDelay) + appSettings.delay);
                 
                     if (impactDecal != null)
                         setTimeout(function() {
@@ -632,9 +626,9 @@ function bonk(image, weight, scale, sound, volume, data, game_folder, faceWidthM
                             document.querySelector("body").appendChild(hit);
 
                             setTimeout(function() { hit.remove(); }, impactDecal.duration * 1000);
-                        }, (data.throwDuration * 500) + data.delay);
+                        }, (appSettings.throwDuration * 500) + appSettings.delay);
                     
-                    setTimeout(function() { document.querySelector("body").removeChild(root); }, (data.throwDuration * 1000) + data.delay);
+                    setTimeout(function() { document.querySelector("body").removeChild(root); }, (appSettings.throwDuration * 1000) + appSettings.delay);
                 }
             }
         }
@@ -653,17 +647,17 @@ function playSound(sound, volume, master_volume, game_folder)
     }
 }
 
-function barrageTick(images, weights, scales, sounds, volumes, data, game_folder, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, impactDecals, bonkDelay, bonkCount, currentBonk) {
+function barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, bonkDelay, bonkCount, currentBonk) {
     console.log('current BonkDelay is ' + bonkDelay);
     let tickRate = bonkDelay + (Math.floor((Math.random() * bonkDelay * 1.5) - (bonkDelay * 0.75)));
     console.log('new Tickrate is ' + tickRate);
-    bonk(images[currentBonk], weights[currentBonk], scales[currentBonk], sounds[currentBonk], volumes[currentBonk], data, game_folder, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, impactDecals[currentBonk]);
+    bonk(images[currentBonk], weights[currentBonk], scales[currentBonk], sounds[currentBonk], volumes[currentBonk], appSettings, game_folder, modelCalibration, flinchParameters, impactDecals[currentBonk]);
     currentBonk++;
     if (currentBonk < bonkCount)
     {
         setTimeout(function()
         {
-            barrageTick(images, weights, scales, sounds, volumes, data, game_folder, faceWidthMin, faceWidthMax, faceHeightMin, faceHeightMax, impactDecals, bonkDelay, bonkCount, currentBonk);
+            barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, bonkDelay, bonkCount, currentBonk);
         }, tickRate);
     }
 }

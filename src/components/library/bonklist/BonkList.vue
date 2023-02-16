@@ -82,6 +82,10 @@ export default {
         if (this.live_game_data.impacts[i].enabled)
           this.live_game_data.impacts[i].customs.push("Custom Bonk " + newBonkNumber);
 
+      this.updateImages();
+      this.updateSounds();
+      this.updateCustomBonks();
+
     },
     editBonk(item_index) {
       this.$emit("edit-custom-bonk",item_index);
@@ -98,14 +102,33 @@ export default {
         for (var i = 0; i < this.live_game_data.impacts.length; i++)
           if (this.live_game_data.impacts[i].customs.includes(item_index))
             this.live_game_data.impacts[i].customs.splice(this.live_game_data.impacts[i].customs.indexOf(item_index),1);
+
+        this.updateImages();
+        this.updateSounds();
+        this.updateCustomBonks();
       }
     },
     testCustomBonk(item_index) {
       console.log('Testing custom bonk: ' + item_index);
       window.ipc.send('TEST_CUSTOM_BONK', item_index);
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    updateSounds() {
+      this.$emit("set-game-field",{
+        field: `impacts`,
+        value: this.live_game_data.impacts
+      });
+    },
+    updateImages() {
+      this.$emit("set-game-field",{
+        field: `throws`,
+        value: this.live_game_data.throws
+      });
+    },
+    updateCustomBonks() {
+      this.$emit("set-game-field",{
+        field: `customBonks`,
+        value: this.live_game_data.customBonks
+      });
     }
   },
   mounted() {
@@ -118,12 +141,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },

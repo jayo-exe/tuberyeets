@@ -27,7 +27,7 @@
               <img src="ui/checkmark.png" class="checkmark">
             </label>
             <p class="imageLabel" :title="bonk_windup.location">{{ bonk_windup.location }}</p>
-            <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.customBonks[current_bonk].windupSounds[key].volume">
+            <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.customBonks[current_bonk].windupSounds[key].volume" @input="updateWindups">
             <label class="delete">
               <button class="imageRemove" @click="removeItem(key)"></button>
               <img src="ui/x.png" class="checkmark"></img>
@@ -57,8 +57,11 @@ export default {
     setSection(section_name) {
       this.$emit("set-section",section_name);
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    updateWindups() {
+      this.$emit("set-game-field",{
+        field: `customBonks.${current_bonk}.windupSounds`,
+        value: this.live_game_data.customBonks[current_bonk].windupSounds
+      });
     },
     handleNewFiles(event) {
       var file_list = event.target.files;
@@ -71,6 +74,7 @@ export default {
     removeItem(item_index) {
       if(confirm("are you sure you want to remove this Windup?")) {
         this.live_game_data.customBonks[this.current_bonk].windupSounds.splice(item_index,1);
+        this.updateDecals();
       }
     },
     getWindupsPath(filename) {
@@ -115,11 +119,13 @@ export default {
     enableItem(item_index) {
       if(!this.itemIsEnabled(item_index)) {
         this.live_game_data.customBonks[this.current_bonk].windupSounds[item_index].enabled = true;
+        this.updateWindups();
       }
     },
     disableItem(item_index) {
       if(this.itemIsEnabled(item_index)) {
         this.live_game_data.customBonks[this.current_bonk].windupSounds[item_index].enabled = false;
+        this.updateWindups();
       }
     }
   },
@@ -130,12 +136,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },

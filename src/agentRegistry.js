@@ -9,34 +9,30 @@ module.exports = class AgentRegistry {
         this.appData = appDataHelper;
         this.gameData = gameDataHelper;
         this.eventManager = new EventManager(this);
-        if(!this.appData.hasFieldData('agents')) {
+        if(!this.appData.has('agents')) {
             console.log("[AgentRegistry] Agent Data store not found! Creating...");
-            this.appData.setFieldData('agents', {});
-            this.appData.saveData();
+            this.appData.update('agents', {});
         }
     }
 
     hasAgentFieldData(agent, field) {
-        var agentData = this.appData.getFieldData('agents');
-        if(!agentData.hasOwnProperty(agent.agentKey)) return false;
-        if(!agentData[agent.agentKey].hasOwnProperty(field)) return false;
-        return true;
+        return this.appData.has(`agents.${agent.agentKey}.${field}`);
     }
 
     getAgentFieldData(agent, field) {
-        var agentData = this.appData.getFieldData('agents');
+        var agentData = this.appData.read('agents');
         if(!agentData.hasOwnProperty(agent.agentKey)) return undefined;
         if(!agentData[agent.agentKey].hasOwnProperty(field)) return undefined;
         return agentData[agent.agentKey][field];
     }
 
     setAgentFieldData(agent, field, value) {
-        var agentData = this.appData.getFieldData('agents');
+        var agentData = this.appData.read('agents');
         if(!agentData.hasOwnProperty(agent.agentKey)) agentData[agent.agentKey] = {};
         if(!agentData[agent.agentKey].hasOwnProperty(field)) agentData[agent.agentKey][field] = {};
         agentData[agent.agentKey][field] = value;
         console.log("[AgentRegistry] Setting field '"+field+"' for agent " + agent.agentKey + "...");
-        return this.appData.setFieldData('agents',agentData);
+        return this.appData.update('agents',agentData);
     }
 
     registerAgent(agent) {
@@ -53,7 +49,6 @@ module.exports = class AgentRegistry {
                 this.setAgentFieldData(agent, setting.name, setting.default);
             }
         });
-        this.appData.saveData();
 
         //fire agent init routine
         console.log("[AgentRegistry] Firing registry routine for agent " + agent.agentKey + "...");
@@ -64,7 +59,6 @@ module.exports = class AgentRegistry {
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
         this.setAgentFieldData(agent,'enabled', true);
-        this.appData.saveData();
         agent.agentEnabled();
     }
 
@@ -72,7 +66,6 @@ module.exports = class AgentRegistry {
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
         this.setAgentFieldData(agent,'enabled', false);
-        this.appData.saveData();
         agent.agentDisabled();
     }
 
@@ -93,10 +86,6 @@ module.exports = class AgentRegistry {
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
         return agent.agentStatus()
-    }
-
-    saveAppData() {
-        return this.appData.saveData();
     }
 
     getAllAgentStatus() {

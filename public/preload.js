@@ -6,10 +6,17 @@ const validChannels = [
     'UPDATE_DOWNLOADED',
     'RESTART',
     'LOAD_DATA',
-    'SAVE_DATA',
+    'SAVE_STATUS',
     'LOAD_GAME_DATA',
     'SAVE_GAME_DATA',
+    'SAVE_GAME_STATUS',
     'SET_FIELD',
+    'SET_GAME_FIELD',
+    'APP_CRUD',
+    'GAME_CRUD',
+    'APP_CRUD_SYNC',
+    'GAME_CRUD_SYNC',
+    'GAME_STATS',
     'STATUS',
     'AGENT_STATUS',
     'EFFECT_QUEUE',
@@ -33,9 +40,19 @@ const validChannels = [
 
 contextBridge.exposeInMainWorld(
     'ipc', {
-        send: (channel, data) => {
+        send: (channel, ...data) => {
             if (validChannels.includes(channel)) {
-                ipcRenderer.send(channel, data);
+                ipcRenderer.send(channel,... data);
+            }
+        },
+        sendSync: (channel, ...data) => {
+            if (validChannels.includes(channel)) {
+                return ipcRenderer.sendSync(channel, ...data);
+            }
+        },
+        invoke: (channel, ...data) => {
+            if (validChannels.includes(channel)) {
+                return ipcRenderer.invoke(channel, ...data);
             }
         },
         on: (channel, func) => {

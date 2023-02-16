@@ -73,10 +73,14 @@ export default {
       if(confirm("are you sure you want to remove this Item?")) {
         var item_image = this.live_game_data.throws[item_index].location;
         this.live_game_data.throws.splice(item_index,1);
+        this.updateImages();
       }
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    updateImages() {
+      this.$emit("set-game-field",{
+        field: `throws`,
+        value: this.live_game_data.throws
+      });
     },
     handleNewFiles(event) {
       var file_list = event.target.files;
@@ -122,11 +126,13 @@ export default {
     enableItem(item_index) {
       if(!this.itemIsEnabled(item_index)) {
         this.live_game_data.throws[item_index].enabled = true;
+        this.updateImages();
       }
     },
     disableItem(item_index) {
       if(this.itemIsEnabled(item_index)) {
         this.live_game_data.throws[item_index].enabled = false;
+        this.updateImages();
       }
     },
     testCustomItem(item_index) {
@@ -147,12 +153,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },

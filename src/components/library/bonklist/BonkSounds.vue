@@ -54,8 +54,11 @@ export default {
     setSection(section_name) {
       this.$emit("set-section",section_name);
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    updateSounds() {
+      this.$emit("set-game-field",{
+        field: `impacts`,
+        value: this.live_game_data.impacts
+      });
     },
     handleNewFiles(event) {
       var file_list = event.target.files;
@@ -107,11 +110,13 @@ export default {
     enableItem(item_index) {
       if(!this.itemIsIncluded(item_index)) {
         this.live_game_data.impacts[item_index].customs.push(this.current_bonk);
+        this.updateSounds();
       }
     },
     disableItem(item_index) {
       if(this.itemIsIncluded(item_index)) {
         this.live_game_data.impacts[item_index].customs.splice(this.live_game_data.impacts[item_index].customs.indexOf(this.current_bonk),1);
+        this.updateSounds();
       }
     }
   },
@@ -122,12 +127,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },

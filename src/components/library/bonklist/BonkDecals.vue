@@ -30,9 +30,13 @@
             <p class="imageLabel" :title="bonk_decal.location">{{ bonk_decal.location }}</p>
             <div class="decalSettings">
               <img src="ui/duration.png" title="Duration (s)">
-              <input type="number" class="decalDuration" min="0" v-model="live_game_data.customBonks[current_bonk].impactDecals[key].duration">
+              <input type="number" class="decalDuration" min="0"
+                     v-model="live_game_data.customBonks[current_bonk].impactDecals[key].duration"
+                     @input="updateDecals">
               <img src="ui/scale.png" title="Scale">
-              <input type="number" class="decalScale" min="0" v-model="live_game_data.customBonks[current_bonk].impactDecals[key].scale">
+              <input type="number" class="decalScale" min="0"
+                     v-model="live_game_data.customBonks[current_bonk].impactDecals[key].scale"
+                     @input="updateDecals">
             </div>
             <label class="delete">
               <button class="imageRemove" @click="removeItem(key)"></button>
@@ -63,8 +67,11 @@ export default {
     setSection(section_name) {
       this.$emit("set-section",section_name);
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    updateDecals() {
+      this.$emit("set-game-field",{
+        field: `customBonks.${current_bonk}.impactDecals`,
+        value: this.live_game_data.customBonks[current_bonk].impactDecals
+      });
     },
     handleNewFiles(event) {
       var file_list = event.target.files;
@@ -77,6 +84,7 @@ export default {
     removeItem(item_index) {
       if(confirm("are you sure you want to remove this Decal?")) {
         this.live_game_data.customBonks[this.current_bonk].impactDecals.splice(item_index,1);
+        this.updateDecals();
       }
     },
     getDecalsPath(filename) {
@@ -120,11 +128,13 @@ export default {
     enableItem(item_index) {
       if(!this.itemIsEnabled(item_index)) {
         this.live_game_data.customBonks[this.current_bonk].impactDecals[item_index].enabled = true;
+        this.updateDecals();
       }
     },
     disableItem(item_index) {
       if(this.itemIsEnabled(item_index)) {
         this.live_game_data.customBonks[this.current_bonk].impactDecals[item_index].enabled = false;
+        this.updateDecals();
       }
     }
   },
@@ -135,12 +145,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },

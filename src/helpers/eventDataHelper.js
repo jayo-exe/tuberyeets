@@ -60,60 +60,33 @@ module.exports = class EventDataHelper {
             event.scripts[script.key] = {'name': script.key, 'actions': {}};
         });
 
-        let data = this.gameData.getAllData();
-        data.events[eventId] = { ...event};
-        this.gameData.setAllData(data);
-        this.gameData.saveData();
-
-        return data.events[eventId];
+        this.gameData.update(`events.${eventId}`, event, true);
+        return this.gameData.read(`events.${eventId}`)
     }
 
     updateEventDetails(eventId, eventDetails) {
-        let data = this.gameData.getAllData();
-        if(!data.events.hasOwnProperty(eventId)) {
-            return false;
-        }
+        if(!this.gameData.has(`events.${eventId}`)) return false;
+
         if(eventDetails.hasOwnProperty('name')) {
-            data.events[eventId].name = eventDetails.name;
+            this.gameData.update(`events.${eventId}.name`, eventDetails.name);
         }
         if(eventDetails.hasOwnProperty('enabled')) {
-            data.events[eventId].enabled = eventDetails.enabled;
+            this.gameData.update(`events.${eventId}.enabled`, eventDetails.enabled);
         }
         if(eventDetails.hasOwnProperty('settings')) {
-            data.events[eventId].settings = { ...eventDetails.settings};
+            this.gameData.update(`events.${eventId}.settings`, { ...eventDetails.settings});
         }
 
-        this.gameData.setAllData(data);
-        this.gameData.saveData();
 
-        return data.events[eventId];
+        return this.gameData.read(`events.${eventId}`);
     }
 
     destroyEvent(eventId) {
-        let data = this.gameData.getAllData();
-        if(!data.events.hasOwnProperty(eventId)) {
-            return false;
-        }
-
-        delete data.events[eventId];
-        this.gameData.setAllData(data);
-        this.gameData.saveData();
-
-        return true;
+        return this.gameData.delete(`events.${eventId}`);
     }
 
     findEventAction(eventId, scriptName, actionId) {
-        let data = this.gameData.getAllData();
-        if(!data.events.hasOwnProperty(eventId)) {
-            return false;
-        }
-        if(!data.events[eventId].scripts.hasOwnProperty(scriptName)) {
-            return false;
-        }
-        if(!data.events[eventId].scripts[scriptName].actions.hasOwnProperty(actionId)) {
-            return false;
-        }
-        return data.events[eventId].scripts[scriptName].actions[actionId];
+        return this.gameData.read(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
     }
 
     createEventAction(eventId, scriptName, agentKey, actionKey) {
@@ -122,11 +95,12 @@ module.exports = class EventDataHelper {
         if(!agent.agentOutputs.hasOwnProperty(actionKey)) return false;
         let agentAction = agent.agentOutputs[actionKey];
 
-        let data = this.gameData.getAllData();
-        if(!data.events.hasOwnProperty(eventId)) {
+        if(!this.gameData.has(`events.${eventId}`)) {
             return false;
         }
-        if(!data.events[eventId].scripts.hasOwnProperty(scriptName)) {
+
+
+        if(!this.gameData.has(`events.${eventId}.scripts.${scriptName}`)) {
             return false;
         }
 
@@ -143,42 +117,32 @@ module.exports = class EventDataHelper {
             action.settings[setting.key] = (setting.hasOwnProperty('default') ? setting.default: null);
         });
 
-        data = this.gameData.getAllData();
-        data.events[eventId].scripts[scriptName].actions[actionId] = { ...action};
-        this.gameData.setAllData(data);
-        this.gameData.saveData();
+        this.gameData.update(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`, action, true);
 
-        return data.events[eventId].scripts[scriptName].actions[actionId];
+        return this.gameData.read(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
     }
 
     updateEventActionDetails(eventId, scriptName, actionId, actionDetails) {
-        let data = this.gameData.getAllData();
+
         if(!this.findEventAction(eventId, scriptName, actionId)) {
             return false;
         }
 
         if(actionDetails.hasOwnProperty('delay')) {
-            data.events[eventId].scripts[scriptName].actions[actionId].delay = actionDetails.delay
+            this.gameData.update(`events.${eventId}.scripts.${scriptName}.actions.${actionId}.delay`, actionDetails.delay);
         }
         if(actionDetails.hasOwnProperty('settings')) {
-            data.events[eventId].scripts[scriptName].actions[actionId].settings = { ...actionDetails.settings};
+            this.gameData.update(`events.${eventId}.scripts.${scriptName}.actions.${actionId}.settings`, actionDetails.settings);
         }
 
-        this.gameData.setAllData(data);
-        this.gameData.saveData();
-
-        return data.events[eventId].scripts[scriptName].actions[actionId];
+        return this.gameData.read(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
     }
 
     destroyEventAction(eventId, scriptName, actionId) {
         if(!this.findEventAction(eventId, scriptName, actionId)) {
             return false;
         }
-        let data = this.gameData.getAllData();
-        delete data.events[eventId].scripts[scriptName].actions[actionId];
-        this.gameData.setAllData(data);
-        this.gameData.saveData();
 
-        return true;
+        return this.gameData.delete(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
     }
 }

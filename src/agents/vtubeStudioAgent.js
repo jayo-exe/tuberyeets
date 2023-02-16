@@ -8,13 +8,16 @@ module.exports = class VtubeStudioAgent {
         this.apiClient = null;
         this.apiOptions = {
             authTokenGetter: () => {return this.agentRegistry.getAgentFieldData(this,'vtsAuthKey');},
-            authTokenSetter: (token) => {this.agentRegistry.setAgentFieldData(this,'vtsAuthKey', token); this.agentRegistry.saveAppData();},
+            authTokenSetter: (token) => {this.agentRegistry.setAgentFieldData(this,'vtsAuthKey', token);},
             webSocketFactory: (url) => new WebSocket(url),
             pluginName: "TuberYeets",
             pluginDeveloper: "Jayo",
             pluginIcon: icon.iconData,
             port: 8001,
         };
+        this.stacks = {"expression" : {}, "hotkey" : {}};
+        this.hotkeyStacks = {};
+
         this.agentRegistry = null;
         this.agentName = 'VTube Studio';
         this.agentKey = 'vtubestudio';
@@ -62,6 +65,28 @@ module.exports = class VtubeStudioAgent {
                     {
                         'key': 'name',
                         'label': 'VTS Hotkey',
+                        'type': 'list',
+                        'options': this.getHotkeyOutputOptions,
+                        'default': ''
+                    }
+                ]
+            },
+            negateHotkey: {
+                'key': 'negateHotkey',
+                'label': 'Negate Hotkey',
+                'description': 'Negate a VTS Hotkey with another Hotkey',
+                'handler': this.handleNegateHotkeyOutput,
+                'settings': [
+                    {
+                        'key': 'target',
+                        'label': 'Hotkey to Negate',
+                        'type': 'list',
+                        'options': this.getHotkeyOutputOptions,
+                        'default': ''
+                    },
+                    {
+                        'key': 'name',
+                        'label': 'Hotkey to Use',
                         'type': 'list',
                         'options': this.getHotkeyOutputOptions,
                         'default': ''
@@ -132,8 +157,13 @@ module.exports = class VtubeStudioAgent {
 
     handleExpressionOutput(values) {
         if(values.type == 'activate') {
-            this.activateExpression(values.name);
+            if(this.incrementStack('expression', values.name) === 1) {
+                this.activateExpression(values.name);
+            }
         } else {
+            if(this.decrementStack('expression', values.name) === 1) {
+                this.activateExpression(values.name);
+            }
             this.deactivateExpression(values.name);
         }
     }
@@ -148,7 +178,15 @@ module.exports = class VtubeStudioAgent {
     }
 
     handleHotkeyOutput(values) {
-        this.triggerHotkey(values.name);
+        if(this.incrementStack('hotkey', values.name) === 1) {
+            this.triggerHotkey(values.name);
+        }
+    }
+
+    handleNegateHotkeyOutput(values) {
+        if(this.decrementStack('hotkey', values.target) === 0) {
+            this.triggerHotkey(values.name);
+        }
     }
 
     setPort(new_port) {
@@ -166,7 +204,6 @@ module.exports = class VtubeStudioAgent {
 
     setAuthToken(authToken) {
         this.agentRegistry.setAgentFieldData(this,'vtsAuthKey', authToken);
-        this.agentRegistry.saveAppData();
     }
 
     async getStats() {
@@ -178,6 +215,12 @@ module.exports = class VtubeStudioAgent {
             this.vtsReady = false;
             console.error("VTS ERROR: " + e);
         }
+    }
+
+    async getModelId() {
+        if(!this.vtsReady) return;
+        const model = await this.apiClient.currentModel();
+        return model.modelLoaded ? model.modelId : false;
     }
 
     async getHotkeys() {
@@ -218,6 +261,33 @@ module.exports = class VtubeStudioAgent {
         } else {
             console.log(`Could not find Parameter: ${param}`);
         }
+    }
+
+    incrementStack(type, name) {
+        if(!this.stacks.hasOwnProperty(type)) return false;
+        if(!this.stacks[type].hasOwnProperty(name)) {
+            this.stacks[type][name] = 1;
+            return 1;
+        }
+        this.stacks[type][name] ++;
+        return this.stacks[type][name];
+    }
+
+    decrementStack(type, name) {
+        if(!this.stacks.hasOwnProperty(type)) return false;
+        if(!this.stacks[type].hasOwnProperty(name)) return false;
+        if(this.stacks[type][name] === 1) {
+            delete this.stacks[type][name];
+            return 0;
+        }
+        this.stacks[type][name] --;
+        return this.stacks[type][name];
+    }
+
+    checkStack(type, name) {
+        if(!this.stacks.hasOwnProperty(type)) return false;
+        if(!this.stacks[type].hasOwnProperty(name)) return 0;
+        return this.stacks[type][name];
     }
 
     async activateExpression(expression_name) {

@@ -123,7 +123,6 @@ module.exports = class CrowdControlAgent {
 
     setGame(gameId) {
         this.agentRegistry.setAgentFieldData(this,'selectedGameId', gameId);
-        this.agentRegistry.saveAppData();
         this.loadGameMenu(gameId);
     }
 

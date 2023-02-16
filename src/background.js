@@ -22,7 +22,7 @@ let bonkerPath = path.resolve(__static, bonkRoot+'/bonker.html');
 // Loading core data file
 let appData = new AppDataHelper(userDataPath);
 appData.loadData();
-appData.setFieldData('bonkerPath', bonkerPath);
+appData.update('bonkerPath', bonkerPath);
 
 let gameData = new GameDataHelper(userDataPath,__static);
 
@@ -76,7 +76,7 @@ async function createWindow() {
   }
 
   mainWindow.on("minimize", () => {
-    if (appData.getFieldData('minimizeToTray'))
+    if (appData.read('minimizeToTray'))
     {
       setTray();
       mainWindow.setSkipTaskbar(true);
@@ -223,7 +223,12 @@ setInterval(() => {
 // Data Management
 // ----------------
 
-
+appData.statusCallback = function(status) {
+  mainWindow.webContents.send("SAVE_STATUS", status);
+}
+gameData.statusCallback = function(status) {
+  mainWindow.webContents.send("GAME_SAVE_STATUS", status);
+}
 
 ipcMain.on('GET_DATA_PATH', (event, payload) => {
   event.reply('GET_DATA_PATH', userDataPath);
@@ -233,21 +238,9 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
   console.log('got load request');
   try {
     appData.loadData();
-    appData.setFieldData('bonkerPath', bonkerPath);
+    appData.update('bonkerPath', bonkerPath);
   } catch {}
   event.reply('LOAD_DATA', appData.getAllData());
-});
-
-ipcMain.on('SAVE_DATA', (event, payload) => {
-  console.log('got save request');
-  let save_success;
-  try {
-    appData.setAllData(payload);
-    appData.saveData();
-    save_success = true;
-  } catch {}
-  console.log('sending save reply');
-  event.reply('SAVE_DATA', save_success);
 });
 
 ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
@@ -259,20 +252,87 @@ ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
 
 ipcMain.on('SAVE_GAME_DATA', (event, payload) => {
   let save_data = payload.data;
-  gameData.setAllData(save_data);
-  let save_success = gameData.saveData();
   event.reply('SAVE_GAME_DATA', save_success);
 });
 
-ipcMain.on("SET_FIELD", (_, arg) =>
+ipcMain.on("SET_FIELD", (event, payload) =>
 {
-  let save_success;
   try {
-    appData.setFieldData(field, value);
-    appData.saveData();
-    save_success = true;
+    appData.update(payload.field, payload.value, payload.create);
   } catch {}
-  _.reply('SET_FIELD', save_success);
+});
+
+ipcMain.on("APP_CRUD", (event, payload) =>
+{
+
+  try {
+
+  } catch {}
+});
+
+ipcMain.handle('APP_CRUD', async (event, operation, payload) => {
+  switch(operation) {
+    case "read":
+      return appData.read(payload.field);
+      break;
+    case "update":
+      return appData.update(payload.field, payload.value, payload.create);
+      break;
+    case "delete":
+      return appData.delete(payload.field);
+      break;
+  }
+});
+
+ipcMain.handle('GAME_CRUD', async (event, operation, payload) => {
+  console.log(payload);
+  switch(operation) {
+    case "read":
+      return gameData.read(payload.field);
+      break;
+    case "update":
+      return gameData.update(payload.field, payload.value, payload.create);
+      break;
+    case "delete":
+      return gameData.delete(payload.field);
+      break;
+  }
+});
+
+ipcMain.on('APP_CRUD_SYNC', async (event, operation, payload) => {
+  switch(operation) {
+    case "read":
+      event.returnValue = appData.read(payload.field);
+      break;
+    case "update":
+      event.returnValue = appData.update(payload.field, payload.value, payload.create);
+      break;
+    case "delete":
+      event.returnValue = appData.delete(payload.field);
+      break;
+  }
+});
+
+ipcMain.on('GAME_CRUD_SYNC', async (event, operation, payload) => {
+  console.log(payload);
+  switch(operation) {
+    case "read":
+      event.returnValue = gameData.read(payload.field);
+      break;
+    case "update":
+      event.returnValue = gameData.update(payload.field, payload.value, payload.create);
+      break;
+    case "delete":
+      event.returnValue = gameData.delete(payload.field);
+      break;
+  }
+});
+
+ipcMain.on("SET_GAME_FIELD", (event, payload) =>
+{
+  try {
+    gameData.update(payload.field, payload.value, payload.create);
+  } catch {}
 });
 
 ipcMain.on('UPLOAD_THROW', (event, payload) => {
@@ -349,7 +409,7 @@ function handleEffect(effect_id) {
   }
   let current_effect = effectQueue[effect_id];
   console.log("Handling event " + current_effect.id);
-  let customEvents = gameData.getFieldData("crowdControlEvents");
+  let customEvents = gameData.read("crowdControlEvents");
   let matchedEvent = null;
   Object.entries(customEvents).forEach(item => {
     const [key, customEvent] = item;

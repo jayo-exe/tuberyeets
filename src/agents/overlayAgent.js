@@ -199,7 +199,6 @@ module.exports = class OverlayAgent {
                     else
                     {
                         this.agentRegistry.setAgentFieldData(this,request.modelID + "Min", [ request.positionX, request.positionY ]);
-                        this.agentRegistry.saveAppData();
                         this.calibrateStage = 2;
                         this.proceedCalibration();
                     }
@@ -213,7 +212,6 @@ module.exports = class OverlayAgent {
                     else
                     {
                         this.agentRegistry.setAgentFieldData(this,request.modelID + "Max", [ request.positionX, request.positionY ]);
-                        this.agentRegistry.saveAppData();
                         this.calibrateStage = 4;
                         this.proceedCalibration();
                     }
@@ -234,8 +232,27 @@ module.exports = class OverlayAgent {
             this.socketClient.send(JSON.stringify(response));
         } else if (request.type == "vtsAuth") {
             this.agentRegistry.setAgentFieldData(this,'vtsOverlayAuthKey', request.authKey);
-            this.agentRegistry.saveAppData();
         }
+    }
+
+    getAppSettings() {
+        let appData = this.agentRegistry.appData;
+        return {
+            barrageCount: appData.read('barrageCount'),
+            barrageFrequency: appData.read('barrageFrequency'),
+            throwAngleMin: appData.read('throwAngleMin'),
+            throwAngleMax: appData.read('throwAngleMax'),
+            itemScaleMin: appData.read('itemScaleMin'),
+            itemScaleMax: appData.read('itemScaleMax'),
+            throwDuration: appData.read('throwDuration'),
+            delay: appData.read('delay'),
+            spinSpeedMin: appData.read('spinSpeedMin'),
+            spinSpeedMax: appData.read('spinSpeedMax'),
+            volume: appData.read('volume'),
+            closeEyes: appData.read('closeEyes'),
+            openEyes: appData.read('openEyes'),
+            returnSpeed: appData.read('returnSpeed'),
+        };
     }
 
     proceedCalibration()
@@ -272,7 +289,8 @@ module.exports = class OverlayAgent {
     throwItem(itemIndex) {
         console.log('[OverlayAgent] Sending Custom Item');
         let gdh = this.agentRegistry.gameData;
-        let itemData = gdh.gameData.throws;
+
+        let itemData = gdh.read(`throws`);
         let item = itemData.find(obj => {
             return obj.location === itemIndex
         });
@@ -284,8 +302,8 @@ module.exports = class OverlayAgent {
         if (gdh.hasActiveSound())
         {
             do {
-                soundIndex = Math.floor(Math.random() * gdh.gameData.impacts.length);
-            } while (!gdh.gameData.impacts[soundIndex].enabled);
+                soundIndex = Math.floor(Math.random() * gdh.read(`impacts`).length);
+            } while (!gdh.read(`impacts.${soundIndex}.enabled`));
         }
 
         let request =
@@ -294,20 +312,31 @@ module.exports = class OverlayAgent {
                 "image": item.location,
                 "weight": item.weight,
                 "scale": item.scale,
-                "sound": item.sound == null && soundIndex != -1 ? gdh.gameData.impacts[soundIndex].location : item.sound,
+                "sound": item.sound == null && soundIndex != -1 ? gdh.read(`impacts.${soundIndex}.location`) : item.sound,
                 "volume": item.volume,
-                "data": this.agentRegistry.appData.getAllData(),
-                "game_data": gdh.gameData,
-                "game_data_path": gdh.gameData.game_data_path
+                "masterVolume": this.agentRegistry.appData.read('volume'),
+                "appSettings": this.getAppSettings(),
+                "game_data_path": gdh.read(`game_data_path`)
 
             }
+        if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
+            let currentModelId = this.agentRegistry.getAgent('vtubestudio').getModelId();
+            if(currentModelId) {
+                request.modelCalibration = {
+                    "faceWidthMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[0],
+                    "faceHeightMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[1],
+                    "faceWidthMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[0],
+                    "faceHeightMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[1],
+                }
+            }
+        }
         this.socketClient.send(JSON.stringify(request));
     }
 
     throwBonk(bonkName,customCount=null) {
         console.log('[OverlayAgent] Sending Custom Bonk');
         let gdh = this.agentRegistry.gameData;
-        const imagesWeightsScalesSoundsVolumes = gdh.getCustomImagesWeightsScalesSoundsVolumes(bonkName,customCount);
+        const imagesWeightsScalesSoundsVolumes = gdh.bonkEventHelper.getCustomImagesWeightsScalesSoundsVolumes(bonkName,customCount);
         let images = [], weights = [], scales = [], sounds = [], volumes = [], impactDecals = [], windupSounds = [];
         for (let i = 0; i < imagesWeightsScalesSoundsVolumes.length; i++) {
             images[i] = imagesWeightsScalesSoundsVolumes[i].location;
@@ -326,11 +355,24 @@ module.exports = class OverlayAgent {
             "scale": scales,
             "sound": sounds,
             "volume": volumes,
+            "masterVolume": this.agentRegistry.appData.read('volume'),
             "impactDecal": impactDecals,
             "windupSound": windupSounds,
-            "data": this.agentRegistry.appData.getAllData(),
-            "game_data": gdh.gameData,
-            "game_data_path": gdh.gameData.game_data_path
+            "appSettings": this.getAppSettings(),
+            "customBonk": gdh.read(`customBonks.${bonkName}`),
+            "game_data_path": gdh.read(`game_data_path`)
+        }
+
+        if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
+            let currentModelId = this.agentRegistry.getAgent('vtubestudio').getModelId();
+            if(currentModelId) {
+                request.modelCalibration = {
+                    "faceWidthMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[0] || 0,
+                    "faceHeightMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[1] || 0,
+                    "faceWidthMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[0] || 0,
+                    "faceHeightMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[1] || 0,
+                }
+            }
         }
         this.socketClient.send(JSON.stringify(request));
     }
@@ -338,7 +380,7 @@ module.exports = class OverlayAgent {
     playSound(soundIndex) {
         console.log('[OverlayAgent] Sending Sound');
         let gdh = this.agentRegistry.gameData;
-        let soundData = gdh.gameData.impacts;
+        let soundData = gdh.read(`impacts`);
         let sound = soundData.find(obj => {
             return obj.location === soundIndex
         });
@@ -351,9 +393,9 @@ module.exports = class OverlayAgent {
                 "type": "sound",
                 "sound": sound.location,
                 "volume": sound.volume,
-                "data": this.agentRegistry.appData.getAllData(),
-                "game_data": gdh.gameData,
-                "game_data_path": gdh.gameData.game_data_path
+                "masterVolume": this.agentRegistry.appData.read('volume'),
+                "appSettings": this.getAppSettings(),
+                "game_data_path": gdh.read(`game_data_path`)
 
             }
         this.socketClient.send(JSON.stringify(request));

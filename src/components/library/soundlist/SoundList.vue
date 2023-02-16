@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="soundsList">
     <h2>Sounds</h2>
 
     <div id="bonkSounds" class="body-panel">
@@ -28,7 +28,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(bonk_impact, key) in live_game_data.impacts" :key="'bim_'+bonk_impact.location">
+            <tr v-for="(bonk_impact, key) in soundsList" :key="'bim_'+bonk_impact.location+listKey">
               <td>
                 <label class="checkbox">
                   <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
@@ -43,7 +43,7 @@
                 <label class="cogwheel">
                   <img src="ui/speaker.png" class="checkmark" title="Volume" v-b-tooltip.hover.right="'Volume'"></img>
                 </label>
-                <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.impacts[key].volume">
+                <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="soundsList[key].volume" @input="() => {updateSound(key, 'volume')}">
               </td>
               <td>
                 <label class="delete">
@@ -68,6 +68,8 @@ export default {
     return {
       live_app_data: this.app_data,
       live_game_data: this.game_data,
+      soundsList: [],
+      listKey: 0
     }
   },
   methods: {
@@ -84,14 +86,19 @@ export default {
         window.ipc.send("UPLOAD_IMPACT", {game_id: this.app_game.id, file_name: file.name, file_path: file.path});
       }
     },
-    removeSoundFile(item_index) {
+    removeSoundFile(itemId) {
       if(confirm("are you sure you want to remove this Impact sound?")) {
-        var item_sound = this.live_game_data.impacts[item_index].location;
-        this.live_game_data.impacts.splice(item_index,1);
+        this.$delete(this.soundsList, itemId);
+        this.$gameData.delete(`impacts.${itemId}`).then((success) => {
+          this.listKey++;
+        });
       }
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    updateSound(impactId, field) {
+      this.$gameData.update(`impacts.${impactId}.${field}`, this.soundsList[impactId][field]).then((success) => {
+        if(!success) console.log('updateSound failed');
+        this.listKey++;
+      });
     },
     handleNewFiles(event) {
       var file_list = event.target.files;
@@ -101,25 +108,25 @@ export default {
         window.ipc.send("UPLOAD_THROW", {game_id: this.app_game.id, file_name: file.name, file_path: file.path});
       }
     },
-    handleIncludeCheckbox(event,item_index) {
+    handleIncludeCheckbox(event,itemId) {
       var isChecked = event.target.checked;
       if(isChecked) {
-        this.enableItem(item_index);
+        this.enableItem(itemId);
       } else {
-        this.disableItem(item_index);
+        this.disableItem(itemId);
       }
     },
     handleIncludeAllCheckbox(event) {
       var isChecked = event.target.checked;
-      for (var i = 0; i < this.live_game_data.impacts.length; i++)
+      for (var i = 0; i < this.soundsList.length; i++)
         if (isChecked == true) {
           this.enableItem(i);
         } else {
           this.disableItem(i);
         }
     },
-    itemIsEnabled(item_index) {
-      if (this.live_game_data.impacts[item_index].enabled === true)
+    itemIsEnabled(itemId) {
+      if (this.soundsList[itemId].enabled === true)
       {
         return true;
       }
@@ -127,21 +134,23 @@ export default {
     },
     allItemsEnabled() {
       var allIncluded = true;
-      for (var i = 0; i < this.live_game_data.impacts.length; i++) {
+      for (var i = 0; i < this.soundsList.length; i++) {
         if(this.itemIsEnabled(i) == false) {
           allIncluded = false;
         }
       }
       return allIncluded;
     },
-    enableItem(item_index) {
-      if(!this.itemIsEnabled(item_index)) {
-        this.live_game_data.impacts[item_index].enabled = true;
+    enableItem(itemId) {
+      if(!this.itemIsEnabled(itemId)) {
+        this.soundsList[itemId].enabled = true;
+        this.updateSound(itemId, 'enabled');
       }
     },
-    disableItem(item_index) {
-      if(this.itemIsEnabled(item_index)) {
-        this.live_game_data.impacts[item_index].enabled = false;
+    disableItem(itemId) {
+      if(this.itemIsEnabled(itemId)) {
+        this.soundsList[itemId].enabled = false;
+        this.updateSound(itemId, 'enabled');
       }
     }
   },
@@ -149,6 +158,11 @@ export default {
     //HelloWorld
   },
   mounted() {
+    //this.soundsList = this.$gameData.readSync(`impacts`);
+
+    this.$gameData.read(`impacts`).then((result) => {
+      this.soundsList = result;
+    });
 
   },
   watch: {
@@ -158,12 +172,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },

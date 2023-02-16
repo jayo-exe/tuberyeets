@@ -6,7 +6,7 @@
     <div class="body-panel">
       <h3>Custom Bonk Name</h3>
       <hr>
-      <input type="text" min="0" step="1" class="bonkName grid1-3" v-model="live_game_data.customBonks[current_bonk].name">
+      <input type="text" min="0" step="1" class="bonkName grid1-3" v-model="live_game_data.customBonks[current_bonk].name" @input="(e) => {setBonkField('name', e.target.value)}">
     </div>
 
     <div class="body-panel">
@@ -16,10 +16,14 @@
         <p class="grid2">Item Count <i class="fa fa-info-circle"
                                        v-b-tooltip.hover.left="'The number of items to throw.  This is ignored for events with a quantity'"
         ></i></p>
-        <input type="number" min="0" step="1" class="barrageCount" v-model="live_game_data.customBonks[current_bonk].barrageCount">
+        <input type="number" min="0" step="1" class="barrageCount"
+               v-model="live_game_data.customBonks[current_bonk].barrageCount"
+               @input="(e) => {setBonkField('barrageCount', e.target.value)}">
 
         <label class="checkbox grid1">
-          <input type="checkbox" class="throwAway" v-model="live_game_data.customBonks[current_bonk].throwAway">
+          <input type="checkbox" class="throwAway"
+                 v-model="live_game_data.customBonks[current_bonk].throwAway"
+                 @change="(e) => {setBonkField('throwAway', e.target.checked)}">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -28,7 +32,9 @@
         ></i></p>
 
         <label class="checkbox grid1">
-          <input type="checkbox" class="barrageFrequencyOverride" v-model="live_game_data.customBonks[current_bonk].barrageFrequencyOverride">
+          <input type="checkbox" class="barrageFrequencyOverride"
+                 v-model="live_game_data.customBonks[current_bonk].barrageFrequencyOverride"
+                 @change="(e) => {setBonkField('barrageFrequencyOverride', e.target.checked)}">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -37,11 +43,14 @@
         ></i></p>
         <input type="number" min="0" step="1" class="barrageFrequency grid3"
                v-model="live_game_data.customBonks[current_bonk].barrageFrequency"
+               @input="(e) => {setBonkField('barrageFrequency', e.target.value)}"
                :disabled="!live_game_data.customBonks[current_bonk].barrageFrequencyOverride"
         >
 
         <label class="checkbox grid1">
-          <input type="checkbox" class="throwDurationOverride" v-model="live_game_data.customBonks[current_bonk].throwDurationOverride">
+          <input type="checkbox" class="throwDurationOverride"
+                 v-model="live_game_data.customBonks[current_bonk].throwDurationOverride"
+                 @change="(e) => {setBonkField('throwDurationOverride', e.target.checked)}">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -50,11 +59,15 @@
         ></i></p>
         <input type="number" min="0" step="1" class="throwDuration grid3"
                v-model="live_game_data.customBonks[current_bonk].throwDuration"
+               @input="(e) => {setBonkField('throwDuration', e.target.value)}"
                :disabled="!live_game_data.customBonks[current_bonk].throwDurationOverride"
         >
 
         <label class="checkbox grid1">
-          <input type="checkbox" class="spinSpeedOverride" v-model="live_game_data.customBonks[current_bonk].spinSpeedOverride">
+          <input type="checkbox" class="spinSpeedOverride"
+                 v-model="live_game_data.customBonks[current_bonk].spinSpeedOverride"
+                 @change="(e) => {setBonkField('spinSpeedOverride', e.target.checked)}"
+          >
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -63,6 +76,7 @@
         ></i></p>
         <input type="number" min="0" step="1" class="spinSpeedMin grid3"
                v-model="live_game_data.customBonks[current_bonk].spinSpeedMin"
+               @input="(e) => {setBonkField('spinSpeedMin', e.target.value)}"
                :disabled="!live_game_data.customBonks[current_bonk].spinSpeedOverride"
         >
 
@@ -71,11 +85,14 @@
         ></i></p>
         <input type="number" min="0" step="1" class="spinSpeedMax grid3"
                v-model="live_game_data.customBonks[current_bonk].spinSpeedMax"
+               @input="(e) => {setBonkField('spinSpeedMax', e.target.value)}"
                :disabled="!live_game_data.customBonks[current_bonk].spinSpeedOverride"
         >
 
         <label class="checkbox grid1">
-          <input type="checkbox" class="throwAngleOverride" v-model="live_game_data.customBonks[current_bonk].throwAngleOverride">
+          <input type="checkbox" class="throwAngleOverride"
+                 v-model="live_game_data.customBonks[current_bonk].throwAngleOverride"
+                 @change="(e) => {setBonkField('throwAngleOverride', e.target.checked)}">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -84,6 +101,7 @@
         ></i></p>
         <input type="number" min="-90" step="1" class="throwAngleMin grid3"
                v-model="live_game_data.customBonks[current_bonk].throwAngleMin"
+               @input="(e) => {setBonkField('throwAngleMin', e.target.value)}"
                :disabled="!live_game_data.customBonks[current_bonk].throwAngleOverride"
         >
 
@@ -92,6 +110,7 @@
         ></i></p>
         <input type="number" min="90" step="1" class="throwAngleMax grid3"
                v-model="live_game_data.customBonks[current_bonk].throwAngleMax"
+               @input="(e) => {setBonkField('throwAngleMax', e.target.value)}"
                :disabled="!live_game_data.customBonks[current_bonk].throwAngleOverride"
         >
 
@@ -100,6 +119,7 @@
         ></i></p>
         <input type="number" min="0" class="windupDelay grid3"
                v-model="live_game_data.customBonks[current_bonk].windupDelay"
+               @input="(e) => {setBonkField('windupDelay', e.target.value)}"
         >
       </div>
     </div>
@@ -109,7 +129,9 @@
       <hr>
       <div class="bonkDetailsTable">
         <label class="checkbox grid1">
-          <input type="checkbox" class="itemsOverride" v-model="live_game_data.customBonks[current_bonk].itemsOverride">
+          <input type="checkbox" class="itemsOverride"
+                 v-model="live_game_data.customBonks[current_bonk].itemsOverride"
+                 @change="(e) => {setBonkField('itemsOverride', e.target.checked)}">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -122,7 +144,9 @@
         >Gallery</button>
 
         <label class="checkbox grid1">
-          <input type="checkbox" class="soundsOverride" v-model="live_game_data.customBonks[current_bonk].soundsOverride">
+          <input type="checkbox" class="soundsOverride"
+                 v-model="live_game_data.customBonks[current_bonk].soundsOverride"
+                 @change="(e) => {setBonkField('soundsOverride', e.target.checked)}">
           <div class="checkHover"></div>
           <img src="ui/checkmark.png" class="checkmark">
         </label>
@@ -166,8 +190,11 @@ export default {
     setSection(section_name) {
       this.$emit("set-section",section_name);
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    setBonkField(field, value) {
+      this.$emit("set-game-field",{
+        field: `customBonks.${current_bonk}.${field}`,
+        value: value
+      });
     },
   },
   watch: {
@@ -177,12 +204,6 @@ export default {
     },
     game_data: {
       handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
       deep: true
     }
   },
