@@ -275,7 +275,9 @@ module.exports = class GameDataHelper {
         try {
             let fileInfo = this.checkFilename(this.gameId, "throws", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
+            let throwId = uuid.v1();
             let throwItem = {
+                "id": throwId,
                 "enabled": true,
                 "location": fileInfo.filename,
                 "weight": 1.0,
@@ -284,10 +286,11 @@ module.exports = class GameDataHelper {
                 "volume": 1.0,
                 "customs": []
             }
+            this.update(`throws.${throwId}`, throwItem, true);
             console.log('[GameDataHelper] Successfully uploaded new item!');
             return {
                 success: true,
-                throw_item: throwItem
+                throwItem: throwItem
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading item: ' + err.message);
@@ -300,16 +303,19 @@ module.exports = class GameDataHelper {
         try {
             let fileInfo = this.checkFilename(this.gameId, "impacts", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
+            let impactId = uuid.v1();
             let impactItem = {
+                "id": impactId,
                 "enabled": false,
                 "location": fileInfo.filename,
                 "volume": 1.0,
                 "customs": [],
             }
+            this.update(`impacts.${impactId}`, impactItem, true);
             console.log('[GameDataHelper] Successfully uploaded new sound!');
             return {
                 success: true,
-                impact_item: impactItem
+                impactItem: impactItem
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading sound: ' + err.message);
@@ -317,43 +323,47 @@ module.exports = class GameDataHelper {
         }
     }
 
-    uploadDecal(filePath, filename, currentBonk)
+    uploadDecal(filePath, filename, bonkId)
     {
         try {
             let fileInfo = this.checkFilename(this.gameId, "decals", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
+            let decalId = uuid.v1();
             let decalItem = {
+                "id": decalId,
                 "enabled": true,
                 "location": fileInfo.filename,
                 "scale": 1,
                 "duration": 0.25,
             }
+            this.update(`customBonks.${bonkId}.impactDecals.${decalId}`, decalItem, true);
             console.log('[GameDataHelper] Successfully uploaded new decal!');
             return {
                 success: true,
-                decal_item: decalItem,
-                current_bonk: currentBonk
+                decalItem: decalItem,
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading decal: ' + err.message);
             return { success: false };
         }
     }
-    uploadWindup(filePath, filename, currentBonk)
+    uploadWindup(filePath, filename, bonkId)
     {
         try {
             let fileInfo = this.checkFilename(this.gameId, "decals", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
+            let windupId = uuid.v1();
             let windupItem = {
+                "id": windupId,
                 "enabled": true,
                 "location": fileInfo.filename,
                 "volume": 1,
             }
+            this.update(`customBonks.${bonkId}.windupSounds.${windupId}`, windupItem, true);
             console.log('[GameDataHelper] Successfully uploaded new windup!');
             return {
                 success: true,
-                windup_item: windupItem,
-                current_bonk: currentBonk
+                windupItem: windupItem,
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading windup: ' + err.message);

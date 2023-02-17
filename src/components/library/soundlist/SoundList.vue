@@ -83,7 +83,11 @@ export default {
       for (let i = 0; i < file_list.length; i++) {
         let file = file_list.item(i);
         console.log('sending upload message for impact' + file.name);
-        window.ipc.send("UPLOAD_IMPACT", {game_id: this.app_game.id, file_name: file.name, file_path: file.path});
+        this.$gameData.uploadImpact(file.path, file.name).then((result) => {
+          if(result.success) {
+            this.$set(this.soundsList, result.impactItem.id, result.impactItem);
+          }
+        });
       }
     },
     removeSoundFile(itemId) {

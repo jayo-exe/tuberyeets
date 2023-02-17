@@ -262,13 +262,6 @@ ipcMain.on("SET_FIELD", (event, payload) =>
   } catch {}
 });
 
-ipcMain.on("APP_CRUD", (event, payload) =>
-{
-
-  try {
-
-  } catch {}
-});
 
 ipcMain.handle('APP_CRUD', async (event, operation, payload) => {
   switch(operation) {
@@ -335,38 +328,20 @@ ipcMain.on("SET_GAME_FIELD", (event, payload) =>
   } catch {}
 });
 
-ipcMain.on('UPLOAD_THROW', (event, payload) => {
-  let filePath = payload.file_path;
-  let filename = payload.file_name;
-
-  let throwResult = gameData.uploadThrow(filePath,filename);
-  event.reply('UPLOAD_THROW', throwResult);
+ipcMain.handle('UPLOAD_THROW', async (event, payload) => {
+  return gameData.uploadThrow(payload.filePath,payload.filename);
 });
 
-ipcMain.on('UPLOAD_IMPACT', (event, payload) => {
-  let filePath = payload.file_path;
-  let filename = payload.file_name;
-
-  let impactResult = gameData.uploadImpact(filePath,filename);
-  event.reply('UPLOAD_IMPACT', impactResult);
+ipcMain.handle('UPLOAD_IMPACT', async (event, payload) => {
+  return gameData.uploadImpact(payload.filePath,payload.filename);
 });
 
-ipcMain.on('UPLOAD_DECAL', (event, payload) => {
-  let filePath = payload.file_path;
-  let filename = payload.file_name;
-  let currentBonk = payload.current_bonk;
-
-  let decalResult = gameData.uploadDecal(filePath,filename,currentBonk);
-  event.reply('UPLOAD_DECAL', decalResult);
+ipcMain.handle('UPLOAD_DECAL', async (event, payload) => {
+  return gameData.uploadDecal(payload.filePath,payload.filename,payload.bonkId);
 });
 
-ipcMain.on('UPLOAD_WINDUP', (event, payload) => {
-  let filePath = payload.file_path;
-  let filename = payload.file_name;
-  let currentBonk = payload.current_bonk;
-
-  let windupResult = gameData.uploadWindup(filePath,filename,currentBonk);
-  event.reply('UPLOAD_WINDUP', windupResult);
+ipcMain.handle('UPLOAD_WINDUP', async (event, payload) => {
+  return gameData.uploadWindup(payload.filePath,payload.filename,payload.bonkId);
 });
 
 ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {

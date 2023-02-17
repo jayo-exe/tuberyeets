@@ -78,9 +78,6 @@
           :app_game="current_game"
           :current_library_section="current_library_section"
           @set-library-section="setLibrarySection"
-          @set-field="handleSetField"
-          @set-game-field="handleSetGameField"
-          @update-game-data="saveGameData"
       />
 
 
@@ -251,32 +248,6 @@ export default {
       console.log('Getting Data Path...');
       window.ipc.send('GET_DATA_PATH', true);
     },
-    saveGameData(event) {
-      this.autoGameSaveStatus = "changed";
-      this.game_data_loading = true;
-      this.live_game_data = event;
-      clearTimeout(this.autoGameSaveTimeout);
-      this.autoSaveTimeout = setTimeout(() => {
-        this.autoGameSaveStatus = "saving";
-        window.ipc.send('SAVE_GAME_DATA', {game_id:this.current_game.id , data:this.live_game_data});
-      },1000);
-    },
-    handleSetField(event) {
-      this.setField(event.field, event.value);
-    },
-    setField(field,value) {
-      this.autoSaveStatus = "changed";
-      console.log('Saving Field "'+field+'"...');
-      window.ipc.send('SET_FIELD', {'field': field, 'value': value});
-    },
-    handleSetGameField(event) {
-      this.setGameField(event.field, event.value);
-    },
-    setGameField(field,value) {
-      this.autoGameSaveStatus = "changed";
-      console.log('Saving Game Field "'+field+'"...');
-      window.ipc.send('SET_GAME_FIELD', {'field': field, 'value': value});
-    },
     setStatus(message) {
       var status_id = message;
       this.statuses.forEach(app_status => {
@@ -411,9 +382,9 @@ export default {
       console.log('Received Decal response');
       var success = payload.success;
       if (success) {
-        var decal_item = payload.decal_item;
+        var decalItem = payload.decal_item;
         console.log(this.live_game_data.customBonks[current_bonk]);
-        this.live_game_data.customBonks[current_bonk].impactDecals.unshift(decal_item);
+        this.live_game_data.customBonks[current_bonk].impactDecals[decalItem.id] = decalItem;
         console.log('File uploaded!');
       } else {
         console.log('Error uploading file!');

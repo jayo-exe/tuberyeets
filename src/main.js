@@ -52,7 +52,19 @@ Vue.prototype.$gameData = {
   },
   "deleteSync": function(field) {
     return window.ipc.sendSync('GAME_CRUD_SYNC', 'delete', {field:field});
-  }
+  },
+  "uploadThrow": function(filePath, filename) {
+    return window.ipc.invoke('UPLOAD_THROW', {flePath:filePath, filename:filename});
+  },
+  "uploadImpact": function(filePath, filename) {
+    return window.ipc.invoke('UPLOAD_IMPACT', {flePath:filePath, filename:filename});
+  },
+  "uploadDecal": function(filePath, filename,bonkId) {
+    return window.ipc.invoke('UPLOAD_DECAL', {flePath:filePath, filename:filename, bonkId:bonkId});
+  },
+  "uploadWindup": function(filePath, filename, bonkId) {
+    return window.ipc.invoke('UPLOAD_WINDUP', {flePath:filePath, filename:filename, bonkId:bonkId});
+  },
 }
 
 new Vue({
