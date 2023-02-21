@@ -82,6 +82,9 @@ export default {
     setField(field, value) {
       this.$emit("set-field",{field:field, value:value});
     }
-  }
+  },
+  mounted() {
+    this.$emit('unlock-game-change');
+  },
 }
 </script>

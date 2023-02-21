@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <div v-if="itemList">
     <h2>Items</h2>
 
     <div id="bonkImages" class="body-panel">
       <h3>Bonk Images</h3>
-      <input id="loadImage" type="file" ref="file" accept="image/*" multiple hidden @change="handleNewFiles">
+      <input id="loadImage" type="file" ref="file" accept="image/*" multiple hidden @change="uploadItem">
       <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Images</button>
       <hr>
       <div id="imageTable" class="imageTable">
@@ -19,7 +19,7 @@
           </div>
         </div>
 
-        <div v-for="(bonk_item, key) in live_game_data.throws" id="imageRow" class="row" :key="'bi_'+bonk_item.location">
+        <div v-for="(bonkItem, key) in itemList" id="imageRow" class="row" :key="'bi_'+bonkItem.id+listKey">
           <div class="imageRowInner">
             <label class="checkbox">
               <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
@@ -30,8 +30,8 @@
               <button class="imageDetails" @click="editItem(key)">Details</button>
               <img src="ui/cog.png" class="checkmark" v-b-tooltip.hover.right="'Edit'">
             </label>
-            <img class="imageImage img-pxl" :src="'file://'+getThrowsPath(bonk_item.location)" @click="testCustomItem(key)" v-b-tooltip.click.right="'Test'"></img>
-            <p class="imageLabel" :title="bonk_item.location">{{ bonk_item.location }}</p>
+            <img class="imageImage img-pxl" :src="'file://'+getItemPath(bonkItem.location)" @click="testCustomItem(key)" v-b-tooltip.click.right="'Test'"></img>
+            <p class="imageLabel" :title="bonkItem.location">{{ bonkItem.location }}</p>
             <label class="delete">
               <button class="imageRemove" @click="removeItem(key)"></button>
               <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
@@ -41,74 +41,100 @@
         </div>
       </div>
     </div>
+    <ItemForm
+        ref="editItem"
+        @finish-edit="finishEditItem"
+    ></ItemForm>
+
   </div>
+
 </template>
 
 <script>
+import ItemForm from '@/components/library/itemlist/ItemForm.vue'
 
 export default {
   name: 'ItemList',
-  props: ['app_data','app_game','game_data','current_item'],
+  props: ['current_item'],
+  components: {
+    ItemForm
+  },
   data : function() {
     return {
-      live_app_data: this.app_data,
-      live_game_data: this.game_data,
+      libraryType: 'throws',
+      libraryName: 'Item',
+      libraryUploadHandler: this.$gameData.uploadThrow,
+      itemList: {},
+      soundList: {},
+      listKey: 0,
+      gameDataPath: '',
+      editFormSection: "ItemForm",
     }
   },
   methods: {
-    getThrowsPath(filename) {
-      var dsep = this.live_app_data.sys_sep;
-      var path = this.live_game_data.game_data_path + "/throws/" + filename;
-      return path.replaceAll("/",dsep);
+    getItemPath(filename) {
+      return `${this.gameDataPath}/${this.libraryType}/${filename}`;
     },
-    getImpactsPath(filename) {
-      var dsep = this.live_app_data.sys_sep;
-      var path = this.live_game_data.game_data_path + "/impacts/" + filename;
-      return path.replaceAll("/",dsep);
-    },
-    editItem(item_index) {
-      this.$emit("edit-item",item_index);
-    },
-    removeItem(item_index) {
-      if(confirm("are you sure you want to remove this Item?")) {
-        var item_image = this.live_game_data.throws[item_index].location;
-        this.live_game_data.throws.splice(item_index,1);
-        this.updateImages();
-      }
-    },
-    updateImages() {
-      this.$emit("set-game-field",{
-        field: `throws`,
-        value: this.live_game_data.throws
+    listItems() {
+      this.$set(this, "itemList", null);
+      this.$forceUpdate();
+      this.$gameData.read(`${this.libraryType}`).then((result) => {
+        this.$set(this, "itemList", result);
+        this.listKey++;
       });
     },
-    handleNewFiles(event) {
+    uploadItem(event) {
       var file_list = event.target.files;
       for (let i = 0; i < file_list.length; i++) {
         let file = file_list.item(i);
-        console.log('sending upload message for ' + file.name);
-        window.ipc.send("UPLOAD_THROW", {game_id: this.app_game.id, file_name: file.name, file_path: file.path});
+        console.log(`sending upload message for ${this.libraryName} ${file.name}`);
+        this.libraryUploadHandler(file.path, file.name).then((result) => {
+          if(result.success) {
+            this.$set(this.itemList, result.item.id, result.item);
+          }
+        });
       }
     },
-    handleIncludeCheckbox(event,item_index) {
+    updateItem(itemId, field) {
+      this.$gameData.update(`${this.libraryType}.${itemId}.${field}`, this.itemList[itemId][field]).then((success) => {
+        if(!success) console.log(`updateItem failed for ${this.libraryName} ${itemId}`);
+        this.listKey++;
+      });
+    },
+    removeItem(itemId) {
+      if(confirm(`are you sure you want to remove this ${this.libraryName}?`)) {
+        this.$delete(this.itemList, itemId);
+        this.$gameData.delete(`${this.libraryType}.${itemId}`).then((success) => {
+          this.listKey++;
+        });
+      }
+    },
+
+    editItem(itemId) {
+      this.$refs['editItem'].open(itemId);
+    },
+    finishEditItem() {
+      this.listItems();
+    },
+    handleIncludeCheckbox(event,itemId) {
       var isChecked = event.target.checked;
       if(isChecked) {
-        this.enableItem(item_index);
+        this.enableItem(itemId);
       } else {
-        this.disableItem(item_index);
+        this.disableItem(itemId);
       }
     },
     handleIncludeAllCheckbox(event) {
       var isChecked = event.target.checked;
-      for (var i = 0; i < this.live_game_data.throws.length; i++)
+      for (var i = 0; i < this.itemList.length; i++)
         if (isChecked == true) {
           this.enableItem(i);
         } else {
           this.disableItem(i);
         }
     },
-    itemIsEnabled(item_index) {
-      if (this.live_game_data.throws[item_index].enabled === true)
+    itemIsEnabled(itemId) {
+      if (this.itemList[itemId].enabled === true)
       {
         return true;
       }
@@ -116,45 +142,34 @@ export default {
     },
     allItemsEnabled() {
       var allIncluded = true;
-      for (var i = 0; i < this.live_game_data.throws.length; i++) {
+      for (var i = 0; i < this.itemList.length; i++) {
         if(this.itemIsEnabled(i) == false) {
           allIncluded = false;
         }
       }
       return allIncluded;
     },
-    enableItem(item_index) {
-      if(!this.itemIsEnabled(item_index)) {
-        this.live_game_data.throws[item_index].enabled = true;
-        this.updateImages();
+    enableItem(itemId) {
+      if(!this.itemIsEnabled(itemId)) {
+        this.itemList[itemId].enabled = true;
+        this.updateItem(itemId, 'enabled');
       }
     },
-    disableItem(item_index) {
-      if(this.itemIsEnabled(item_index)) {
-        this.live_game_data.throws[item_index].enabled = false;
-        this.updateImages();
+    disableItem(itemId) {
+      if(this.itemIsEnabled(itemId)) {
+        this.itemList[itemId].enabled = false;
+        this.updateItem(itemId, 'enabled');
       }
     },
-    testCustomItem(item_index) {
-      console.log('Testing custom item: ' + item_index);
-      let item = this.live_game_data.throws[item_index];
+    testCustomItem(itemId) {
+      console.log('Testing custom item: ' + itemId);
+      let item = this.itemList[itemId];
       window.ipc.send('TEST_CUSTOM_ITEM', item.location);
     }
   },
-  components: {
-    //HelloWorld
-  },
   mounted() {
-  },
-  watch: {
-    app_data: {
-      handler: function() { this.live_app_data = this.app_data},
-      deep: true
-    },
-    game_data: {
-      handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    }
-  },
+    this.listItems();
+    this.gameDataPath = this.$gameData.readSync('game_data_path');
+  }
 }
 </script>

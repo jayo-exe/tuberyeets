@@ -14,6 +14,7 @@ module.exports = class GameDataHelper {
         this.defaultDataPath = path.resolve(staticPath, 'data/defaultData.json');
         this.defaultData = JSON.parse(fs.readFileSync(this.defaultDataPath, "utf8"));
         this.statusCallback = null;
+        this.bonkDefaultsCallback = null;
         this.autoSaveTimeout = null;
 
         this.bonkEventHelper = new BonkEventHelper(this);
@@ -47,16 +48,18 @@ module.exports = class GameDataHelper {
 
     loadData(gameId) {
         this.gameId = gameId;
+        console.log('[GameDataHelper] Attempting to load game-specific data...');
         this.checkGameFolder();
         try {
             this.data = JSON.parse(fs.readFileSync(this.dataPath, "utf8"));
             this.data.game_data_path = this.gameDataFolder;
             console.log('[GameDataHelper] Successfully Loaded game-specific data!');
+            if(this.statusCallback) this.statusCallback("ok (loaded)");
             if(!this.has('events')) {
                 console.log("[GameDataHelper] Event Data store not found for this game! Creating...");
                 this.update('events', {}, true);
             }
-            this.upgradeLegacyData();
+
             return true;
         } catch(err) {
             console.log('[GameDataHelper] Error reading Game Data file:' + err.message);
@@ -110,7 +113,7 @@ module.exports = class GameDataHelper {
             focusObject = focusObject[pathItem];
         });
 
-        if(!focusObject.hasOwnProperty(targetItem)) return undefined;
+        if(focusObject === null || !focusObject.hasOwnProperty(targetItem)) return undefined;
         return focusObject[targetItem];
     }
 
@@ -166,114 +169,27 @@ module.exports = class GameDataHelper {
         this.touchAutosave();
     }
 
-    upgradeLegacyData() {
-        let changes_made = false;
-        for(const [bonkName, bonkItem] of Object.entries(this.data.customBonks)) {
-            if(!bonkItem.hasOwnProperty('id')) {
-                changes_made = true;
-                let bonkId = uuid.v1();
-                this.data.customBonks[bonkId] = bonkItem;
-                this.data.customBonks[bonkId].id = bonkId;
-                delete this.data.customBonks[bonkName];
-
-                if(Array.isArray(this.data.customBonks[bonkId].impactDecals)) {
-                    let decalsNew = {};
-                    this.data.customBonks[bonkId].impactDecals.forEach((decalItem) => {
-                        let decalId = uuid.v1();
-                        decalsNew[decalId] = decalItem;
-                        decalsNew[decalId].id = decalId;
-                    });
-                    this.data.customBonks[bonkId].impactDecals = decalsNew;
-                }
-
-                if(Array.isArray(this.data.customBonks[bonkId].windupSounds)) {
-                    let windupsNew = {};
-                    this.data.customBonks[bonkId].windupSounds.forEach((windupItem) => {
-                        let windupId = uuid.v1();
-                        windupsNew[windupId] = windupItem;
-                        windupsNew[windupId].id = windupId;
-                    });
-                    this.data.customBonks[bonkId].windupSounds = windupsNew;
-                }
-            }
-        }
-
-        if(Array.isArray(this.data.impacts)) {
-            changes_made = true;
-            let impactsNew = {};
-            this.data.impacts.forEach((impactItem) => {
-                let impactId = uuid.v1();
-                impactsNew[impactId] = impactItem;
-                impactsNew[impactId].id = impactId;
-
-                if(Array.isArray(impactsNew[impactId].customs)) {
-                    let customsNew = [];
-                    impactsNew[impactId].customs.forEach((customItem) => {
-                        for(const [bonkId, bonkItem] of Object.entries(this.data.customBonks)) {
-                            if(bonkItem.name === customItem) customsNew.push(bonkId);
-                        }
-                    });
-                    impactsNew[impactId].customs = customsNew;
-                }
-            });
-            this.data.impacts = impactsNew;
-        }
-
-        if(Array.isArray(this.data.throws)) {
-            changes_made = true;
-            let throwsNew = {};
-            this.data.throws.forEach((throwItem) => {
-                let throwId = uuid.v1();
-                throwsNew[throwId] = throwItem;
-                throwsNew[throwId].id = throwId;
-
-                if(Array.isArray(throwsNew[throwId].customs)) {
-                    let customsNew = [];
-                    throwsNew[throwId].customs.forEach((customItem) => {
-                        for(const [bonkId, bonkItem] of Object.entries(this.data.customBonks)) {
-                            if(bonkItem.name === customItem) customsNew.push(bonkId);
-                        }
-                    });
-                    throwsNew[throwId].customs = customsNew;
-                }
-            });
-            this.data.throws = throwsNew;
-        }
-
-        for(const [eventName, eventItem] of Object.entries(this.data.crowdControlEvents)) {
-            if(!eventItem.hasOwnProperty('id')) {
-                changes_made = true;
-                let eventId = uuid.v1();
-                this.data.crowdControlEvents[eventId] = eventItem;
-                this.data.crowdControlEvents[eventId].id = eventId;
-                delete this.data.crowdControlEvents[eventName];
-
-                for(const [bonkId, bonkItem] of Object.entries(this.data.customBonks)) {
-                    if(bonkItem.name === this.data.crowdControlEvents[eventId].bonkType) this.data.crowdControlEvents[eventId].bonkId = bonkId;
-                }
-            }
-        }
-
-        if(changes_made) this.touchAutosave();
-    }
-
     checkFilename(folder, filename) {
         let append = "";
 
-        while (fs.existsSync(this.dataPath + "/"+folder+"/" + filename.substr(0, filename.lastIndexOf(".")) + append + filename.substr(filename.lastIndexOf("."))))
+        while (fs.existsSync(this.gameDataFolder + "/"+folder+"/" + filename.substr(0, filename.lastIndexOf(".")) + append + filename.substr(filename.lastIndexOf("."))))
             append = append == "" ? 2 : (append + 1);
 
         let finalFilename = filename.substr(0, filename.lastIndexOf(".")) + append + filename.substr(filename.lastIndexOf("."));
-        return {
-            filePath: this.dataPath + "/"+folder+"/" + finalFilename,
+        let returnval = {
+            filePath: this.gameDataFolder + "/"+folder+"/" + finalFilename,
             filename: finalFilename
         };
+        console.log(returnval);
+        return returnval;
     }
 
     uploadThrow(filePath, filename)
     {
         try {
-            let fileInfo = this.checkFilename(this.gameId, "throws", filename);
+            let fileInfo = this.checkFilename("throws", filename);
+            console.log(fileInfo);
+            console.log('Filepath: ' + filePath);
             fs.copyFileSync(filePath, fileInfo.filePath);
             let throwId = uuid.v1();
             let throwItem = {
@@ -290,7 +206,7 @@ module.exports = class GameDataHelper {
             console.log('[GameDataHelper] Successfully uploaded new item!');
             return {
                 success: true,
-                throwItem: throwItem
+                item: throwItem
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading item: ' + err.message);
@@ -301,7 +217,7 @@ module.exports = class GameDataHelper {
     uploadImpact(filePath, filename)
     {
         try {
-            let fileInfo = this.checkFilename(this.gameId, "impacts", filename);
+            let fileInfo = this.checkFilename("impacts", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
             let impactId = uuid.v1();
             let impactItem = {
@@ -315,7 +231,7 @@ module.exports = class GameDataHelper {
             console.log('[GameDataHelper] Successfully uploaded new sound!');
             return {
                 success: true,
-                impactItem: impactItem
+                item: impactItem
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading sound: ' + err.message);
@@ -323,10 +239,75 @@ module.exports = class GameDataHelper {
         }
     }
 
+    createCustomBonk() {
+        let bonkDefaults = this.bonkDefaultsCallback();
+        let bonkId = uuid.v1();
+        let customBonkItem = {
+            "id": bonkId,
+            "name": "New Bonk",
+            "barrageCount": 1,
+            "barrageFrequencyOverride": false,
+            "barrageFrequency": bonkDefaults.barrageFrequency,
+            "throwDurationOverride": false,
+            "throwDuration": bonkDefaults.throwDuration,
+            "throwAngleOverride": false,
+            "throwAngleMin": bonkDefaults.throwAngleMin,
+            "throwAngleMax": bonkDefaults.throwAngleMax,
+            "spinSpeedOverride": false,
+            "spinSpeedMin": bonkDefaults.spinSpeedMin,
+            "spinSpeedMax": bonkDefaults.spinSpeedMax,
+            "itemsOverride": false,
+            "soundsOverride": false,
+            "impactDecals": [],
+            "windupSounds": [],
+            "windupDelay": 0,
+            "throwAway": false
+        }
+
+        for(const [key, item] of Object.entries(this.read('throws'))) {
+            if (item.enabled) {
+                let customs = this.read(`throws.${key}.customs`);
+                customs.push(bonkId);
+                this.update(`throws.${key}.customs`, customs);
+            }
+        }
+        for(const [key, item] of Object.entries(this.read('impacts'))) {
+            if (item.enabled) {
+                let customs = this.read(`impacts.${key}.customs`);
+                customs.push(bonkId);
+                this.update(`impacts.${key}.customs`, customs);
+            }
+        }
+
+        this.update(`customBonks.${bonkId}`, customBonkItem, true);
+        console.log('[GameDataHelper] Successfully created new bonk!');
+        return {
+            success: true,
+            item: customBonkItem,
+        };
+    }
+
+    clearCustomBonk(bonkId) {
+        for(const [key, item] of Object.entries(this.read('throws'))) {
+            let customs = this.read(`throws.${key}.customs`);
+            if(customs.includes(bonkId)) {
+                customs.splice(customs.indexOf(bonkId),1);
+                this.update(`throws.${key}.customs`, customs);
+            }
+        }
+        for(const [key, item] of Object.entries(this.read('impacts'))) {
+            let customs = this.read(`impacts.${key}.customs`);
+            if(customs.includes(bonkId)) {
+                customs.splice(customs.indexOf(bonkId),1);
+                this.update(`impacts.${key}.customs`, customs);
+            }
+        }
+    }
+
     uploadDecal(filePath, filename, bonkId)
     {
         try {
-            let fileInfo = this.checkFilename(this.gameId, "decals", filename);
+            let fileInfo = this.checkFilename("decals", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
             let decalId = uuid.v1();
             let decalItem = {
@@ -340,7 +321,7 @@ module.exports = class GameDataHelper {
             console.log('[GameDataHelper] Successfully uploaded new decal!');
             return {
                 success: true,
-                decalItem: decalItem,
+                item: decalItem,
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading decal: ' + err.message);
@@ -350,7 +331,7 @@ module.exports = class GameDataHelper {
     uploadWindup(filePath, filename, bonkId)
     {
         try {
-            let fileInfo = this.checkFilename(this.gameId, "decals", filename);
+            let fileInfo = this.checkFilename("decals", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
             let windupId = uuid.v1();
             let windupItem = {
@@ -363,7 +344,7 @@ module.exports = class GameDataHelper {
             console.log('[GameDataHelper] Successfully uploaded new windup!');
             return {
                 success: true,
-                windupItem: windupItem,
+                item: windupItem,
             };
         } catch (err) {
             console.log('[GameDataHelper] Error uploading windup: ' + err.message);

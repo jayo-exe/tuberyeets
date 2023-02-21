@@ -1,134 +1,141 @@
 <template>
-  <div>
-    <h2>Select Impact Sounds for Bonk</h2>
-    <span class="btn btn-red back-btn" @click="setSection('BonkForm')">Back</span>
+  <b-modal ref="selectModal" scrollable size="xl">
+    <template #modal-header="{ close }">
+      <h5 class="modal-title">Select Sounds for Bonk</h5>
+      <button type="button" class="close" @click="finishSelect()">×</button>
+    </template>
+    <template #default>
+      <div v-if="itemList" :key="listKey">
+        <div id="bonkImagesCustom" class="row">
+          <div id="imageTableCustom" class="imageTable col-12">
 
-    <div id="bonkSoundsCustom" class="body-panel">
-      <h3>Sounds Library</h3>
-      <input id="loadSoundCustom" ref="file" type="file" accept="audio/*" multiple hidden @change="handleNewFiles">
-      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
-      <hr>
-      <div id="soundTableCustom" class="imageTable">
-        <div class="selectAll">
-          <div>
-            <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
-            <label class="checkbox">
-              <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
-              <div class="checkHover"></div>
-              <img src="ui/checkmark.png" class="checkmark">
-            </label>
-          </div>
-        </div>
+            <div class="selectAll">
+              <div>
+                <p><span v-if="!allItemsIncluded()">Select</span><span v-else>Deselect</span> All</p>
+                <label class="checkbox">
+                  <input type="checkbox" class="imageEnabled" :checked="allItemsIncluded()" @change="handleIncludeAllCheckbox">
+                  <div class="checkHover"></div>
+                  <img src="ui/checkmark.png" class="checkmark">
+                </label>
+              </div>
+            </div>
 
-        <div v-for="(bonk_impact, key) in live_game_data.impacts" id="soundRowCustom" class="row" :key="'bs_'+key">
-          <div class="imageRowInner">
-            <label class="checkbox">
-              <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
-              <div class="checkHover"></div>
-              <img src="ui/checkmark.png" class="checkmark">
-            </label>
-            <label class="cogwheel"></label>
-            <p class="imageLabel":title="bonk_impact.location">{{ bonk_impact.location }}</p>
-            <div class="imageRowHover"></div>
+            <div v-for="(item, key) in itemList" id="soundRowCustom" class="row imageRow" :key="'bi_'+item.id+listKey">
+              <div class="imageRowInner">
+                <label class="checkbox">
+                  <input type="checkbox" class="imageEnabled" :checked="itemIsIncluded(key)" @change="handleIncludeCheckbox($event,key)">
+                  <div class="checkHover"></div>
+                  <img src="ui/checkmark.png" class="checkmark">
+                </label>
+                <label class="cogwheel"></label>
+                <p class="imageLabel":title="item.location">{{ item.location }}</p>
+                <div class="imageRowHover"></div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
-    </div>
-  </div>
+
+    </template>
+    <template #modal-footer="{ hide }">
+      <b-button size="sm" variant="outline-secondary" @click="finishSelect()">
+        Close
+      </b-button>
+    </template>
+  </b-modal>
+
 </template>
 
 <script>
-// @ is an alias to /src
-//import HelloWorld from '@/components/HelloWorld.vue'
 
 export default {
   name: 'BonkSounds',
-  props: ['app_data','app_game','game_data','current_bonk'],
+  props: [],
   data : function() {
     return {
-      live_app_data: this.app_data,
-      live_game_data: this.game_data,
+      libraryType: 'impacts',
+      libraryName: 'Sound',
+      itemList: {},
+      bonkId: '',
+      soundList: {},
+      listKey: 0,
+      gameDataPath: '',
     }
   },
   methods: {
-    setSection(section_name) {
-      this.$emit("set-section",section_name);
+    open(bonkId) {
+      this.bonkId = bonkId;
+      this.listItems();
+      this.$refs['selectModal'].show();
     },
-    updateSounds() {
-      this.$emit("set-game-field",{
-        field: `impacts`,
-        value: this.live_game_data.impacts
+    finishSelect() {
+      this.$refs['selectModal'].hide();
+      this.$emit("finish-select");
+    },
+    getItemPath(filename) {
+      return `${this.gameDataPath}/${this.libraryType}/${filename}`;
+    },
+    listItems() {
+      this.$gameData.read(`${this.libraryType}`).then((result) => {
+        this.$set(this, "itemList", result);
+        this.listKey++;
       });
     },
-    handleNewFiles(event) {
-      var file_list = event.target.files;
-      for (let i = 0; i < file_list.length; i++) {
-        let file = file_list.item(i);
-        console.log('sending upload message for impact' + file.name);
-        window.ipc.send("UPLOAD_IMPACT", {game_id: this.app_game.id, file_name: file.name, file_path: file.path});
-      }
-    },
-    getImpactsPath(filename) {
-      var dsep = this.live_app_data.sys_sep;
-      var path = this.live_game_data.game_data_path + "/impacts/" + filename;
-      return path.replaceAll("/",dsep);
-    },
-    handleIncludeCheckbox(event,item_index) {
+    handleIncludeCheckbox(event,itemId) {
       var isChecked = event.target.checked;
       if(isChecked) {
-        this.enableItem(item_index);
+        this.enableItem(itemId);
       } else {
-        this.disableItem(item_index);
+        this.disableItem(itemId);
       }
     },
     handleIncludeAllCheckbox(event) {
       var isChecked = event.target.checked;
-      for (var i = 0; i < this.live_game_data.impacts.length; i++)
+      for(const [key, item] of Object.entries(this.itemList)) {
         if (isChecked == true) {
-          this.enableItem(i);
+          this.enableItem(key);
         } else {
-          this.disableItem(i);
+          this.disableItem(key);
         }
+      }
+      this.listItems();
     },
-    itemIsIncluded(item_index) {
-      if (this.live_game_data.impacts[item_index].customs.includes(this.current_bonk))
+    itemIsIncluded(itemId) {
+      let customs = this.$gameData.readSync(`${this.libraryType}.${itemId}.customs`);
+      if (customs.includes(this.bonkId))
       {
         return true;
       }
       return false;
     },
     allItemsIncluded() {
-      var allIncluded = true;
-      for (var i = 0; i < this.live_game_data.impacts.length; i++) {
-        if(this.itemIsIncluded(i) == false) {
+      let allIncluded = true;
+      for(const [key, item] of Object.entries(this.itemList)) {
+        if(this.itemIsIncluded(key) == false) {
           allIncluded = false;
         }
       }
-
       return allIncluded;
     },
-    enableItem(item_index) {
-      if(!this.itemIsIncluded(item_index)) {
-        this.live_game_data.impacts[item_index].customs.push(this.current_bonk);
-        this.updateSounds();
+    enableItem(itemId) {
+      if(!this.itemIsIncluded(itemId)) {
+        let customs = this.$gameData.readSync(`${this.libraryType}.${itemId}.customs`);
+        customs.push(this.bonkId);
+        this.$gameData.update(`${this.libraryType}.${itemId}.customs`, customs);
       }
     },
-    disableItem(item_index) {
-      if(this.itemIsIncluded(item_index)) {
-        this.live_game_data.impacts[item_index].customs.splice(this.live_game_data.impacts[item_index].customs.indexOf(this.current_bonk),1);
-        this.updateSounds();
+    disableItem(itemId) {
+      if(this.itemIsIncluded(itemId)) {
+        let customs = this.$gameData.readSync(`${this.libraryType}.${itemId}.customs`);
+        customs.splice(customs.indexOf(this.bonkId),1);
+        this.$gameData.update(`${this.libraryType}.${itemId}.customs`, customs);
       }
     }
   },
-  watch: {
-    app_data: {
-      handler: function() { this.live_app_data = this.app_data},
-      deep: true
-    },
-    game_data: {
-      handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    }
-  },
+  mounted() {
+    this.listItems();
+    this.gameDataPath = this.$gameData.readSync('game_data_path');
+  }
 }
 </script>

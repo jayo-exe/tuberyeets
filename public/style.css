@@ -672,23 +672,23 @@ a {
 }
 
 .imageDetailsShadow {
-    height: 128px;
+    height: 148px;
     margin: 16px auto;
     box-shadow: -8px 8px 16px rgba(0, 0, 0, 0.5);
 }
 
 #imageSettings1 > .imageDetailsShadow
 {
-    width: 240px;
+    width: 320px;
 }
 
 #imageSettings2 > .imageDetailsShadow
 {
-    width: 288px;
+    width: 320px;
 }
 
 .imageDetailsInner  {
-    height: calc(100% - 16px);
+    height: 100%;
     clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 0% 100%);
     background-color: #2A2A2A;
     padding: 8px 16px;
@@ -714,7 +714,7 @@ a {
 }
 
 #imageSettings2 .settingsTable {
-    grid-template-columns: 64px 176px;
+    grid-template-columns: 100%;
 }
 
 .settingsTable img {
@@ -1405,4 +1405,30 @@ mark {
 }
 .refresh-game:hover {
     transform: rotate(90deg);
+}
+
+.modal-content {
+    border: 1px solid #fff;
+    background-color: #090a22;
+    border-radius: 4px;
+}
+
+.modal-header {
+    padding: 0.2em 1em;
+    background-color: #1f2037;
+    border-bottom: 0px;
+}
+
+.modal-header .close {
+    color: #fff;
+}
+
+.modal-body {
+    padding: 0;
+}
+
+.modal-footer {
+    padding: 0.2em 1em;
+    background-color: #1f2037;
+    border-top: 0px;
 }

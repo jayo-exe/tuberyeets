@@ -1,53 +1,63 @@
 <template>
-  <div>
-    <h2>Edit Item</h2>
-    <span class="btn btn-red back-btn" @click="setSection('EventList')">Back</span>
-    <div id="imageDetails" class="body-panel">
-
-      <div id="imageDetailsInner">
-        <img class="imageImage" :src="'file://'+getThrowsPath(live_game_data.throws[current_item].location)">
-        <h3>{{ live_game_data.throws[current_item].location }}</h3>
-        <button class="btn btn-blue add-btn" @click="testCustomItem(current_item)">Test Item</button>
-        <hr>
-
-        <div id="imageSettings">
-          <div id="imageSettings1">
-            <div class="imageDetailsShadow">
-              <div class="imageDetailsInner">
-                <div class="settingsTable">
-                  <p>Scale <i class="fa fa-info-circle"
-                              v-b-tooltip.hover.left="'The relative size of the object compared to the input image'"
-                  ></i></p>
-                  <input type="number" class="imageScale" min="0" step="0.1" v-model="live_game_data.throws[current_item].scale">
-                  <p>Weight <i class="fa fa-info-circle"
-                               v-b-tooltip.hover.left="'This determines how much force is applied to the vTube model on impact'"
-                  ></i></p>
-                  <input type="range" class="imageWeight" min="0" max="1" step="0.1" v-model="live_game_data.throws[current_item].weight">
-                  <p>Volume <i class="fa fa-info-circle"
-                               v-b-tooltip.hover.left="'The volume of the impact sound'"
-                  ></i></p>
-                  <input class="imageSoundVolume" type="range" min="0" max="1" step="0.1" v-model="live_game_data.throws[current_item].volume">
+  <b-modal ref="editModal" size="xl">
+    <template #modal-header="{ close }">
+      <h5 class="modal-title">Edit Item - <span v-if="itemData">{{ itemData.location }}</span></h5>
+      <button type="button" class="close" @click="finishEdit()">×</button>
+    </template>
+    <template #default>
+      <div id="imageDetails" v-if="itemData">
+        <div id="imageDetailsInner">
+          <img class="imageImage" :src="'file://'+getItemPath(itemData.location)">
+          <div id="imageSettings">
+            <div id="imageSettings1">
+              <div class="imageDetailsShadow">
+                <div class="imageDetailsInner">
+                  <div class="settingsTable">
+                    <p>Scale <i class="fa fa-info-circle"
+                                v-b-tooltip.hover.left="'The relative size of the object compared to the input image'"
+                    ></i></p>
+                    <input type="number" class="imageScale" min="0" step="0.1" v-model="itemData.scale" @input="updateItem('scale')">
+                    <p>Weight <i class="fa fa-info-circle"
+                                 v-b-tooltip.hover.left="'This determines how much force is applied to the vTube model on impact'"
+                    ></i></p>
+                    <input type="range" class="imageWeight" min="0" max="1" step="0.1" v-model="itemData.weight" @input="updateItem('weight')">
+                    <p>Volume <i class="fa fa-info-circle"
+                                 v-b-tooltip.hover.left="'The volume of the impact sound'"
+                    ></i></p>
+                    <input class="imageSoundVolume" type="range" min="0" max="1" step="0.1" v-model="itemData.volume" @input="updateItem('volume')">
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div id="imageSettings2">
-            <div class="imageDetailsShadow">
-              <div class="imageDetailsInner">
-                <div class="settingsTable">
-                  <p>Sound</p>
-                  <select class="imageSoundName" v-model="live_game_data.throws[current_item].sound">
-                    <option value="">(Use default sounds)</option>
-                    <option v-for="(bonk_impact, key) in live_game_data.impacts" :value="bonk_impact.location">{{ bonk_impact.location }}</option>
-                  </select>
+            <div id="imageSettings2">
+              <div class="imageDetailsShadow">
+                <div class="imageDetailsInner">
+                  <div class="settingsTable">
+                    <p>Sound</p>
+                    <div>
+                      <select class="imageSoundName" v-model="itemData.sound" @change="updateItem('sound')">
+                        <option value="">(Use default sounds)</option>
+                        <option v-for="(bonkImpact, key) in soundList" :value="bonkImpact.id">{{ bonkImpact.location }}</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+
+    </template>
+    <template #modal-footer="{ hide }">
+      <button v-if="itemData" class="btn btn-blue add-btn" @click="testCustomItem()">Test Item</button>
+      <b-button size="sm" variant="outline-secondary" @click="finishEdit()">
+        Close
+      </b-button>
+    </template>
+  </b-modal>
+
+
 </template>
 
 <script>
@@ -56,51 +66,56 @@
 
 export default {
   name: 'ItemForm',
-  props: ['app_data','app_game','game_data','current_item'],
+  props: [],
   data : function() {
     return {
-      live_app_data: this.app_data,
-      live_game_data: this.game_data,
+      libraryType: "throws",
+      libraryName: "Item",
+      itemId: null,
+      itemData: null,
+      soundList: {},
+      gameDataPath: '',
+      itemListSection: "ItemList"
     }
   },
   methods: {
-    setSection(section_name) {
-      this.$emit("set-section",section_name);
+    open(itemId) {
+      this.itemId = itemId;
+      this.getItemData();
+      this.listSounds();
+      this.$refs['editModal'].show();
     },
-    getThrowsPath(filename) {
-      var dsep = this.live_app_data.sys_sep;
-      var path = this.live_game_data.game_data_path + "/throws/" + filename;
-      return path.replaceAll("/",dsep);
+    finishEdit() {
+      this.$refs['editModal'].hide();
+      this.$emit("finish-edit");
     },
-    removeSoundFile() {
-      this.live_game_data.throws[this.current_item].sound = sound_file;
+    getItemPath(filename) {
+      return `${this.gameDataPath}/${this.libraryType}/${filename}`;
     },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
+    getItemData() {
+      this.$gameData.read(`${this.libraryType}.${this.itemId}`).then((result) => {
+        this.$set(this, "itemData", result);
+      });
+
     },
-    testCustomItem(item_index) {
-      console.log('Testing custom item: ' + item_index);
-      let item = this.live_game_data.throws[item_index];
-      window.ipc.send('TEST_CUSTOM_ITEM', item.location);
+    listSounds() {
+      this.$gameData.read(`impacts`).then((result) => {
+        this.$set(this, "soundList", result);
+      });
+    },
+    updateItem(field) {
+      let itemId = this.itemId;
+      this.$gameData.update(`${this.libraryType}.${itemId}.${field}`, this.itemData[field]).then((success) => {
+        if(!success) console.log(`updateItem failed for ${this.libraryName} ${itemId}`);
+      });
+    },
+    testCustomItem() {
+      console.log('Testing custom item: ' + this.itemData.id);
+      window.ipc.send('TEST_CUSTOM_ITEM', this.itemData.id);
     },
   },
   mounted() {
-  },
-  watch: {
-    app_data: {
-      handler: function() { this.live_app_data = this.app_data},
-      deep: true
-    },
-    game_data: {
-      handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
-      deep: true
-    }
+    this.gameDataPath = this.$gameData.readSync('game_data_path');
   },
 }
 </script>

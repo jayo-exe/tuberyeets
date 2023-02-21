@@ -8,7 +8,7 @@
 .sidebar {
     float: left;
     width: 200px;
-    height: calc(100vh - 32px - 32px);
+    height: calc(100vh - 32px);
     background-color: #090a22;
     padding: 16px;
     font-size: 18px;
@@ -63,16 +63,16 @@
     border-radius: 0 0 6px 6px;
     margin-right: 24px;
     position: fixed;
-    margin-top: -56px;
+    margin-top: -74px;
     width: calc(100% - 320px);
     z-index: 1000;
 }
 
 .body-container {
-    height: calc(100vh - 88px);
+    height: calc(100vh - 74px - 32px);
     padding-left: 24px;
     overflow-y: auto;
-    padding-top: 56px;
+    margin-top: 74px;
 }
 
 .view-container {
@@ -92,7 +92,7 @@
     margin-bottom: 16px;
 }
 
-.body-panel h3 {
+.body-panel h3, .modal-subheading {
     color: #fac635;
     margin-top: 8px;
     margin-bottom: 8px;
@@ -109,6 +109,7 @@
 
 #mainBody{
     margin-right: 24px;
+    padding-top: 24px;
 }
 
 
@@ -129,7 +130,7 @@
 
 #imageDetails {
     width: auto;
-    height: calc(100vh - 227px);
+    height: calc(100vh - 160px);
     margin-bottom: 0;
 }
 

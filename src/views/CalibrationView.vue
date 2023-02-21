@@ -57,6 +57,7 @@ export default {
   },
   mounted: function() {
     this.startCalibrate();
+    this.$emit('unlock-game-change');
   },
   beforeDestroy() {
     this.cancelCalibrate();

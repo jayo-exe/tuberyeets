@@ -229,7 +229,16 @@ appData.statusCallback = function(status) {
 gameData.statusCallback = function(status) {
   mainWindow.webContents.send("GAME_SAVE_STATUS", status);
 }
-
+gameData.bonkDefaultsCallback = function() {
+  return {
+    barrageFrequency: appData.read('barrageFrequency'),
+    throwDuration: appData.read('throwDuration'),
+    throwAngleMin: appData.read('throwAngleMin'),
+    throwAngleMax: appData.read('throwAngleMax'),
+    spinSpeedMin: appData.read('spinSpeedMin'),
+    spinSpeedMax: appData.read('spinSpeedMax'),
+  }
+}
 ipcMain.on('GET_DATA_PATH', (event, payload) => {
   event.reply('GET_DATA_PATH', userDataPath);
 });
@@ -243,11 +252,11 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
   event.reply('LOAD_DATA', appData.getAllData());
 });
 
-ipcMain.on('LOAD_GAME_DATA', (event, payload) => {
+ipcMain.on('SET_GAME', (event, payload) => {
+  console.log('GOT SET GAME REQUEST');
   let gameId = payload;
   agentRegistry.getAgent('crowdcontrol').setGame(gameId);
-  gameData.loadData(gameId);
-  event.reply('LOAD_GAME_DATA', gameData.getAllData());
+  event.reply('SET_GAME', gameId);
 });
 
 ipcMain.on('SAVE_GAME_DATA', (event, payload) => {
@@ -342,6 +351,13 @@ ipcMain.handle('UPLOAD_DECAL', async (event, payload) => {
 
 ipcMain.handle('UPLOAD_WINDUP', async (event, payload) => {
   return gameData.uploadWindup(payload.filePath,payload.filename,payload.bonkId);
+});
+
+ipcMain.handle('CREATE_BONK', async (event) => {
+  return gameData.createCustomBonk();
+});
+ipcMain.handle('CLEAR_BONK', async (event, payload) => {
+  return gameData.clearCustomBonk(payload.bonkId);
 });
 
 ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {
@@ -468,7 +484,7 @@ function cancelCalibrate()
 
 // Testing a specific item
 ipcMain.on("TEST_CUSTOM_ITEM", (event, message) => testItem(event, message));
-ipcMain.on("TEST_CUSTOM_BONK", (_, message) => { custom(message); });
+ipcMain.on("TEST_CUSTOM_BONK", (_, message) => { console.log('testing bonk ' + message); custom(message); });
 
 function testItem(_, item)
 {

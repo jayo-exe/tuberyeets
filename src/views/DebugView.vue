@@ -30,7 +30,7 @@
 
 <script>
 export default {
-  name: 'SettingsView',
+  name: 'DebugView',
   props: ['app_data','app_status','app_game','game_data'],
   data : function() {
     return {

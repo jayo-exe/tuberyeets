@@ -117,6 +117,7 @@ module.exports = class CrowdControlAgent {
     loadGameMenu(gameId) {
         axios.get("https://api.crowdcontrol.live/menu/"+gameId).then(response => {
             console.log('[CrowdControlAgent] setting selected game to '+response.data.menu.id);
+            this.agentRegistry.gameData.loadData(gameId);
             this.currentGame = response.data.menu;
         }).catch(e => {console.log(e); return null; });
     }
