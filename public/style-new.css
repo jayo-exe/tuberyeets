@@ -56,23 +56,11 @@
     margin-bottom: 24px;
 }
 
-.game-select {
-    margin-bottom: 24px;
-    padding: 16px;
-    background-color: #090a22;
-    border-radius: 0 0 6px 6px;
-    margin-right: 24px;
-    position: fixed;
-    margin-top: -74px;
-    width: calc(100% - 320px);
-    z-index: 1000;
-}
-
 .body-container {
-    height: calc(100vh - 74px - 32px);
+    height: calc(100vh - 32px - 32px);
     padding-left: 24px;
     overflow-y: auto;
-    margin-top: 74px;
+    margin-top: 32px;
 }
 
 .view-container {
@@ -107,12 +95,6 @@
     background-color: #212121;
 }
 
-#mainBody{
-    margin-right: 24px;
-    padding-top: 24px;
-}
-
-
 #mainBody.library {
     height: auto;
     display: block;
@@ -132,49 +114,6 @@
     width: auto;
     height: calc(100vh - 160px);
     margin-bottom: 0;
-}
-
-.btn {
-    border-radius: 4px;
-    border: 1px solid;
-    padding: 8px;
-    color: #fff;
-}
-
-.btn:active {
-    border: 0px;
-    color: #bbb !important;
-}
-
-.btn:hover {
-    background-color: transparent;
-}
-
-.btn-blue, .btn-blue:active {
-    background-color:#135b97;
-    border-color: #135b97;
-}
-
-.btn-blue:hover {
-    color: #135b97;
-}
-
-.btn-green, .btn-green:active {
-    background-color:#11855b;
-    border-color: #11855b;
-}
-
-.btn-green:hover {
-    color: #11855b;
-}
-
-.btn-red, .btn-red:active {
-    background-color:#ec6754;
-    border-color: #ec6754;
-}
-
-.btn-red:hover {
-    color: #ec6754;
 }
 
 .back-btn {
@@ -222,4 +161,10 @@ select,
 .listTable tr:nth-child(odd) {
     background-color: #1f2037;
 }
+header {
+    -webkit-app-region: drag;
+}
 
+header .no-drag {
+    -webkit-app-region: no-drag;
+}

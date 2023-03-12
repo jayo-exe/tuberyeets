@@ -32,6 +32,8 @@ const validChannels = [
     'UPLOAD_WINDUP',
     'CREATE_BONK',
     'CLEAR_BONK',
+    'CREATE_EVENT',
+    'GET_EVENT_TYPES',
     'GET_VTS_EXPRESSIONS',
     'GET_VTS_HOTKEYS',
     'OPEN_GAME_FOLDER',

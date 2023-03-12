@@ -98,6 +98,27 @@ module.exports = class AgentRegistry {
         return all_status;
     }
 
+    getAvailableTriggers() {
+        let availableTriggers = {};
+        for (const [key, agent] of Object.entries(this.agents)) {
+            if(this.getAgentFieldData(agent,'enabled') === true
+                && agent.hasOwnProperty('agentInputs')
+                && Object.keys(agent.agentInputs).length > 0)
+            {
+                availableTriggers[key] = {name:agent.agentLabel, options:{}};
+                for (const [inputKey, input] of Object.entries(agent.agentInputs)) {
+                    availableTriggers[key].options[inputKey] = {
+                        key:input.key,
+                        label:input.label,
+                        description:input.description,
+                        agent:key,
+                    };
+                }
+            }
+        }
+        return availableTriggers;
+    }
+
 
 
 }

@@ -165,7 +165,7 @@ body > div {
     animation: error 3s infinite;
 }
 
-#footer {
+footer {
     height: 28px;
     position: absolute;
     bottom: 0;

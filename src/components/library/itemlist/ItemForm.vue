@@ -50,7 +50,7 @@
 
     </template>
     <template #modal-footer="{ hide }">
-      <button v-if="itemData" class="btn btn-blue add-btn" @click="testCustomItem()">Test Item</button>
+      <button v-if="itemData" class="btn btn-blurple add-btn" @click="testCustomItem()">Test Item</button>
       <b-button size="sm" variant="outline-secondary" @click="finishEdit()">
         Close
       </b-button>

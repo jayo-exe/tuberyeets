@@ -1,83 +1,84 @@
 <template>
   <div id="app" class="wrapper">
-    <div class="sidebar">
-      <h2>TuberYeets</h2>
-      <hr />
-      <ul>
-        <li>
-          <router-link to="/">
-            <a href="#" :class="{active: this.$route.name == 'library'}">Library</a>
-          </router-link>
-          <ul v-if="this.$route.name == 'library'">
-            <li>
-              <a href="#"
-                 @click="setLibrarySection('ItemList')"
-                 :class="{active: this.current_library_section == 'ItemList'}"
-              >Items</a>
-            </li>
-            <li>
-              <a href="#"
-                 @click="setLibrarySection('SoundList')"
-                 :class="{active: this.current_library_section == 'SoundList'}"
-              >Sounds</a>
-            </li>
-            <li>
-              <a href="#"
-                 @click="setLibrarySection('BonkList')"
-                 :class="{active: this.current_library_section == 'BonkList'}"
-              >Bonks</a>
-            </li>
-            <li>
-              <a href="#"
-                 @click="setLibrarySection('EventList')"
-                 :class="{active: this.current_library_section == 'EventList'}"
-              >CC Triggers</a>
-            </li>
-          </ul>
-        </li>
-        <li>
-          <router-link to="/calibration">
-            <a href="#" :class="{active: this.$route.name == 'calibration'}" >Calibrate</a>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/settings">
-            <a href="#" :class="{active: this.$route.name == 'settings'}" >Settings</a>
-          </router-link>
-        </li>
-      </ul>
-      <div class="agent-connections">
-        <div v-for="(agent, key) in current_agent_status">
-          <small><strong>{{agent.name}}</strong>: {{agent.status}}</small>
-        </div>
-      </div>
-    </div>
-    <div class="body-container">
-
+    <header>
+      <span class="app-title">TuberYeets</span>
       <div class="game-select">
-
         Choose Game:
-        <select :disabled="gameLocked" v-model="currentGameId" @change="setCrowdControlGame" style="font-size:0.85em;">
+        <select class="no-drag" :disabled="gameLocked" v-model="currentGameId" @change="setCrowdControlGame" style="font-size:0.85em; padding: 0px;">
           <option v-for="(game, key) in games" :value="game.menuID">{{ game.name }}</option>
         </select>
-        <i style="margin-left: 24px;" class="fa-solid fa-folder-open open-folder" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
+        <i style="margin-left: 24px;" class="fa-solid fa-folder-open open-folder no-drag" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
         <span style="clear:both;"></span>
       </div>
-
-      <router-view
-          :vts_data="live_vts_data"
-          :agent_status="current_agent_status"
-          :current_library_section="current_library_section"
-          @set-library-section="setLibrarySection"
-          @lock-game-change="lockGameChange"
-          @unlock-game-change="unlockGameChange"
-      />
-
+    </header>
+    <div class="app-body">
+      <nav>
+        <div class="menu-box">
+          <ul>
+            <li>
+              <router-link to="/">
+                <a href="#" :class="{active: this.$route.name == 'library'}">Library</a>
+              </router-link>
+              <ul v-if="this.$route.name == 'library'">
+                <li>
+                  <a href="#"
+                     @click="setLibrarySection('ItemList')"
+                     :class="{active: this.current_library_section == 'ItemList'}"
+                  >Items</a>
+                </li>
+                <li>
+                  <a href="#"
+                     @click="setLibrarySection('SoundList')"
+                     :class="{active: this.current_library_section == 'SoundList'}"
+                  >Sounds</a>
+                </li>
+                <li>
+                  <a href="#"
+                     @click="setLibrarySection('BonkList')"
+                     :class="{active: this.current_library_section == 'BonkList'}"
+                  >Bonks</a>
+                </li>
+                <li>
+                  <a href="#"
+                     @click="setLibrarySection('EventList')"
+                     :class="{active: this.current_library_section == 'EventList'}"
+                  >CC Triggers</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <router-link to="/calibration">
+                <a href="#" :class="{active: this.$route.name == 'calibration'}" >Calibrate</a>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/settings">
+                <a href="#" :class="{active: this.$route.name == 'settings'}" >Settings</a>
+              </router-link>
+            </li>
+          </ul>
+        </div>
+        <div class="menu-box bottom">
+          <div class="agent-connections">
+            <div v-for="(agent, key) in current_agent_status">
+              <small><strong>{{agent.name}}</strong>: {{agent.status}}</small>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <main class="pl-0">
+          <router-view
+              :vts_data="live_vts_data"
+              :agent_status="current_agent_status"
+              :current_library_section="current_library_section"
+              class="module-container"
+              @set-library-section="setLibrarySection"
+              @lock-game-change="lockGameChange"
+              @unlock-game-change="unlockGameChange"
+          />
+      </main>
     </div>
-    <div id="footer">
-      <span style="padding-left: 8px;">
-
-      </span>
+    <footer>
       <div style="float:right;">
         <div class="main-status-icons">
           <i class="fa-solid fa-gamepad"
@@ -99,8 +100,9 @@
             Update Downloaded <a href="#" @click="restartAndInstall">Restart and Install</a>
           </span>
       </div>
+    </footer>
+
     </div>
-  </div>
 </template>
 
 <script>

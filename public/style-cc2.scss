@@ -1,0 +1,381 @@
+@use "sass:map";
+@use "sass:list";
+@use "sass:string";
+
+/* Colours */
+
+$color-map: (
+        "w": (  100:#fafafa, 200:#cdcde9, 300:#aaaacd, 400:#8181a5),
+        "s": (  100:#535b80, 200:#404668, 300:#373c5e, 400:#323353,
+                500:#2d304d, 600:#282943, 700:#212136, 800:#1a172a),
+        "y": (  100:#faef8d, 200:#ffec3b, 300:#e48d0a, 400:#ce6b0f),
+        "r": (  100:#f98c9c, 200:#f74660, 300:#c31841, 400:#890836),
+        "b": (  100:#94aaf7, 200:#6666ff, 300:#4746b8, 400:#333199),
+        "t": (  100:#aff1d2, 200:#1ee2bd, 300:#049572, 400:#0a5946),
+        "ro": ( 100:#5b52c0, 200:#332772, 300:#1a143a, 400:#151129)
+);
+
+$base-colors: (
+        "white":    "w" 100,
+        "slate":    "s" 400,
+        "yellow":   "y" 200,
+        "red":      "r" 200,
+        "blurple":  "b" 200,
+        "teal":     "t" 200,
+        "royal":    "ro" 200,
+);
+
+:root {
+    /* Base Palette */
+    @each $name, $color in $base-colors {
+        --cc-color-#{$name}: #{map.get($color-map, list.nth($color, 1), list.nth($color, 2))};
+    }
+
+    /* Variations (will include some overlap) */
+    @each $key, $weights in $color-map {
+        @each $weight, $color in $weights {
+            --cc-color-#{$key}#{$weight}: #{$color};
+        }
+    }
+}
+
+$color-variant-map: (
+        "fc":"color",
+        "bc":"background-color",
+        "oc":"border-color"
+);
+
+@each $key, $weights in $color-map {
+    @each $weight, $color in $weights {
+        @each $class, $rule in $color-variant-map {
+            .cc-#{$class}-#{$key}#{$weight} {
+                #{$rule}: var(--cc-color-#{$key}#{$weight});
+            }
+        }
+    }
+}
+
+/* Typography */
+
+$font-name: "Poppins";
+$font-weights: (
+        100:"Thin",
+        200:"ExtraLight",
+        300:"Light",
+        400:"Regular",
+        500:"Medium",
+        600:"SemiBold",
+        700:"Bold",
+        800:"ExtraBold",
+        900:"Black"
+);
+$font-map: (
+        "h1": ("size":64px, "weight":900, "height":96px),
+        "h2": ("size":48px, "weight":800, "height":64px),
+        "h3": ("size":32px, "weight":700, "height":48px),
+        "h4": ("size":24px, "weight":600, "height":32px),
+        "h5": ("size":20px, "weight":500, "height":30px),
+        "xl": ("size":24px, "weight":500, "height":32px),
+        "lg": ("size":20px, "weight":500, "height":30px),
+        "md": ("size":16px, "weight":400, "height":24px),
+        "sm": ("size":14px, "weight":300, "height":21px),
+        "xs": ("size":12px, "weight":300, "height":18px),
+);
+$font-headers: 5;
+
+@each $weight, $weight-name in $font-weights {
+    @each $style in [normal, italic] {
+        @font-face {
+            font-family: $font-name;
+            font-style: $style;
+            font-weight: $weight;
+            @if $style == italic {
+                src: url("fonts/#{$font-name}-#{$weight-name}Italic.ttf");
+            } @else {
+                src: url("fonts/#{$font-name}-#{$weight-name}.ttf");
+            }
+        }
+    }
+}
+
+:root {
+    @each $key, $rules in $font-map {
+        @each $rule, $value in $rules {
+            --cc-text-#{$rule}-#{$key}: #{$value};
+        }
+    }
+}
+
+$header-cursor: 0;
+@each $key, $rules in $font-map {
+    $header-cursor: $header-cursor + 1;
+    $base-selector: ".cc-f";
+    $append: "";
+    @if $header-cursor <= $font-headers {
+        $append: $key + ", ";
+    }
+    #{$append}#{$base-selector}-#{$key}, #{$base-selector}s-#{$key} {
+        font-size: var(--cc-text-size-#{$key});
+    }
+    #{$append}#{$base-selector}#{$key}, #{$base-selector}w-#{$key} {
+        font-weight: var(--cc-text-weight-#{$key});
+    }
+    #{$append}#{$base-selector}#{$key}, #{$base-selector}h-#{$key} {
+        line-height: var(--cc-text-height-#{$key});
+    }
+}
+
+body {
+    font-family: $font-name;
+    background-color: var(--cc-color-s800);
+    color: var(--cc-color-white);
+}
+
+small {
+    font-size: #{map.get($font-map, "xs", "size")}px;
+    font-weight: #{map.get($font-map, "xs", "weight")};
+    line-height: #{map.get($font-map, "xs", "height")}px;
+}
+
+/* Buttons */
+.btn {
+    position: relative;
+    border-radius: 6px;
+    border: 0;
+    padding: 8px 20px 8px 12px;
+    color: var(--cc-color-white);
+    background-color: var(--cc-color-slate);
+    font-weight: 600;
+    font-size: var(--cc-text-size-sm);
+    line-height: var(--cc-text-size-sm);
+    &::after {
+        content: '';
+        display: block;
+        position: absolute;
+        right: 0;
+        top:0;
+        bottom: 0;
+        width: 6px;
+        border-radius: 0px 6px 6px 0px;
+        background-color: var(--cc-color-s100);
+    }
+    &:hover {
+        background-color: var(--cc-color-s100);
+        color: var(--cc-color-s700);
+        padding: 8px 16px 8px 16px;
+        &::after {
+            display: none;
+        }
+    }
+    &:active {
+        background-color: var(--cc-color-s700);
+        color: var(--cc-color-s100);
+        padding: 8px 16px 8px 16px;
+        &::after {
+            display: none;
+        }
+    }
+}
+.btn-lg {
+    border-radius: 8px;
+    padding: 16px 24px 16px 16px;
+    font-size: var(-cc-text-size-xl);
+    line-height: var(-cc-text-size-xl);
+    font-weight: 800;
+    &::after {
+        width: 8px;
+        border-radius: 0px 8px 8px 0px;
+    }
+    &:hover {
+        padding: 16px 20px 16px 20px;
+    }
+}
+
+$button-map: (
+        "yellow": ("main": "y300", "light":"y200", "dark":"y400"),
+        "red": ("main": "r300", "light":"r100", "dark":"r400"),
+        "teal": ("main": "t300", "light":"t200", "dark":"t400"),
+        "blurple": ("main": "b300", "light":"b100", "dark":"b400"),
+);
+@each $class, $colors in $button-map {
+    .btn-#{$class} {
+        background-color: var(--cc-color-#{map.get($colors,"main")});
+        &::after {
+            background-color: var(--cc-color-#{map.get($colors,"light")});
+        }
+        &:hover {
+            background-color: var(--cc-color-#{map.get($colors,"light")});
+            background-color: var(--cc-color-#{map.get($colors,"dark")});
+        }
+        &:active {
+            background-color: var(--cc-color-#{map.get($colors,"dark")});
+            color: var(--cc-color-#{map.get($colors,"light")});
+        }
+    }
+}
+.btn-blurple {
+    background-color: var(--cc-color-b300);
+    &::after {
+        background-color: var(--cc-color-b100);
+    }
+    &:hover {
+        background-color: var(--cc-color-b100);
+        color: var(--cc-color-b400);
+    }
+    &:active {
+        background-color: var(--cc-color-b400);
+        color: var(--cc-color-b100);
+    }
+}
+.btn-teal {
+    background-color: var(--cc-color-t300);
+    &::after {
+        background-color: var(--cc-color-t200);
+    }
+    &:hover {
+        background-color: var(--cc-color-t200);
+        color: var(--cc-color-t400);
+    }
+    &:active {
+        background-color: var(--cc-color-t400);
+        color: var(--cc-color-t200);
+    }
+}
+.btn-yellow {
+    background-color: var(--cc-color-y300);
+    &::after {
+        background-color: var(--cc-color-y200);
+    }
+    &:hover {
+        background-color: var(--cc-color-y200);
+        color: var(--cc-color-y400);
+    }
+    &:active {
+        background-color: var(--cc-color-y400);
+        color: var(--cc-color-y200);
+    }
+}
+.btn-red {
+    background-color: var(--cc-color-r300);
+    &::after {
+        background-color: var(--cc-color-r100);
+    }
+    &:hover {
+        background-color: var(--cc-color-r100);
+        color: var(--cc-color-r400);
+    }
+    &:active {
+        background-color: var(--cc-color-r400);
+        color: var(--cc-color-r100);
+    }
+}
+
+/* Menu */
+.wrapper {
+    background: radial-gradient(circle at 160px 580px, var(--cc-color-r100) 0%, var(--cc-color-b400) 16%, var(--cc-color-ro400) 80%);
+}
+.row {
+    margin: 16px 0 16px 0;
+}
+
+header {
+    padding: 4px;
+    background: linear-gradient(90deg, var(--cc-color-y100) 0%, var(--cc-color-r100) 25%, var(--cc-color-r100) 50%, var(--cc-color-b300) 90%);
+    .app-title {
+
+    }
+    .game-select {
+        float: right;
+        width: calc(100% - 320px);
+        z-index: 1000;
+    }
+}
+
+.app-body {
+    display:flex;
+    height: calc(100vh - 32px - 28px - 16px);
+    margin-bottom: calc(24px);
+    position: relative;
+    padding-top: 16px;
+}
+
+nav {
+    flex: 0 0 20%;
+    max-width: 20%;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 0 0 80%;
+    max-width: 80%;
+    padding-right: 16px;
+    height: 100%;
+    .module-container {
+        height: 100%;
+        overflow-y: auto;
+        .module {
+            max-height: 100%;
+        }
+    }
+}
+
+footer {
+    background: var(--cc-color-s800);
+}
+
+.menu-box {
+    background: var(--cc-color-s700);
+    padding: 8px;
+    border-radius: 8px;
+    &.bottom {
+        margin-top: auto;
+    }
+    ul {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0;
+        li {
+            margin-top: 4px;
+            padding: 12px;
+            font-size: var(--cc-text-size-sm);
+            font-weight: 500;
+            a {
+                color: var(--cc-color-white);
+            }
+            &:first-child {
+                margin-top: 0;
+                border-radius: 8px 8px 0 0;
+            }
+            &:last-child {
+                border-radius: 0 0 8px 8px;
+            }
+            &:nth-child(odd) {
+                background-color: var(--cc-color-s300);
+            }
+            &:nth-child(even) {
+                background-color: var(--cc-color-s400);
+            }
+            ul {
+                li {
+                    padding-left: calc(12px + 16px);
+                }
+            }
+        }
+    }
+}
+
+section {
+    background: var(--cc-color-s600);
+    padding: 16px;
+    border-radius: 8px;
+    overyflow-y: auto;
+    max-height: 100%;
+    overflow: hidden;
+    .inner {
+        max-height: 100%;
+        overflow-y: auto;
+    }
+}
+

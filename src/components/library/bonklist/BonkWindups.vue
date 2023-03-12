@@ -5,7 +5,7 @@
     <div id="windupSounds" class="body-panel">
       <h3>Windup Sounds</h3>
       <input id="loadWindupSound" ref="file" type="file" accept="audio/*" multiple hidden @change="handleNewFiles">
-      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
+      <button class="btn btn-teal add-btn" @click="$refs.file.click()">Add Sounds</button>
       <hr>
       <div id="windupSoundTable" class="imageTable">
         <div class="selectAll">

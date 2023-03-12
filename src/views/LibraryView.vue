@@ -1,10 +1,10 @@
 <template>
-  <div id="mainBody" class="library">
-
+  <div class="library">
         <component
             v-bind:is="current_library_section"
             :vts_data="vts_data"
             :current_item="current_item"
+            class="module"
             @set-section="setSection"
             @edit-item="editItem"
         ></component>
@@ -14,12 +14,8 @@
 <script>
 // @ is an alias to /src
 import BonkList from '@/components/library/bonklist/BonkList.vue'
-
-
 import EventList from '@/components/library/eventlist/EventList.vue'
-import EventForm from '@/components/library/eventlist/EventForm.vue'
 import ItemList from '@/components/library/itemlist/ItemList.vue'
-
 import SoundList from '@/components/library/soundlist/SoundList.vue'
 
 
@@ -29,7 +25,6 @@ export default {
   components: {
     BonkList,
     EventList,
-    EventForm,
     ItemList,
     SoundList
   },

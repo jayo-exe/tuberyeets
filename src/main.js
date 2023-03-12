@@ -15,6 +15,7 @@ import 'vue-select/dist/vue-select.css';
 //import custom styles
 import '../public/style.css';
 import '../public/style-new.css';
+import '../public/style-cc2.scss';
 
 Vue.component('v-select', vSelect)
 
@@ -75,6 +76,12 @@ Vue.prototype.$gameData = {
   },
   "clearBonk": function(bonkId) {
     return window.ipc.invoke('CLEAR_BONK', {bonkId:bonkId});
+  },
+  "createEvent": function(agentKey, triggerKey) {
+    return window.ipc.invoke('CREATE_EVENT', {agentKey:agentKey, triggerKey:triggerKey});
+  },
+  "getEventTypes": function() {
+    return window.ipc.invoke('GET_EVENT_TYPES');
   },
 }
 

@@ -30,6 +30,17 @@ module.exports = defineConfig({
             bufferutil: 'commonjs bufferutil',
             'utf-8-validate': 'commonjs utf-8-validate',
         },
+        module: {
+            rules: [
+                {
+                    test: /\.scss$/i,
+                    use: [
+                        // Compiles Sass to CSS
+                        { loader: 'sass-loader', options: { sassOptions: {indentedSyntax: false } } },
+                    ],
+                },
+            ],
+        },
         watchOptions: {
             ignored: /data\.json/
         },

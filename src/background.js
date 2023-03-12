@@ -34,6 +34,8 @@ let agents = [
     new OverlayAgent
 ];
 
+gameData.setAgentRegistry(agentRegistry);
+
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -51,6 +53,12 @@ async function createWindow() {
     minHeight: 720,
     icon: path.resolve(__static, 'icon.ico'),
     title: "'TuberYeets v" + app.getVersion(),
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#4746b8',
+      symbolColor: '#74b1be',
+      height: 74
+    },
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -67,7 +75,7 @@ async function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools();
+    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools({mode:"bottom"});
   } else {
     createProtocol('app')
     // Load the index.html when not in development
@@ -358,6 +366,15 @@ ipcMain.handle('CREATE_BONK', async (event) => {
 });
 ipcMain.handle('CLEAR_BONK', async (event, payload) => {
   return gameData.clearCustomBonk(payload.bonkId);
+});
+ipcMain.handle('CREATE_EVENT', async (event, payload) => {
+  console.log('GOT IT');
+  let newEvent = gameData.eventData.createEvent(payload.agentKey, payload.triggerKey);
+  console.log(newEvent);
+  return {success:true, item:newEvent}
+});
+ipcMain.handle('GET_EVENT_TYPES', async (event) => {
+  return agentRegistry.getAvailableTriggers();
 });
 
 ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {

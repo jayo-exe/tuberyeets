@@ -27,7 +27,7 @@ module.exports = class CrowdControlAgent {
                         'key': 'effectId',
                         'label': 'Effect',
                         'type': 'groupedList',
-                        'options': () => { this.getEffectInputOptions },
+                        'options': () => { return this.getEffectInputOptions },
                         'settable': true
                     },
                     {

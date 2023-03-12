@@ -3,121 +3,138 @@
     <h2>Triggers</h2>
 
     <div id="events" class="body-panel">
-      <h3>Crowd Control Triggers</h3>
-      <button class="btn btn-green add-btn" @click="addEvent">Add Trigger</button>
+      <h3>Events</h3>
+      <div class="event-selector">
+        <select @change="handleSelectNewEvent">
+          <optgroup v-for="(eventTypeGroup) in eventTypeList" :key="'evtg_'+listKey" :label="eventTypeGroup.name">
+            <option v-for="(eventType) in eventTypeGroup.options" :key="'evto_'+listKey" :value="eventType.key">
+              {{ `${eventTypeGroup.name}: ${eventType.label}` }}
+            </option>
+          </optgroup>
+        </select>
+        <button class="btn btn-teal add-btn" @click="uploadItem">Add Event</button>
+      </div>
       <hr>
       <div id="eventsTable" class="imageTable">
         <table class="listTable">
           <thead>
           <tr>
-            <th>Trigger Name</th>
-            <th>Triggered By</th>
+            <th>Name</th>
+            <th>Event Type</th>
             <th style="width: 140px;">Actions</th>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(cc_event, key) in live_game_data.crowdControlEvents" :key="'bcb_'+key">
+          <tr v-for="(event, key) in itemList" :key="'ev_'+listKey">
             <td>
-              <p class="imageLabel">{{ cc_event.name }}</p>
+              <p class="imageLabel">{{ event.name }}</p>
             </td>
             <td>
-              <p style="margin: 0">{{ getEffectName(cc_event.crowdControlEffect) }}</p>
+              <p style="margin: 0">{{ `${eventTypeList[event.agent].name}: ${eventTypeList[event.agent].options[event.trigger].label}` }}</p>
             </td>
             <td>
-              <button class="btn btn-green" @click="editEvent(key)">Edit</button>
-              <button class="btn btn-red" @click="removeEvent(key)">Delete</button>
+              <button class="btn btn-teal" @click="editItem(key)">Edit</button>
+              <button class="btn btn-red" @click="removeItem(key)">Delete</button>
             </td>
           </tr>
           </tbody>
         </table>
       </div>
     </div>
+    <EventForm
+        ref="editItem"
+        @finish-edit="finishEditItem"
+    ></EventForm>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-//import HelloWorld from '@/components/HelloWorld.vue'
+import EventForm from '@/components/library/eventlist/EventForm.vue'
+import isotip from "isotip";
 
 export default {
   name: 'EventList',
-  props: ['app_data','app_game','game_data','current_event'],
+  props: [],
+  components: {
+    EventForm,
+  },
   data : function() {
     return {
-      live_app_data: this.app_data,
-      live_game_data: this.game_data,
+      libraryType: 'events',
+      libraryName: 'Event',
+      libraryUploadHandler: this.$gameData.createEvent,
+      itemList: null,
+      eventTypeList: null,
+      selectedTypeId: null,
+      selectedType: {},
+      listKey: 0,
+      gameDataPath: '',
+      editFormSection: "EventForm",
     }
   },
   methods: {
-    addEvent()
-    {
-      var newEventNumber = 1;
-      var crowdControlEvents = this.live_game_data.crowdControlEvents;
-      if (crowdControlEvents == null)
-        crowdControlEvents = {};
-
-      while (crowdControlEvents["Custom_Event_" + newEventNumber] != null)
-        newEventNumber++;
-
-      this.$set(this.live_game_data.crowdControlEvents, "Custom_Event_" + newEventNumber, {
-        "name": "Custom Event " + newEventNumber,
-        "enabled": true,
-        "triggerName": null,
-        "crowdControlEffect": null,
-        "triggerType": null,
-        "bonkEnabled": false,
-        "bonkType": "single",
-        "hotkeyEnabled": false,
-        "hotkeyName": null,
-        "secondHotkeyEnabled": false,
-        "secondHotkeyName": null,
-        "secondHotkeyDelay": 2500,
-        "hotkeySync":true,
-        "expressionEnabled": false,
-        "expressionName": null,
-        "expressionDuration": 1000,
-        "expressionSync":true,
+    listItems() {
+      this.$set(this, "itemList", null);
+      this.$forceUpdate();
+      this.$gameData.read(`${this.libraryType}`).then((result) => {
+        this.$set(this, "itemList", result);
+        this.listKey++;
       });
-
-
     },
-    editEvent(item_index) {
-      this.$emit("edit-cc-event",item_index);
-    },
-    removeEvent(item_index) {
-      if(confirm("are you sure you want to remove this Crowd Control Event?")) {
-        var item_sound = this.live_game_data.crowdControlEvents[item_index].location;
-        this.$delete(this.live_game_data.crowdControlEvents,item_index);
-      }
-    },
-    updateGameData() {
-      this.$emit("update-game-data",this.live_game_data);
-    },
-    getEffectName(bid) {
-      var effect_name = "None";
-      this.app_game.items.forEach(cc_effect => {
-        if(cc_effect.bid == bid) {
-          effect_name = cc_effect.name;
+    uploadItem() {
+      console.log(`sending create message for ${this.libraryName}`);
+      this.libraryUploadHandler(this.selectedType.agent, this.selectedType.trigger).then((result) => {
+        if(result.success) {
+          console.log('event create good!');
+          this.$set(this.itemList, result.item.id, result.item);
+          this.listKey++;
+          this.selectedTypeId = null;
+          this.selectedType = {};
+          this.listItems();
         }
       });
-      return effect_name;
-    }
+    },
+    updateItem(itemId, field) {
+      this.$gameData.update(`${this.libraryType}.${itemId}.${field}`, this.itemList[itemId][field]).then((success) => {
+        if(!success) console.log(`updateItem failed for ${this.libraryName} ${itemId}`);
+        this.listKey++;
+      });
+    },
+    removeItem(itemId) {
+      if(confirm(`are you sure you want to remove this ${this.libraryName}?`)) {
+        this.$delete(this.itemList, itemId);
+        this.$gameData.delete(`${this.libraryType}.${itemId}`).then((success) => {
+          this.listKey++;
+        });
+      }
+    },
+
+    handleSelectNewEvent(event) {
+      let newKey = event.target.value;
+      this.selectedTypeId = newKey;
+      this.selectedType = {
+        agent: this.eventTypeList[newKey].agent,
+        trigger: this.eventTypeList[newKey].key
+      };
+    },
+    listEventTypes() {
+      this.$set(this, "eventTypeList", null);
+      this.$forceUpdate();
+      this.$gameData.getEventTypes().then((result) => {
+        this.$set(this, "eventTypeList", result);
+        this.listKey++;
+      });
+    },
+    editItem(itemId) {
+      this.$refs['editItem'].open(itemId);
+    },
+    finishEditItem() {
+      this.listItems();
+    },
   },
-  watch: {
-    app_data: {
-      handler: function() { this.live_app_data = this.app_data},
-      deep: true
-    },
-    game_data: {
-      handler: function() { this.live_game_data = this.game_data},
-      deep: true
-    },
-    live_game_data: {
-      handler: function(newVal, oldVal) {
-        this.updateGameData();
-      },
-      deep: true
-    }
+  mounted() {
+    this.listItems();
+    this.listEventTypes();
   },
 }
 </script>

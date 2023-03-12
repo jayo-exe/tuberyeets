@@ -1,7 +1,6 @@
 <template>
   <div v-if="itemList">
-    <h2>Bonks</h2>
-    <div id="customBonks" class="body-panel">
+    <section id="customBonks">
       <h3>Custom Bonks</h3>
       <button class="btn btn-green add-btn" @click="uploadItem">Add Bonk</button>
       <hr>
@@ -19,15 +18,15 @@
                 <p class="imageLabel">{{ bonk.name }}</p>
               </td>
               <td>
-                <button class="btn btn-green" @click="editItem(key)">Edit</button>
-                <button class="btn btn-blue" @click="testCustomBonk(key)">Test</button>
+                <button class="btn btn-teal" @click="editItem(key)">Edit</button>
+                <button class="btn btn-blurple" @click="testCustomBonk(key)">Test</button>
                 <button class="btn btn-red" @click="removeItem(key)">Delete</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
     <BonkForm
         ref="editItem"
         @finish-edit="finishEditItem"

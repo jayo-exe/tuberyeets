@@ -24,6 +24,10 @@ module.exports = class GameDataHelper {
 
     }
 
+    setAgentRegistry(agentRegistry) {
+        this.agentRegistry = agentRegistry;
+    }
+
     checkGameFolder() {
         if (!fs.existsSync(this.folderPath))
             fs.mkdirSync(this.folderPath);

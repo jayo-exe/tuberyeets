@@ -61,7 +61,7 @@ module.exports = class EventDataHelper {
         });
 
         this.gameData.update(`events.${eventId}`, event, true);
-        return this.gameData.read(`events.${eventId}`)
+        return this.gameData.read(`events.${eventId}`);
     }
 
     updateEventDetails(eventId, eventDetails) {

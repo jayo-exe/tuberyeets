@@ -5,7 +5,7 @@
     <div id="impactDecals" class="body-panel">
       <h3>Impact Decals</h3>
       <input id="loadImpactDecal" ref="file" type="file" accept="image/*" multiple hidden @change="handleNewFiles">
-      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Images</button>
+      <button class="btn btn-teal add-btn" @click="$refs.file.click()">Add Images</button>
       <hr>
       <div id="impactDecalsTable" class="imageTable">
         <div class="selectAll">

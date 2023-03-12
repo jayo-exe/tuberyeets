@@ -1,13 +1,11 @@
 <template>
   <div v-if="itemList">
-    <h2>Items</h2>
-
-    <div id="bonkImages" class="body-panel">
-      <h3>Bonk Images</h3>
+    <section id="bonkImages">
+      <h3 class="cc-f-h5">Bonk Images</h3>
       <input id="loadImage" type="file" ref="file" accept="image/*" multiple hidden @change="uploadItem">
-      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Images</button>
+      <button class="btn btn-teal add-btn" @click="$refs.file.click()">Add Images</button>
       <hr>
-      <div id="imageTable" class="imageTable">
+      <div id="imageTable" class="imageTable inner">
         <div class="selectAll">
           <div>
             <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
@@ -40,7 +38,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
     <ItemForm
         ref="editItem"
         @finish-edit="finishEditItem"

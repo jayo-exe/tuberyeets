@@ -5,7 +5,7 @@
     <div id="bonkSounds" class="body-panel">
       <h3>Sound Library</h3>
       <input id="loadSound" type="file" ref="file" accept="audio/*" multiple hidden @change="uploadItem">
-      <button class="btn btn-green add-btn" @click="$refs.file.click()">Add Sounds</button>
+      <button class="btn btn-teal add-btn" @click="$refs.file.click()">Add Sounds</button>
       <hr>
       <div id="soundTable" class="imageTable">
         <div class="selectAll">

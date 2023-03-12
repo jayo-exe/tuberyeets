@@ -30,7 +30,7 @@
               <p class="grid2">Bonk Items <i class="fa fa-info-circle"
                                              v-b-tooltip.hover.left="'Select some thrown items that will be used in this Bonk'"
               ></i></p>
-              <button class="images grid3 btn btn-blue"
+              <button class="images grid3 btn btn-blurple"
                       @click="selectItems()"
                       :disabled="!itemData.itemsOverride"
               >Gallery</button>
@@ -45,7 +45,7 @@
               <p class="grid2">Impact Sounds <i class="fa fa-info-circle"
                                                 v-b-tooltip.hover.left="'Select some impact sounds that will be used in this Bonk'"
               ></i></p>
-              <button class="sounds grid3 btn btn-blue"
+              <button class="sounds grid3 btn btn-blurple"
                       @click="selectSounds()"
                       :disabled="!itemData.soundsOverride"
               >Gallery</button>
@@ -54,12 +54,12 @@
                 <p class="grid2">Impact Decals <i class="fa fa-info-circle"
                                                   v-b-tooltip.hover.left="'Select some Impact Decals that will be used in this Bonk'"
                 ></i></p>
-                <button class="impactDecals grid3 btn btn-blue" @click="setSection('BonkDecals')">Gallery</button>
+                <button class="impactDecals grid3 btn btn-blurple" @click="setSection('BonkDecals')">Gallery</button>
 
                 <p class="grid2">Windup Sounds <i class="fa fa-info-circle"
                                                   v-b-tooltip.hover.left="'Select some Windup Sounds that will be used in this Bonk'"
                 ></i></p>
-                <button class="windupSounds grid3 btn btn-blue" @click="setSection('BonkWindups')">Gallery</button>
+                <button class="windupSounds grid3 btn btn-blurple" @click="setSection('BonkWindups')">Gallery</button>
               </div>
 
             </div>
@@ -215,8 +215,6 @@ export default {
       libraryName: "Bonk",
       itemId: null,
       itemData: null,
-      gameDataPath: '',
-      itemListSection: "BonkList"
     }
   },
   methods: {
@@ -253,7 +251,7 @@ export default {
     },
   },
   mounted() {
-    this.gameDataPath = this.$gameData.readSync('game_data_path');
+
   },
 }
 </script>
