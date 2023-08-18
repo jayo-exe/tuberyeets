@@ -16,13 +16,13 @@ const { autoUpdater } = require('electron-updater');
 const userDataPath = app.getPath('userData');
 const uuid = require('uuid');
 
-let bonkRoot = (app.isPackaged ? '../' : '')+'../public/bonker';
-let bonkerPath = path.resolve(__static, bonkRoot+'/bonker.html');
+let overlayRoot = (app.isPackaged ? '../' : '')+'../public/overlay';
+let overlayPath = path.resolve(__static, overlayRoot+'/overlay.html');
 
 // Loading core data file
 let appData = new AppDataHelper(userDataPath);
 appData.loadData();
-appData.update('bonkerPath', bonkerPath);
+appData.update('overlayPath', overlayPath);
 
 let gameData = new GameDataHelper(userDataPath,__static);
 
@@ -31,11 +31,10 @@ let agentRegistry = new AgentRegistry(appData,gameData);
 let agents = [
     new CrowdControlAgent,
     new VtubeStudioAgent,
-    new OverlayAgent
+    new OverlayAgent,
 ];
 
 gameData.setAgentRegistry(agentRegistry);
-
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -43,6 +42,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let mainWindow;
+let authWindow;
 
 async function createWindow() {
   // Create the browser window.
@@ -55,8 +55,8 @@ async function createWindow() {
     title: "'TuberYeets v" + app.getVersion(),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#4746b8',
-      symbolColor: '#74b1be',
+      color: '#FDD353',
+      symbolColor: '#1A172A',
       height: 74
     },
     webPreferences: {
@@ -70,12 +70,29 @@ async function createWindow() {
 
     autoHideMenuBar: true,
     useContentSize: true
-  })
+  });
+
+  agentRegistry.getAgent('crowdcontrol').onGamePackLoad = () => {
+    let agent = agentRegistry.getAgent('crowdcontrol');
+    let payload = {};
+    try {
+      payload = {
+        gameId: agent.currentPack.game.gameID,
+        packId: agent.currentPack.gamePackID,
+        packs: agent.currentGame
+      };
+    } catch(e) {
+      console.log("Game Pack not yet loaded! will try again in 0.5s");
+      setTimeout(() => {agent.onGamePackLoad()},500);
+      return;
+    }
+    mainWindow.webContents.send('GET_GAME', payload);
+  }
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools({mode:"bottom"});
+    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools({mode:"detach"});
   } else {
     createProtocol('app')
     // Load the index.html when not in development
@@ -116,6 +133,30 @@ async function createWindow() {
   mainWindow.on("close", () => {
     exiting = true;
   });
+}
+
+async function createAuthWindow(connectionId, service) {
+  let authUrl = `https://auth.crowdcontrol.live/?platform=${service}&connectionID=${encodeURIComponent(connectionId)}`;
+  authWindow = new BrowserWindow({
+    width: 360,
+    height: 600,
+    minWidth: 360,
+    minHeight: 600,
+    icon: path.resolve(__static, 'icon.ico'),
+    title: "Authorize",
+    webPreferences: {
+
+    },
+    autoHideMenuBar: true,
+    useContentSize: true
+  });
+  console.log(`auth URL is ${authUrl}`);
+  try {
+    await authWindow.loadURL(authUrl);
+  } catch (e) {
+    console.log('auth window redirected');
+  }
+
 }
 
 function setTray()
@@ -161,6 +202,7 @@ app.on('ready', async () => {
   agents.forEach((agent) => {
     agentRegistry.registerAgent(agent);
   });
+
   createWindow();
 })
 
@@ -224,6 +266,7 @@ setInterval(() => {
   if (mainWindow != null && !exiting)
   {
       mainWindow.webContents.send("AGENT_STATUS", agentRegistry.getAllAgentStatus());
+      mainWindow.webContents.send("CALIBRATE_STATUS", agentRegistry.getAgent('overlay').getCalibrateStage());
   }
 }, 500);
 
@@ -232,14 +275,18 @@ setInterval(() => {
 // ----------------
 
 appData.statusCallback = function(status) {
-  mainWindow.webContents.send("SAVE_STATUS", status);
+  if (mainWindow != null && !exiting) {
+    mainWindow.webContents.send("SAVE_STATUS", status);
+  }
 }
 gameData.statusCallback = function(status) {
-  mainWindow.webContents.send("GAME_SAVE_STATUS", status);
+  if (mainWindow != null && !exiting) {
+    mainWindow.webContents.send("GAME_SAVE_STATUS", status);
+  }
 }
-gameData.bonkDefaultsCallback = function() {
+gameData.itemGroupDefaultsCallback = function() {
   return {
-    barrageFrequency: appData.read('barrageFrequency'),
+    groupFrequency: appData.read('groupFrequency'),
     throwDuration: appData.read('throwDuration'),
     throwAngleMin: appData.read('throwAngleMin'),
     throwAngleMax: appData.read('throwAngleMax'),
@@ -247,25 +294,34 @@ gameData.bonkDefaultsCallback = function() {
     spinSpeedMax: appData.read('spinSpeedMax'),
   }
 }
+
 ipcMain.on('GET_DATA_PATH', (event, payload) => {
   event.reply('GET_DATA_PATH', userDataPath);
 });
 
 ipcMain.on('LOAD_DATA', (event, payload) => {
-  console.log('got load request');
   try {
     appData.loadData();
-    appData.update('bonkerPath', bonkerPath);
+    appData.update('overlayPath', overlayPath);
   } catch {}
   event.reply('LOAD_DATA', appData.getAllData());
 });
 
-ipcMain.on('SET_GAME', (event, payload) => {
-  console.log('GOT SET GAME REQUEST');
-  let gameId = payload;
-  agentRegistry.getAgent('crowdcontrol').setGame(gameId);
-  event.reply('SET_GAME', gameId);
+ipcMain.on('BEGIN_CC_AUTH', async(event, payload) => {
+  await createAuthWindow(agentRegistry.getAgent('crowdcontrol').connectionId, payload.service);
 });
+
+ipcMain.on('SET_GAME', (event, payload) => {
+  let gameId = payload.gameId;
+  let packId = payload.packId;
+  let agent = agentRegistry.getAgent('crowdcontrol');
+  agent.loadGameMenu(gameId, packId);
+});
+
+ipcMain.on('GET_GAME', (event, payload) => {
+  agentRegistry.getAgent('crowdcontrol').onGamePackLoad();
+});
+
 
 ipcMain.on('SAVE_GAME_DATA', (event, payload) => {
   let save_data = payload.data;
@@ -295,7 +351,6 @@ ipcMain.handle('APP_CRUD', async (event, operation, payload) => {
 });
 
 ipcMain.handle('GAME_CRUD', async (event, operation, payload) => {
-  console.log(payload);
   switch(operation) {
     case "read":
       return gameData.read(payload.field);
@@ -324,7 +379,6 @@ ipcMain.on('APP_CRUD_SYNC', async (event, operation, payload) => {
 });
 
 ipcMain.on('GAME_CRUD_SYNC', async (event, operation, payload) => {
-  console.log(payload);
   switch(operation) {
     case "read":
       event.returnValue = gameData.read(payload.field);
@@ -354,116 +408,72 @@ ipcMain.handle('UPLOAD_IMPACT', async (event, payload) => {
 });
 
 ipcMain.handle('UPLOAD_DECAL', async (event, payload) => {
-  return gameData.uploadDecal(payload.filePath,payload.filename,payload.bonkId);
+  return gameData.uploadDecal(payload.filePath,payload.filename,payload.itemGroupId);
 });
 
 ipcMain.handle('UPLOAD_WINDUP', async (event, payload) => {
-  return gameData.uploadWindup(payload.filePath,payload.filename,payload.bonkId);
+  return gameData.uploadWindup(payload.filePath,payload.filename,payload.itemGroupId);
 });
 
-ipcMain.handle('CREATE_BONK', async (event) => {
-  return gameData.createCustomBonk();
+ipcMain.handle('CREATE_ITEM_GROUP', async (event) => {
+  return gameData.createItemGroup();
 });
-ipcMain.handle('CLEAR_BONK', async (event, payload) => {
-  return gameData.clearCustomBonk(payload.bonkId);
+ipcMain.handle('CLEAR_ITEM_GROUP', async (event, payload) => {
+  return gameData.clearItemGroup(payload.itemGroupId);
 });
-ipcMain.handle('CREATE_EVENT', async (event, payload) => {
-  console.log('GOT IT');
-  let newEvent = gameData.eventData.createEvent(payload.agentKey, payload.triggerKey);
-  console.log(newEvent);
+ipcMain.handle('CREATE_TRIGGER', async (event, payload) => {
+  let newEvent = gameData.eventData.createTrigger(payload.agentKey, payload.eventKey);
   return {success:true, item:newEvent}
 });
 ipcMain.handle('GET_EVENT_TYPES', async (event) => {
-  return agentRegistry.getAvailableTriggers();
+  return agentRegistry.getAvailableEvents();
+});
+ipcMain.handle('GET_EVENT_SETTINGS', async (event,payload) => {
+  return await agentRegistry.getEventSettings(payload.agentKey, payload.eventKey);
 });
 
-ipcMain.on('GET_VTS_EXPRESSIONS', async (event, payload) => {
-  console.log('got VTS Expression request');
-  let expression_result = await agentRegistry.getAgent('vtubestudio').getExpressions();
-  console.log(expression_result);
-  console.log('sending VTS Expression reply');
-  event.reply('GET_VTS_EXPRESSIONS', {success:true,expressions:expression_result});
+ipcMain.handle('CREATE_COMMAND', async (event, payload) => {
+  let newCommand = gameData.eventData.createTriggerCommand(payload.triggerId, payload.scriptName, payload.agentKey, payload.actionKey);
+  return {success:true, item:newCommand}
+});
+ipcMain.handle('GET_ACTION_TYPES', async (event) => {
+  return agentRegistry.getAvailableActions();
+});
+ipcMain.handle('GET_ACTION_SETTINGS', async (event,payload) => {
+  return await agentRegistry.getActionSettings(payload.agentKey, payload.actionKey);
 });
 
-ipcMain.on('GET_VTS_HOTKEYS', async (event, payload) => {
-  console.log('got VTS Hotkey request');
-  let hotkey_result = await agentRegistry.getAgent('vtubestudio').getHotkeys();
-  console.log(hotkey_result);
-  console.log('sending VTS Hotkey reply');
-  event.reply('GET_VTS_HOTKEYS', {success:true, hotkeys:hotkey_result});
+ipcMain.handle('GET_AGENT_DETAILS', async (event) => {
+  return agentRegistry.getAllAgentDetails();
+});
+
+ipcMain.handle('GET_AGENT_SETTINGS', async (event, payload) => {
+  return agentRegistry.getAgentSettings(payload.agentKey);
+});
+
+ipcMain.handle('ENABLE_AGENT', async (event, payload) => {
+  return agentRegistry.activateAgent(payload.agentKey);
+});
+
+ipcMain.handle('DISABLE_AGENT', async (event, payload) => {
+  return agentRegistry.deactivateAgent(payload.agentKey);
+});
+
+ipcMain.handle('RESTART_AGENT', async (event, payload) => {
+  return agentRegistry.reloadAgent(payload.agentKey);
 });
 
 ipcMain.on('OPEN_GAME_FOLDER', async (event, payload) => {
-  console.log('got Folder Open request');
-  shell.openPath(gameData.gameDataFolder);
+  await shell.openPath(gameData.gameDataFolder);
 });
 
-ipcMain.on('CHECK_UPDATE', () => {
-  console.log('Checking for Updates...');
-  autoUpdater.checkForUpdatesAndNotify();
+ipcMain.on('CHECK_UPDATE', async () => {
+  await autoUpdater.checkForUpdatesAndNotify();
 });
 
 ipcMain.on('RESTART', () => {
   autoUpdater.quitAndInstall();
 });
-
-
-
-
-function handleEffect(effect_id) {
-  if (!effectQueue.hasOwnProperty(effect_id)) {
-    console.log("Could not handle unknown event " + effect_id);
-    return false;
-  }
-  let current_effect = effectQueue[effect_id];
-  console.log("Handling event " + current_effect.id);
-  let customEvents = gameData.read("crowdControlEvents");
-  let matchedEvent = null;
-  Object.entries(customEvents).forEach(item => {
-    const [key, customEvent] = item;
-    if(current_effect.effect.safeName == customEvent.triggerName && customEvent.enabled == true) {
-      matchedEvent = customEvent;
-      console.log('Found a matching instant event: ' + key);
-      console.log(current_effect);
-    }
-  });
-
-  if(matchedEvent) {
-    //Execute the bonk if enabled
-    if(matchedEvent.bonkEnabled && matchedEvent.hasOwnProperty("bonkType") && matchedEvent.bonkType.length > 0) {
-      let customCount = null;
-      if(current_effect.effect.parameters[0] !== undefined) {
-        customCount = current_effect.effect.parameters[0];
-      }
-      console.log('Sending a bonk to the bonker');
-      custom(matchedEvent.bonkType,customCount);
-    }
-
-    //Execute the hotkey(s) if enabled
-    if(matchedEvent.hotkeyEnabled && matchedEvent.hasOwnProperty("hotkeyName") && matchedEvent.hotkeyName.length > 0) {
-      //Trigger the selected hotkey
-      agentRegistry.eventManager.handleOutputAction('vtubestudio','hotkey',{name: matchedEvent.hotkeyName});
-      if(matchedEvent.secondHotkeyEnabled && matchedEvent.hasOwnProperty("secondHotkeyName") && matchedEvent.secondHotkeyName.length > 0) {
-        //Trigger the follow-up hotkey after the specified delay
-        setTimeout(() => {agentRegistry.getAgent('vtubestudio').triggerHotkey(matchedEvent.secondHotkeyName)},matchedEvent.secondHotkeyDelay);
-      }
-    }
-
-    //Execute the expression if enabled
-    if(matchedEvent.expressionEnabled && matchedEvent.hasOwnProperty("expressionName") && matchedEvent.expressionName.length > 0) {
-      //Activate selected expression
-      agentRegistry.eventManager.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'activate'});
-      if(parseInt(matchedEvent.expressionDuration) > 0) {
-        //Deactivate expression after the listed duration
-        setTimeout(() => {
-          agentRegistry.eventManager.handleOutputAction('vtubestudio','expression',{name: matchedEvent.expressionName, type: 'deactivate'});
-          },matchedEvent.expressionDuration);
-      }
-    }
-
-  }
-
-}
 
 // -----------------
 // Model Calibration
@@ -496,12 +506,12 @@ function cancelCalibrate()
 }
 
 // -----
-// Bonks
+// Item Throws
 // -----
 
 // Testing a specific item
 ipcMain.on("TEST_CUSTOM_ITEM", (event, message) => testItem(event, message));
-ipcMain.on("TEST_CUSTOM_BONK", (_, message) => { console.log('testing bonk ' + message); custom(message); });
+ipcMain.on("TEST_ITEM_GROUP", (_, message) => { console.log('testing item group ' + message); custom(message); });
 
 function testItem(_, item)
 {
@@ -510,11 +520,11 @@ function testItem(_, item)
   }
 }
 
-// A custom bonk test
+// A custom item group test
 function custom(customName,customCount=null)
 {
   if(agentRegistry.getAgentStatus('overlay') == 'connected') {
-    return agentRegistry.eventManager.handleOutputAction('overlay','throwBonk',{bonk: customName});
+    return agentRegistry.eventManager.handleOutputAction('overlay','throwItemGroup',{itemGroup: customName});
   }
 }
 

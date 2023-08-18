@@ -7,7 +7,7 @@ module.exports = defineConfig({
         electronBuilder: {
             builderOptions: {
                 "extraFiles": [
-                    "public/bonker"
+                    "public/overlay"
                 ],
                 appId: "ca.jayo.TuberYeets",
                 publish: [

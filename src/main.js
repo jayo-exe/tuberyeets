@@ -14,8 +14,9 @@ import 'vue-select/dist/vue-select.css';
 
 //import custom styles
 import '../public/style.css';
-import '../public/style-new.css';
+import '../public/style-new.scss';
 import '../public/style-cc2.scss';
+import '../public/vselect-theme.scss';
 
 Vue.component('v-select', vSelect)
 
@@ -37,7 +38,31 @@ Vue.prototype.$appData = {
   },
   "deleteSync": function(field) {
     return window.ipc.sendSync('APP_CRUD_SYNC', 'delete', {field:field});
-  }
+  },
+  "getAgentDetails": function() {
+    return window.ipc.invoke('GET_AGENT_DETAILS');
+  },
+  "getAgentSettings": function(agentKey) {
+    return window.ipc.invoke('GET_AGENT_SETTINGS', {agentKey:agentKey});
+  },
+  "hasAgentSettingField": function(agentKey, field) {
+    return window.ipc.invoke('HAS_AGENT_SETTING_FIELD', {agentKey:agentKey, field:field});
+  },
+  "getAgentSettingField": function(agentKey, field) {
+    return window.ipc.invoke('GET_AGENT_SETTING_FIELD', {agentKey:agentKey, field:field});
+  },
+  "setAgentSettingField": function(agentKey, field, value) {
+    return window.ipc.invoke('SET_AGENT_SETTING_FIELD', {agentKey:agentKey, field:field, value:value});
+  },
+  "enableAgent": function(agentKey) {
+    return window.ipc.invoke('ENABLE_AGENT', {agentKey:agentKey});
+  },
+  "disableAgent": function(agentKey) {
+    return window.ipc.invoke('DISABLE_AGENT', {agentKey:agentKey});
+  },
+  "restartAgent": function(agentKey) {
+    return window.ipc.invoke('RESTART_AGENT', {agentKey:agentKey});
+  },
 }
 
 Vue.prototype.$gameData = {
@@ -65,23 +90,35 @@ Vue.prototype.$gameData = {
   "uploadImpact": function(filePath, filename) {
     return window.ipc.invoke('UPLOAD_IMPACT', {filePath:filePath, filename:filename});
   },
-  "uploadDecal": function(filePath, filename,bonkId) {
-    return window.ipc.invoke('UPLOAD_DECAL', {filePath:filePath, filename:filename, bonkId:bonkId});
+  "uploadDecal": function(filePath, filename,itemGroupId) {
+    return window.ipc.invoke('UPLOAD_DECAL', {filePath:filePath, filename:filename, itemGroupId:itemGroupId});
   },
-  "uploadWindup": function(filePath, filename, bonkId) {
-    return window.ipc.invoke('UPLOAD_WINDUP', {filePath:filePath, filename:filename, bonkId:bonkId});
+  "uploadWindup": function(filePath, filename, itemGroupId) {
+    return window.ipc.invoke('UPLOAD_WINDUP', {filePath:filePath, filename:filename, itemGroupId:itemGroupId});
   },
-  "createBonk": function() {
-    return window.ipc.invoke('CREATE_BONK');
+  "createItemGroup": function() {
+    return window.ipc.invoke('CREATE_ITEM_GROUP');
   },
-  "clearBonk": function(bonkId) {
-    return window.ipc.invoke('CLEAR_BONK', {bonkId:bonkId});
+  "clearItemGroup": function(itemGroupId) {
+    return window.ipc.invoke('CLEAR_ITEM_GROUP', {itemGroupId:itemGroupId});
   },
-  "createEvent": function(agentKey, triggerKey) {
-    return window.ipc.invoke('CREATE_EVENT', {agentKey:agentKey, triggerKey:triggerKey});
+  "createTrigger": function(agentKey, eventKey) {
+    return window.ipc.invoke('CREATE_TRIGGER', {agentKey:agentKey, eventKey:eventKey});
   },
   "getEventTypes": function() {
     return window.ipc.invoke('GET_EVENT_TYPES');
+  },
+  "getEventSettings": function(agentKey, eventKey) {
+    return window.ipc.invoke('GET_EVENT_SETTINGS', {agentKey:agentKey, eventKey:eventKey});
+  },
+  "createTriggerCommand": function(triggerId, scriptName, agentKey, actionKey) {
+    return window.ipc.invoke('CREATE_COMMAND', {triggerId:triggerId, scriptName:scriptName, agentKey:agentKey, actionKey:actionKey});
+  },
+  "getActionTypes": function() {
+    return window.ipc.invoke('GET_ACTION_TYPES');
+  },
+  "getActionSettings": function(agentKey, actionKey) {
+    return window.ipc.invoke('GET_ACTION_SETTINGS', {agentKey:agentKey, actionKey:actionKey});
   },
 }
 

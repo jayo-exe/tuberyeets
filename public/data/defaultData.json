@@ -1,10 +1,7 @@
 {
-    "cc_channel": "jayo_exe",
-    "last_game_id": 9,
-    "portThrower": 8082,
-    "portVTubeStudio": 8001,
-    "barrageCount": 30,
-    "barrageFrequency": 0.1,
+    "last_game_id": null,
+    "groupCount": 30,
+    "groupFrequency": 0.1,
     "returnSpeed": 0.05,
     "openEyes": false,
     "closeEyes": false,
@@ -17,5 +14,6 @@
     "throwAngleMax": 45,
     "spinSpeedMin": 5,
     "spinSpeedMax": 10,
-    "minimizeToTray": false
+    "minimizeToTray": false,
+    "agents": {}
 }

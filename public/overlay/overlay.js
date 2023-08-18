@@ -10,6 +10,7 @@ let VTSPort = 8000;
 
 var socketBridge, bridgeIsOpen = false;
 var isCalibrating = false;
+var calibrateStage = -2;
 
 var previousModelPosition = {
     "positionX": 0,
@@ -18,8 +19,146 @@ var previousModelPosition = {
     "size": 0
 };
 
+function calibrateUpdateStage(stageId) {
+    calibrateStage = stageId;
+    let request = {
+        "type": "calibrate-status",
+        "stageId": stageId,
+    }
+    socketBridge.send(JSON.stringify(request));
+}
+function calibrateUpdateGuide() {
+    if (guideX == null)
+        guideX = window.innerWidth / 2;
+    if (guideY == null)
+        guideY = window.innerHeight / 2;
+    if (calibrateStage >= 0 && calibrateStage != 4)
+    {
+        document.querySelector("#guide").hidden = false;
+        document.querySelector("#guideText").hidden = false;
+    }
+    else
+    {
+        document.querySelector("#guide").hidden = true;
+        document.querySelector("#guideText").hidden = true;
+    }
+}
+function calibrateBegin() {
+    calibrateUpdateStage(-1);
+    calibrateUpdateGuide();
+    let request = {
+        "apiName": "VTubeStudioPublicAPI",
+        "apiVersion": "1.0",
+        "requestID": "11",
+        "messageType": "CurrentModelRequest"
+    }
+    socketVTube.onmessage = function(event)
+    {
+        socketVTube.onmessage = null;
+        const tempData = JSON.parse(event.data).data;
+        previousModelPosition = {
+            "positionX": tempData.modelPosition.positionX,
+            "positionY": tempData.modelPosition.positionY,
+            "rotation": tempData.modelPosition.rotation,
+            "size": tempData.modelPosition.size
+        }
+        calibrateShrink();
+    }
+    socketVTube.send(JSON.stringify(request));
+}
+function calibrateShrink() {
+    isCalibrating = true;
+    calibrateUpdateStage(0);
+    calibrateUpdateGuide();
+    let request = {
+        "apiName": "VTubeStudioPublicAPI",
+        "apiVersion": "1.0",
+        "requestID": "7",
+        "messageType": "MoveModelRequest",
+        "data": {
+            "timeInSeconds": 0.5,
+            "valuesAreRelativeToModel": false,
+            "rotation": 0,
+            "size": -100
+        }
+    }
+    socketVTube.onmessage = null;
+    socketVTube.send(JSON.stringify(request));
+}
+function calibrateMeasureSmall() {
+    calibrateUpdateStage(1);
+    calibrateUpdateGuide();
+    let request = {
+        "apiName": "VTubeStudioPublicAPI",
+        "apiVersion": "1.0",
+        "requestID": "8",
+        "messageType": "CurrentModelRequest"
+    }
+    socketVTube.onmessage = function(event)
+    {
+        socketVTube.onmessage = null;
+        const tempData = JSON.parse(event.data).data;
+        let request = {
+            "type": "calibrating",
+            "stage": "min",
+            "positionX": tempData.modelPosition.positionX - (((guideX / window.innerWidth) * 2) - 1),
+            "positionY": tempData.modelPosition.positionY + (((guideY / window.innerHeight) * 2) - 1),
+            "size": tempData.modelPosition.size,
+            "modelID": tempData.modelID
+        }
+        socketBridge.send(JSON.stringify(request));
+        calibrateGrow();
+    }
+    socketVTube.send(JSON.stringify(request));
+}
+function calibrateGrow() {
+    calibrateUpdateStage(2);
+    calibrateUpdateGuide();
+    let request = {
+        "apiName": "VTubeStudioPublicAPI",
+        "apiVersion": "1.0",
+        "requestID": "9",
+        "messageType": "MoveModelRequest",
+        "data": {
+            "timeInSeconds": 0.5,
+            "valuesAreRelativeToModel": false,
+            "rotation": 0,
+            "size": 100
+        }
+    }
+    socketVTube.onmessage = null;
+    socketVTube.send(JSON.stringify(request));
+}
+function calibrateMeasureLarge() {
+    calibrateUpdateStage(3);
+    calibrateUpdateGuide();
+    var request = {
+        "apiName": "VTubeStudioPublicAPI",
+        "apiVersion": "1.0",
+        "requestID": "10",
+        "messageType": "CurrentModelRequest"
+    }
+    socketVTube.onmessage = function(event)
+    {
+        const tempData = JSON.parse(event.data).data;
+        socketVTube.onmessage = null;
+        request = {
+            "type": "calibrating",
+            "stage": "max",
+            "positionX": tempData.modelPosition.positionX - (((guideX / window.innerWidth) * 2) - 1),
+            "positionY": tempData.modelPosition.positionY + (((guideY / window.innerHeight) * 2) - 1),
+            "size": tempData.modelPosition.size,
+            "modelID": tempData.modelID
+        }
+        socketBridge.send(JSON.stringify(request));
+        endCalibration();
+    }
+    socketVTube.send(JSON.stringify(request));
+}
+
 function endCalibration()
 {
+    calibrateUpdateStage(4);
     if (isCalibrating)
     {
         isCalibrating = false;
@@ -27,7 +166,7 @@ function endCalibration()
         document.querySelector("#guideText").hidden = true;
         if (vTubeIsOpen)
         {
-            var request = {
+            let request = {
                 "apiName": "VTubeStudioPublicAPI",
                 "apiVersion": "1.0",
                 "requestID": "9",
@@ -104,126 +243,33 @@ function connectBridge()
         }
         else if (data.type == "calibrating")
         {
-            if (guideX == null)
-                guideX = window.innerWidth / 2;
-            if (guideY == null)
-                guideY = window.innerHeight / 2;
-            if (data.stage >= 0 && data.stage != 4)
-            {
-                document.querySelector("#guide").hidden = false;
-                document.querySelector("#guideText").hidden = false;
-            }
-            else
-            {
-                document.querySelector("#guide").hidden = true;
-                document.querySelector("#guideText").hidden = true;
-            }
+
             switch(data.stage)
             {
                 // Stage -1 is storing current position information
                 case -1:
-                    var request = {
-                        "apiName": "VTubeStudioPublicAPI",
-                        "apiVersion": "1.0",
-                        "requestID": "11",
-                        "messageType": "CurrentModelRequest"
-                    }
-                    socketVTube.onmessage = function(event)
-                    {
-                        socketVTube.onmessage = null;
-                        const modelPosition = JSON.parse(event.data).data.modelPosition;
-                        previousModelPosition = {
-                            "positionX": modelPosition.positionX,
-                            "positionY": modelPosition.positionY,
-                            "rotation": modelPosition.rotation,
-                            "size": modelPosition.size
-                        }
-                    }
-                    socketVTube.send(JSON.stringify(request));
+                    console.log('calibration setup: getting model position');
+                    calibrateBegin();
                     break;
                 // Stage 0 is calibrating at smallest size
                 case 0:
-                    isCalibrating = true;
-
-                    var request = {
-                        "apiName": "VTubeStudioPublicAPI",
-                        "apiVersion": "1.0",
-                        "requestID": "7",
-                        "messageType": "MoveModelRequest",
-                        "data": {
-                            "timeInSeconds": 0.5,
-                            "valuesAreRelativeToModel": false,
-                            "rotation": 0,
-                            "size": -100
-                        }
-                    }
-                    socketVTube.onmessage = null;
-                    socketVTube.send(JSON.stringify(request));
+                    console.log('calibration process: shrink to smallest');
+                    calibrateShrink();
                     break;
                 // Stage 1 is sending min size position information back
                 case 1:
-                    var request = {
-                        "apiName": "VTubeStudioPublicAPI",
-                        "apiVersion": "1.0",
-                        "requestID": "8",
-                        "messageType": "CurrentModelRequest"
-                    }
-                    socketVTube.onmessage = function(event)
-                    {
-                        const tempData = JSON.parse(event.data).data;
-                        request = {
-                            "type": "calibrating",
-                            "stage": "min",
-                            "positionX": tempData.modelPosition.positionX - (((guideX / window.innerWidth) * 2) - 1),
-                            "positionY": tempData.modelPosition.positionY + (((guideY / window.innerHeight) * 2) - 1),
-                            "size": tempData.modelPosition.size,
-                            "modelID": tempData.modelID
-                        }
-                        socketVTube.onmessage = null;
-                        socketBridge.send(JSON.stringify(request));
-                    }
-                    socketVTube.send(JSON.stringify(request));
+                    console.log('calibration process: small measurement');
+                    calibrateMeasureSmall();
                     break;
                 // Stage 2 is calibrating at largest size
                 case 2:
-                    var request = {
-                        "apiName": "VTubeStudioPublicAPI",
-                        "apiVersion": "1.0",
-                        "requestID": "9",
-                        "messageType": "MoveModelRequest",
-                        "data": {
-                            "timeInSeconds": 0.5,
-                            "valuesAreRelativeToModel": false,
-                            "rotation": 0,
-                            "size": 100
-                        }
-                    }
-                    socketVTube.onmessage = null;
-                    socketVTube.send(JSON.stringify(request));
+                    console.log('calibration process: grow to largest');
+                    calibrateGrow();
                     break;
                 // Stage 3 is sending max size position information back
                 case 3:
-                    var request = {
-                        "apiName": "VTubeStudioPublicAPI",
-                        "apiVersion": "1.0",
-                        "requestID": "10",
-                        "messageType": "CurrentModelRequest"
-                    }
-                    socketVTube.onmessage = function(event)
-                    {
-                        const tempData = JSON.parse(event.data).data;
-                        request = {
-                            "type": "calibrating",
-                            "stage": "max",
-                            "positionX": tempData.modelPosition.positionX - (((guideX / window.innerWidth) * 2) - 1),
-                            "positionY": tempData.modelPosition.positionY + (((guideY / window.innerHeight) * 2) - 1),
-                            "size": tempData.modelPosition.size,
-                            "modelID": tempData.modelID
-                        }
-                        socketVTube.onmessage = null;
-                        socketBridge.send(JSON.stringify(request));
-                    }
-                    socketVTube.send(JSON.stringify(request));
+                    console.log('calibration process: largest position');
+                    calibrateMeasureLarge();
                     break;
                 // Stage 4 is finishing calibration
                 case 4:
@@ -242,6 +288,7 @@ function connectBridge()
             socketVTube.onmessage = async function(event)
             {
                 const tempData = JSON.parse(event.data).data;
+                console.log(tempData);
                 const paramInfo = tempData.defaultParameters;
                 const modelID = tempData.modelID;
 
@@ -286,7 +333,7 @@ function connectBridge()
                 switch(data.type)
                 {
                     case "single":
-                        bonk(data.image, data.weight, data.scale, data.sound, data.volume, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, null);
+                        throwItem(data.image, data.weight, data.scale, data.sound, data.volume, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, null);
                         break;
                     case "barrage":
                         var i = 0;
@@ -297,7 +344,7 @@ function connectBridge()
                         const volumes = data.volume;
                         const max = Math.min(images.length, sounds.length, weights.length);
                         console.log(data);
-                        barrageTick(images, weights, scales, sounds, volumes, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, [], data.appSettings.barrageFrequency * 1000, max, 0);
+                        barrageTick(images, weights, scales, sounds, volumes, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, [], data.appSettings.groupFrequency * 1000, max, 0);
                         break;
                     case "timed":
                         break;
@@ -305,23 +352,23 @@ function connectBridge()
                         playSound(data.sound, data.volume, data.masterVolume, data.game_data_path);
                         break;
                     default:
-                        if (data.customBonk.barrageCountOverride)
-                            temp_data.barrageCount = data.customBonk.barrageCount;
-                        if (data.customBonk.barrageFrequencyOverride)
-                            temp_data.barrageFrequency = data.customBonk.barrageFrequency;
-                        if (data.customBonk.throwDurationOverride)
-                            temp_data.throwDuration = data.customBonk.throwDuration;
-                        if (data.customBonk.throwAway)
-                            temp_data.throwAway = data.customBonk.throwAway;
-                        if (data.customBonk.throwAngleOverride)
+                        if (data.itemGroup.groupCountOverride)
+                            temp_data.groupCount = data.itemGroup.groupCount;
+                        if (data.itemGroup.groupFrequencyOverride)
+                            temp_data.groupFrequency = data.itemGroup.groupFrequency;
+                        if (data.itemGroup.throwDurationOverride)
+                            temp_data.throwDuration = data.itemGroup.throwDuration;
+                        if (data.itemGroup.throwAway)
+                            temp_data.throwAway = data.itemGroup.throwAway;
+                        if (data.itemGroup.throwAngleOverride)
                         {
-                            temp_data.throwAngleMin = data.customBonk.throwAngleMin;
-                            temp_data.throwAngleMax = data.customBonk.throwAngleMax;
+                            temp_data.throwAngleMin = data.itemGroup.throwAngleMin;
+                            temp_data.throwAngleMax = data.itemGroup.throwAngleMax;
                         }
-                        if (data.customBonk.spinSpeedOverride)
+                        if (data.itemGroup.spinSpeedOverride)
                         {
-                            temp_data.spinSpeedMin = data.customBonk.spinSpeedMin;
-                            temp_data.spinSpeedMax = data.customBonk.spinSpeedMax;
+                            temp_data.spinSpeedMin = data.itemGroup.spinSpeedMin;
+                            temp_data.spinSpeedMax = data.itemGroup.spinSpeedMax;
                         }
 
                         var i = 0;
@@ -353,8 +400,8 @@ function connectBridge()
                             windup.play();
                             
                         setTimeout(() => {
-                            barrageTick(cImages, cWeights, cScales, cSounds, cVolumes, temp_data, data.game_data_path, data.modelCalibration, cImpactDecals, temp_data.barrageFrequency * 1000, cMax, 0);
-                        }, data.customBonk.windupDelay * 1000);
+                            barrageTick(cImages, cWeights, cScales, cSounds, cVolumes, temp_data, data.game_data_path, data.modelCalibration, flinchParameters,cImpactDecals, temp_data.groupFrequency * 1000, cMax, 0);
+                        }, data.itemGroup.windupDelay * 1000);
                         break;
                 }
             }
@@ -414,6 +461,7 @@ function retryConnectVTube()
 
 function tryAuthorization()
 {
+    console.log("Requesting Authentication Token from VTS");
     var request = {
         "apiName": "VTubeStudioPublicAPI",
         "apiVersion": "1.0",
@@ -445,6 +493,7 @@ function tryAuthorization()
 }
 
 function authorizeVTS(token) {
+    console.log("Requesting Authentication from VTS");
     request = {
         "apiName": "VTubeStudioPublicAPI",
         "apiVersion": "1.0",
@@ -459,7 +508,8 @@ function authorizeVTS(token) {
     socketVTube.onmessage = function(event)
     {
         socketVTube.onmessage = null;
-        response = JSON.parse(event.data);
+        let response = JSON.parse(event.data);
+        console.log(`Got response for Authentication Request`,response);
         if (response.data.authenticated) {
             if (bridgeIsOpen) {
                 var request =
@@ -483,7 +533,7 @@ setInterval(() => {
     {
         var request = {
             "type": "status",
-            "connectedBonkerVTube": vTubeIsOpen
+            "connectedOverlayVTube": vTubeIsOpen
         }
         socketBridge.send(JSON.stringify(request));
     }
@@ -497,7 +547,7 @@ setInterval(() => {
     }
 }, 5000);
 
-function bonk(image, weight, scale, sound, volume, appSettings, game_folder, modelCalibration, flinchParameters, impactDecal)
+function throwItem(image, weight, scale, sound, volume, appSettings, game_folder, modelCalibration, flinchParameters, impactDecal)
 {
     if (vTubeIsOpen)
     {
@@ -547,6 +597,7 @@ function bonk(image, weight, scale, sound, volume, appSettings, game_folder, mod
                     canShowImpact = true;
 
                 var img = new Image();
+                console.log('trying image ', image);
                 if (image.startsWith("https://static-cdn.jtvnw.net/emoticons/v1/"))
                     img.src = image;
                 else
@@ -603,6 +654,7 @@ function bonk(image, weight, scale, sound, volume, appSettings, game_folder, mod
                     root.appendChild(pivot);
                     document.querySelector("body").appendChild(root);
                     
+                    console.log('flinch params ', flinchParameters);
                     if(!throwAway) {
                         setTimeout(function() { flinch(multH, angle, weight, flinchParameters.parametersHorizontal, flinchParameters.parametersVertical, appSettings.returnSpeed, eyeState); }, appSettings.throwDuration * 500, appSettings.throwAngleMin, appSettings.throwAngleMax);
                     }
@@ -647,17 +699,17 @@ function playSound(sound, volume, master_volume, game_folder)
     }
 }
 
-function barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, bonkDelay, bonkCount, currentBonk) {
-    console.log('current BonkDelay is ' + bonkDelay);
-    let tickRate = bonkDelay + (Math.floor((Math.random() * bonkDelay * 1.5) - (bonkDelay * 0.75)));
+function barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, itemGroupDelay, itemGroupCount, currentItem=0) {
+    console.log('current Delay is ' + itemGroupDelay);
+    let tickRate = itemGroupDelay + (Math.floor((Math.random() * itemGroupDelay * 1.5) - (itemGroupDelay * 0.75)));
     console.log('new Tickrate is ' + tickRate);
-    bonk(images[currentBonk], weights[currentBonk], scales[currentBonk], sounds[currentBonk], volumes[currentBonk], appSettings, game_folder, modelCalibration, flinchParameters, impactDecals[currentBonk]);
-    currentBonk++;
-    if (currentBonk < bonkCount)
+    throwItem(images[currentItem], weights[currentItem], scales[currentItem], sounds[currentItem], volumes[currentItem], appSettings, game_folder, modelCalibration, flinchParameters, impactDecals[currentItem]);
+    currentItem++;
+    if (currentItem < itemGroupCount)
     {
         setTimeout(function()
         {
-            barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, bonkDelay, bonkCount, currentBonk);
+            barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, itemGroupDelay, itemGroupCount, currentItem);
         }, tickRate);
     }
 }

@@ -16,28 +16,29 @@ module.exports = class EventManager {
         if(agentStatus !== "connected") { return false; }
 
         if (!agent.agentOutputs.hasOwnProperty(actionKey)) { return false; }
-        console.log('[EventManager] Handling Output Action ' + agentKey + '.' + actionKey)
-        return agent.agentOutputs[actionKey].handler(values);
+        console.log('[EventManager] Handling Outgoing Action ' + agentKey + '.' + actionKey)
+        return agent[agent.agentOutputs[actionKey].handler](values);
     }
 
-    handleInputTrigger(agentKey,triggerKey,scriptName,parameters) {
+    handleInputTrigger(agentKey,eventKey,scriptName,parameters) {
         let agent = this.agentRegistry.getAgent(agentKey);
         if (!agent) { return false; }
 
         let agentStatus = this.agentRegistry.getAgentStatus(agentKey);
         if(agentStatus !== "connected") { return false; }
 
-        if (!agent.agentInputs.hasOwnProperty(triggerKey)) { return false; }
+        if (!agent.agentInputs.hasOwnProperty(eventKey)) { return false; }
 
-        console.log('[EventManager] Handling Input Trigger ' + agentKey + '.' + triggerKey)
+        console.log('[EventManager] Handling Incoming Event ' + agentKey + '.' + eventKey)
 
-        let matchedEvents = this.eventData.findEventsForTrigger(agentKey, triggerKey, scriptName, parameters)
+        let matchedTriggers = this.eventData.findTriggersForScript(agentKey, eventKey, scriptName, parameters)
 
-        for(const [eventId, event] of Object.entries(matchedEvents)) {
-            console.log('[EventManager] Running "' + scriptName + '" script for event ' + eventId)
-            let currentScript = event.scripts[scriptName];
-            for(const [actionKey, action] of Object.entries(currentScript.actions)) {
-                setTimeout(() => { this.handleOutputAction(action.agent, action.agentAction, action.settings); }, parseInt(action.delay));
+        for(const [triggerId, trigger] of Object.entries(matchedTriggers)) {
+            console.log('[EventManager] -- Running "' + scriptName + '" script for trigger ' + triggerId)
+            let currentScript = trigger.scripts[scriptName];
+            for(const [commandKey, command] of Object.entries(currentScript.commands)) {
+                console.log(`[EventManager] ---- Queuing an action at ${command.delay}ms for script ${scriptName}`,command);
+                setTimeout(() => { this.handleOutputAction(command.agent, command.action, command.settings); }, parseInt(command.delay));
             }
         }
     }

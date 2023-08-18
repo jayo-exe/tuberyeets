@@ -1,11 +1,18 @@
 <template>
-  <div v-if="itemList">
-    <section id="bonkImages">
-      <h3 class="cc-f-h5">Bonk Images</h3>
-      <input id="loadImage" type="file" ref="file" accept="image/*" multiple hidden @change="uploadItem">
-      <button class="btn btn-teal add-btn" @click="$refs.file.click()">Add Images</button>
-      <hr>
-      <div id="imageTable" class="imageTable inner">
+  <div v-if="itemList" class="d-flex">
+    <section id="overlayImages" style="flex: 1">
+      <div class="section-heading">
+        <div class="section-title">
+          <h3 class="cc-h5">Overlay Items</h3>
+          <span></span>
+        </div>
+        <div class="ml-auto">
+          <input id="loadImage" type="file" ref="file" accept="image/*" multiple hidden @change="uploadItem">
+          <button class="btn btn-teal add-btn" @click="$refs.file.click()">Add Images</button>
+        </div>
+      </div>
+
+      <div id="imageTable" class="imageTable inner scrollable">
         <div class="selectAll">
           <div>
             <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
@@ -17,7 +24,7 @@
           </div>
         </div>
 
-        <div v-for="(bonkItem, key) in itemList" id="imageRow" class="row" :key="'bi_'+bonkItem.id+listKey">
+        <div v-for="(overlayItem, key) in itemList" id="imageRow" class="row" :key="'bi_'+overlayItem.id+listKey">
           <div class="imageRowInner">
             <label class="checkbox">
               <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
@@ -28,8 +35,8 @@
               <button class="imageDetails" @click="editItem(key)">Details</button>
               <img src="ui/cog.png" class="checkmark" v-b-tooltip.hover.right="'Edit'">
             </label>
-            <img class="imageImage img-pxl" :src="'file://'+getItemPath(bonkItem.location)" @click="testCustomItem(key)" v-b-tooltip.click.right="'Test'"></img>
-            <p class="imageLabel" :title="bonkItem.location">{{ bonkItem.location }}</p>
+            <img class="imageImage img-pxl" :src="'file://'+getItemPath(overlayItem.location)" @click="testCustomItem(overlayItem.id)" v-b-tooltip.click.right="'Test'"></img>
+            <p class="imageLabel" :title="overlayItem.name">{{ overlayItem.name }}</p>
             <label class="delete">
               <button class="imageRemove" @click="removeItem(key)"></button>
               <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
@@ -49,7 +56,7 @@
 </template>
 
 <script>
-import ItemForm from '@/components/library/itemlist/ItemForm.vue'
+import ItemForm from '@/views/Library/Items/ItemForm.vue'
 
 export default {
   name: 'ItemList',
@@ -162,12 +169,13 @@ export default {
     testCustomItem(itemId) {
       console.log('Testing custom item: ' + itemId);
       let item = this.itemList[itemId];
-      window.ipc.send('TEST_CUSTOM_ITEM', item.location);
+      window.ipc.send('TEST_CUSTOM_ITEM', item.id);
     }
   },
   mounted() {
     this.listItems();
     this.gameDataPath = this.$gameData.readSync('game_data_path');
+    this.$emit('lock-game-change');
   }
 }
 </script>

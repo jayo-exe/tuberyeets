@@ -2,7 +2,7 @@
   <b-modal ref="editModal" size="xl">
     <template #modal-header="{ close }">
       <h5 class="modal-title">Edit Item - <span v-if="itemData">{{ itemData.location }}</span></h5>
-      <button type="button" class="close" @click="finishEdit()">×</button>
+      <button type="button" class="close" @click="finishEdit()"><i class="fa-solid fa-xmark"></i></button>
     </template>
     <template #default>
       <div id="imageDetails" v-if="itemData">
@@ -13,10 +13,13 @@
               <div class="imageDetailsShadow">
                 <div class="imageDetailsInner">
                   <div class="settingsTable">
+                    <p>Name <i class="fa fa-info-circle" v-b-tooltip.hover.left="'Item Name'"></i></p>
+                    <input type="text" class="imageScale"  v-model="itemData.name" @input="updateItem('name')">
                     <p>Scale <i class="fa fa-info-circle"
                                 v-b-tooltip.hover.left="'The relative size of the object compared to the input image'"
                     ></i></p>
                     <input type="number" class="imageScale" min="0" step="0.1" v-model="itemData.scale" @input="updateItem('scale')">
+
                     <p>Weight <i class="fa fa-info-circle"
                                  v-b-tooltip.hover.left="'This determines how much force is applied to the vTube model on impact'"
                     ></i></p>
@@ -37,7 +40,7 @@
                     <div>
                       <select class="imageSoundName" v-model="itemData.sound" @change="updateItem('sound')">
                         <option value="">(Use default sounds)</option>
-                        <option v-for="(bonkImpact, key) in soundList" :value="bonkImpact.id">{{ bonkImpact.location }}</option>
+                        <option v-for="(overlaySound, key) in soundList" :value="overlaySound.id">{{ overlaySound.location }}</option>
                       </select>
                     </div>
                   </div>
@@ -50,7 +53,7 @@
 
     </template>
     <template #modal-footer="{ hide }">
-      <button v-if="itemData" class="btn btn-blurple add-btn" @click="testCustomItem()">Test Item</button>
+      <button v-if="itemData" class="btn btn-sm btn-blurple add-btn" @click="testCustomItem()">Test Item</button>
       <b-button size="sm" variant="outline-secondary" @click="finishEdit()">
         Close
       </b-button>
@@ -61,9 +64,6 @@
 </template>
 
 <script>
-// @ is an alias to /src
-//import HelloWorld from '@/components/HelloWorld.vue'
-
 export default {
   name: 'ItemForm',
   props: [],

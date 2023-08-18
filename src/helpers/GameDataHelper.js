@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const uuid = require('uuid');
-const BonkEventHelper = require('./bonkEventHelper');
+const ItemGroupEventHelper = require('./itemGroupEventHelper');
 const EventDataHelper = require('./eventDataHelper');
 
 module.exports = class GameDataHelper {
@@ -11,15 +11,16 @@ module.exports = class GameDataHelper {
         this.userFilesPath = userFilesPath;
         this.dataPath = null;
         this.folderPath = path.join(this.userFilesPath, 'gamedata');
-        this.defaultDataPath = path.resolve(staticPath, 'data/defaultData.json');
+        this.defaultDataPath = path.resolve(staticPath, 'data/defaultGameData.json');
         this.defaultData = JSON.parse(fs.readFileSync(this.defaultDataPath, "utf8"));
         this.statusCallback = null;
-        this.bonkDefaultsCallback = null;
+        this.itemGroupDefaultsCallback = null;
         this.autoSaveTimeout = null;
 
-        this.bonkEventHelper = new BonkEventHelper(this);
+        this.itemGroupEventHelper = new ItemGroupEventHelper(this);
         this.eventData = new EventDataHelper(this);
         this.gameId = null;
+        this.packId = null;
         this.gameDataFolder = null;
 
     }
@@ -29,30 +30,28 @@ module.exports = class GameDataHelper {
     }
 
     checkGameFolder() {
-        if (!fs.existsSync(this.folderPath))
-            fs.mkdirSync(this.folderPath);
+        const packPath = path.join(this.folderPath, this.gameId.toString(), this.packId.toString());
+        let subfolders = ['throws', 'decals', 'impacts', 'windups'];
 
-        const gamePath = path.join(this.folderPath, this.gameId.toString());
-        if (!fs.existsSync(gamePath))
-            fs.mkdirSync(gamePath);
+        subfolders.forEach(subfolder => {
+            if (!fs.existsSync(path.join(packPath, subfolder))) {
+                fs.mkdirSync(path.join(packPath, subfolder),{recursive: true});
+            }
+        })
 
-        if (!fs.existsSync(gamePath +'/throws/'))
-            fs.mkdirSync(gamePath +'/throws/');
-        if (!fs.existsSync(gamePath +'/decals/'))
-            fs.mkdirSync(gamePath +'/decals/');
-        if (!fs.existsSync(gamePath +'/impacts/'))
-            fs.mkdirSync(gamePath +'/impacts/');
-        if (!fs.existsSync(gamePath +'/windups/'))
-            fs.mkdirSync(gamePath +'/windups/');
-        if (!fs.existsSync(gamePath +'/data.json'))
-            fs.writeFileSync(gamePath +'/data.json', JSON.stringify(this.defaultGameData));
-        this.gameDataFolder = gamePath;
-        this.dataPath = gamePath +'/data.json';
+        let dataPath = path.join(packPath, 'data.json');
+        if (!fs.existsSync(dataPath)) {
+            fs.writeFileSync(dataPath, JSON.stringify(this.defaultData));
+        }
+
+        this.gameDataFolder = packPath;
+        this.dataPath = dataPath;
     }
 
-    loadData(gameId) {
+    loadData(gameId, packId) {
         this.gameId = gameId;
-        console.log('[GameDataHelper] Attempting to load game-specific data...');
+        this.packId = packId;
+        console.log('[GameDataHelper] Attempting to load game-pack-specific data...');
         this.checkGameFolder();
         try {
             this.data = JSON.parse(fs.readFileSync(this.dataPath, "utf8"));
@@ -117,7 +116,7 @@ module.exports = class GameDataHelper {
             focusObject = focusObject[pathItem];
         });
 
-        if(focusObject === null || !focusObject.hasOwnProperty(targetItem)) return undefined;
+        if(!focusObject.hasOwnProperty(targetItem)) return undefined;
         return focusObject[targetItem];
     }
 
@@ -199,6 +198,7 @@ module.exports = class GameDataHelper {
             let throwItem = {
                 "id": throwId,
                 "enabled": true,
+                "name": fileInfo.filename,
                 "location": fileInfo.filename,
                 "weight": 1.0,
                 "scale": 1.0,
@@ -243,72 +243,44 @@ module.exports = class GameDataHelper {
         }
     }
 
-    createCustomBonk() {
-        let bonkDefaults = this.bonkDefaultsCallback();
-        let bonkId = uuid.v1();
-        let customBonkItem = {
-            "id": bonkId,
-            "name": "New Bonk",
-            "barrageCount": 1,
-            "barrageFrequencyOverride": false,
-            "barrageFrequency": bonkDefaults.barrageFrequency,
+    createItemGroup() {
+        let itemGroupDefaults = this.itemGroupDefaultsCallback();
+        let itemGroupId = uuid.v1();
+        let itemGroupItem = {
+            "id": itemGroupId,
+            "name": "New Group",
+            "groupCount": 1,
+            "groupFrequencyOverride": false,
+            "groupFrequency": itemGroupDefaults.groupFrequency,
             "throwDurationOverride": false,
-            "throwDuration": bonkDefaults.throwDuration,
+            "throwDuration": itemGroupDefaults.throwDuration,
             "throwAngleOverride": false,
-            "throwAngleMin": bonkDefaults.throwAngleMin,
-            "throwAngleMax": bonkDefaults.throwAngleMax,
+            "throwAngleMin": itemGroupDefaults.throwAngleMin,
+            "throwAngleMax": itemGroupDefaults.throwAngleMax,
             "spinSpeedOverride": false,
-            "spinSpeedMin": bonkDefaults.spinSpeedMin,
-            "spinSpeedMax": bonkDefaults.spinSpeedMax,
-            "itemsOverride": false,
-            "soundsOverride": false,
+            "spinSpeedMin": itemGroupDefaults.spinSpeedMin,
+            "spinSpeedMax": itemGroupDefaults.spinSpeedMax,
+            "items": [],
+            "sounds": [],
             "impactDecals": [],
             "windupSounds": [],
             "windupDelay": 0,
             "throwAway": false
         }
 
-        for(const [key, item] of Object.entries(this.read('throws'))) {
-            if (item.enabled) {
-                let customs = this.read(`throws.${key}.customs`);
-                customs.push(bonkId);
-                this.update(`throws.${key}.customs`, customs);
-            }
-        }
-        for(const [key, item] of Object.entries(this.read('impacts'))) {
-            if (item.enabled) {
-                let customs = this.read(`impacts.${key}.customs`);
-                customs.push(bonkId);
-                this.update(`impacts.${key}.customs`, customs);
-            }
-        }
-
-        this.update(`customBonks.${bonkId}`, customBonkItem, true);
-        console.log('[GameDataHelper] Successfully created new bonk!');
+        this.update(`itemGroups.${itemGroupId}`, itemGroupItem, true);
+        console.log('[GameDataHelper] Successfully created new item group!');
         return {
             success: true,
-            item: customBonkItem,
+            item: itemGroupItem,
         };
     }
 
-    clearCustomBonk(bonkId) {
-        for(const [key, item] of Object.entries(this.read('throws'))) {
-            let customs = this.read(`throws.${key}.customs`);
-            if(customs.includes(bonkId)) {
-                customs.splice(customs.indexOf(bonkId),1);
-                this.update(`throws.${key}.customs`, customs);
-            }
-        }
-        for(const [key, item] of Object.entries(this.read('impacts'))) {
-            let customs = this.read(`impacts.${key}.customs`);
-            if(customs.includes(bonkId)) {
-                customs.splice(customs.indexOf(bonkId),1);
-                this.update(`impacts.${key}.customs`, customs);
-            }
-        }
+    clearItemGroup(itemGroupId) {
+
     }
 
-    uploadDecal(filePath, filename, bonkId)
+    uploadDecal(filePath, filename, itemGroupId)
     {
         try {
             let fileInfo = this.checkFilename("decals", filename);
@@ -321,7 +293,7 @@ module.exports = class GameDataHelper {
                 "scale": 1,
                 "duration": 0.25,
             }
-            this.update(`customBonks.${bonkId}.impactDecals.${decalId}`, decalItem, true);
+            this.update(`itemGroups.${itemGroupId}.impactDecals.${decalId}`, decalItem, true);
             console.log('[GameDataHelper] Successfully uploaded new decal!');
             return {
                 success: true,
@@ -332,7 +304,7 @@ module.exports = class GameDataHelper {
             return { success: false };
         }
     }
-    uploadWindup(filePath, filename, bonkId)
+    uploadWindup(filePath, filename, itemGroupId)
     {
         try {
             let fileInfo = this.checkFilename("decals", filename);
@@ -344,7 +316,7 @@ module.exports = class GameDataHelper {
                 "location": fileInfo.filename,
                 "volume": 1,
             }
-            this.update(`customBonks.${bonkId}.windupSounds.${windupId}`, windupItem, true);
+            this.update(`itemGroups.${itemGroupId}.windupSounds.${windupId}`, windupItem, true);
             console.log('[GameDataHelper] Successfully uploaded new windup!');
             return {
                 success: true,

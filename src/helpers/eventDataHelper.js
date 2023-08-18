@@ -5,27 +5,27 @@ module.exports = class EventDataHelper {
         this.gameData = gameDataHelper;
     }
 
-    findEventsForTrigger(agentKey, triggerKey, scriptName, parameters) {
+    findTriggersForScript(agentKey, eventKey, scriptName, parameters) {
         let agent = this.gameData.agentRegistry.getAgent(agentKey);
         if(!agent) return false;
-        if(!agent.agentInputs.hasOwnProperty(triggerKey)) return false;
+        if(!agent.agentInputs.hasOwnProperty(eventKey)) return false;
 
         let itemsFound = {}
 
         let data = this.gameData.getAllData();
-        for(const [key, event] of Object.entries(data.events)) {
-            if(event.agent === agentKey & event.trigger === triggerKey) {
+        for(const [key, trigger] of Object.entries(data.triggers)) {
+            if(trigger.agent === agentKey & trigger.event === eventKey) {
                 let parametersMatch = true;
                 for(const [settingName, settingValue] of Object.entries(parameters)) {
-                    if(event.settings.hasOwnProperty(settingName) && event.settings[settingName] !== settingValue) {
+                    if(trigger.settings.hasOwnProperty(settingName) && trigger.settings[settingName] !== settingValue) {
                         parametersMatch = false;
                     }
-                    if(!event.scripts.hasOwnProperty(scriptName)) {
+                    if(!trigger.scripts.hasOwnProperty(scriptName)) {
                         parametersMatch = false;
                     }
                 }
                 if(parametersMatch) {
-                    itemsFound[key] = { ...event};
+                    itemsFound[key] = { ...trigger};
                 }
             }
         }
@@ -33,116 +33,125 @@ module.exports = class EventDataHelper {
         return itemsFound;
     }
 
-    createEvent(agentKey,triggerKey) {
+    createTrigger(agentKey,eventKey) {
         let agent = this.gameData.agentRegistry.getAgent(agentKey);
-        if(!agent) return false;
-        if(!agent.agentInputs.hasOwnProperty(triggerKey)) return false;
-        let trigger = agent.agentInputs[triggerKey];
+        if(!agent) {
+            console.log(`[EventDataHelper] Agent "${agentKey}" not found!`);
+            return false;
+        }
+        if(!agent.agentInputs.hasOwnProperty(eventKey)) {
+            console.log(`[EventDataHelper] Input "${eventKey}" not found in Agent "${agentKey}"!`);
+            return false;
+        }
+        let event = agent.agentInputs[eventKey];
 
-        let eventId = uuid.v1();
-        let event = {
-            'id': eventId,
+        let triggerId = uuid.v1();
+        let trigger = {
+            'id': triggerId,
             'agent': agentKey,
-            'trigger': triggerKey,
+            'event': eventKey,
             'settings': {},
             'scripts': {},
             'enabled': true,
-            'name': 'New Event'
+            'name': 'New Trigger'
         }
 
-        trigger.settings.forEach((setting) => {
+        event.settings.forEach((setting) => {
             if(setting.settable) {
-                event.settings[setting.key] = (setting.hasOwnProperty('default') ? setting.default: null);
+                trigger.settings[setting.key] = (setting.hasOwnProperty('default') ? setting.default: null);
             }
         });
 
-        trigger.eventScripts.forEach((script) => {
-            event.scripts[script.key] = {'name': script.key, 'actions': {}};
+        event.triggerScripts.forEach((script) => {
+            trigger.scripts[script] = {'name': script, 'commands': {}};
         });
 
-        this.gameData.update(`events.${eventId}`, event, true);
-        return this.gameData.read(`events.${eventId}`);
+        console.log('trigger to make: ');
+        console.log(trigger);
+
+        this.gameData.update(`triggers.${triggerId}`, trigger, true);
+        return this.gameData.read(`triggers.${triggerId}`);
     }
 
-    updateEventDetails(eventId, eventDetails) {
-        if(!this.gameData.has(`events.${eventId}`)) return false;
+    updateTriggerDetails(triggerId, triggerDetails) {
+        if(!this.gameData.has(`triggers.${triggerId}`)) return false;
 
-        if(eventDetails.hasOwnProperty('name')) {
-            this.gameData.update(`events.${eventId}.name`, eventDetails.name);
+        if(triggerDetails.hasOwnProperty('name')) {
+            this.gameData.update(`triggers.${triggerId}.name`, triggerDetails.name);
         }
-        if(eventDetails.hasOwnProperty('enabled')) {
-            this.gameData.update(`events.${eventId}.enabled`, eventDetails.enabled);
+        if(triggerDetails.hasOwnProperty('enabled')) {
+            this.gameData.update(`triggers.${triggerId}.enabled`, triggerDetails.enabled);
         }
-        if(eventDetails.hasOwnProperty('settings')) {
-            this.gameData.update(`events.${eventId}.settings`, { ...eventDetails.settings});
+        if(triggerDetails.hasOwnProperty('settings')) {
+            this.gameData.update(`triggers.${triggerId}.settings`, { ...triggerDetails.settings});
         }
 
 
-        return this.gameData.read(`events.${eventId}`);
+        return this.gameData.read(`triggers.${triggerId}`);
     }
 
-    destroyEvent(eventId) {
-        return this.gameData.delete(`events.${eventId}`);
+    destroyTrigger(triggerId) {
+        return this.gameData.delete(`triggers.${triggerId}`);
     }
 
-    findEventAction(eventId, scriptName, actionId) {
-        return this.gameData.read(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
+    findTriggerCommand(triggerId, scriptName, commandId) {
+        return this.gameData.read(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}`);
     }
 
-    createEventAction(eventId, scriptName, agentKey, actionKey) {
+    createTriggerCommand(triggerId, scriptName, agentKey, actionKey) {
         let agent = this.gameData.agentRegistry.getAgent(agentKey);
         if(!agent) return false;
         if(!agent.agentOutputs.hasOwnProperty(actionKey)) return false;
-        let agentAction = agent.agentOutputs[actionKey];
+        let action = agent.agentOutputs[actionKey];
 
-        if(!this.gameData.has(`events.${eventId}`)) {
+        if(!this.gameData.has(`triggers.${triggerId}`)) {
             return false;
         }
 
 
-        if(!this.gameData.has(`events.${eventId}.scripts.${scriptName}`)) {
+        if(!this.gameData.has(`triggers.${triggerId}.scripts.${scriptName}`)) {
             return false;
         }
 
-        let actionId = uuid.v1();
-        let action = {
-            'id': actionId,
+        let commandId = uuid.v1();
+        let command = {
+            'id': commandId,
             'agent': agentKey,
-            'agentAction': actionKey,
+            'action': actionKey,
             'delay': 0,
             'settings': {}
         }
 
-        agentAction.settings.forEach((setting) => {
-            action.settings[setting.key] = (setting.hasOwnProperty('default') ? setting.default: null);
+        action.settings.forEach((setting) => {
+            command.settings[setting.key] = (setting.hasOwnProperty('default') ? setting.default: null);
         });
 
-        this.gameData.update(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`, action, true);
+        this.gameData.update(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}`, command, true);
 
-        return this.gameData.read(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
+        return this.gameData.read(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}`);
     }
 
-    updateEventActionDetails(eventId, scriptName, actionId, actionDetails) {
+    updateTriggerCommandDetails(triggerId, scriptName, commandId, commandDetails) {
 
-        if(!this.findEventAction(eventId, scriptName, actionId)) {
+        if(!this.findTriggerCommand(triggerId, scriptName, commandId)) {
             return false;
         }
 
         if(actionDetails.hasOwnProperty('delay')) {
-            this.gameData.update(`events.${eventId}.scripts.${scriptName}.actions.${actionId}.delay`, actionDetails.delay);
+            this.gameData.update(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}.delay`, commandDetails.delay);
         }
         if(actionDetails.hasOwnProperty('settings')) {
-            this.gameData.update(`events.${eventId}.scripts.${scriptName}.actions.${actionId}.settings`, actionDetails.settings);
+            this.gameData.update(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}.settings`, commandDetails.settings);
         }
 
-        return this.gameData.read(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
+        return this.gameData.read(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}`);
     }
 
-    destroyEventAction(eventId, scriptName, actionId) {
-        if(!this.findEventAction(eventId, scriptName, actionId)) {
+    destroyTriggerCommand(triggerId, scriptName, commandId) {
+        if(!this.findTriggerCommand(triggerId, scriptName, commandId)) {
             return false;
         }
 
-        return this.gameData.delete(`events.${eventId}.scripts.${scriptName}.actions.${actionId}`);
+        return this.gameData.delete(`triggers.${triggerId}.scripts.${scriptName}.commands.${commandId}`);
     }
 }

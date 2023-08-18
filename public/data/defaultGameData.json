@@ -1,6 +1,7 @@
 {
     "throws": {},
     "impacts": {},
-    "customBonks": {},
-    "crowdControlEvents": {}
+    "itemGroups": {},
+    "crowdControlEvents": {},
+    "triggers": {}
 }

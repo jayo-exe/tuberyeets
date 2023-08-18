@@ -19,16 +19,7 @@ body {
     color: white;
 }
 
-::-webkit-scrollbar
-{
-    width: 8px;
-    background-color: black;
-}
 
-::-webkit-scrollbar-thumb
-{
-    background-color: #77FF85;
-}
 
 input[type='range'] {
     overflow: hidden;
@@ -92,12 +83,6 @@ body > div {
     height: 63px;
     background-color: white;
     clip-path: polygon(calc(100% - 8px) 0%, 100% 0%, calc(100% - 69px) 100%, calc(100% - 77px) 100%);
-}
-
-#logoJBonk {
-    margin: 8px;
-    margin-left: 16px;
-    height: 48px;
 }
 
 #headerLogo > h1 {
@@ -563,11 +548,11 @@ a {
     transition: transform 0.25s;
 }
 
-#bitImageTable .cogwheel > img:hover, #bonkSounds .cogwheel > img:hover {
+#bitImageTable .cogwheel > img:hover, #itemGroupSounds .cogwheel > img:hover {
     transform: scale(1.1);
 }
 
-.cogwheel > img:hover, .customBonkRow .imageImage:hover {
+.cogwheel > img:hover, .itemGroupRow .imageImage:hover {
     transform: rotate(90deg);
 }
 
@@ -721,37 +706,38 @@ a {
     margin-top: -4px;
 }
 
-#customBonkRow img {
+#itemGroupRow img {
     position: relative;
     z-index: 1;
     transition: transform 0.25s;
 }
 
-.bonkDetailsTable {
-    grid-template-columns: 64px 220px auto;
+.itemGroupDetailsTable {
+    grid-template-columns: 32px 1fr 6em;
+    font-size: var(--cc-text-size-sm);
 }
 
-.bonkDetailsTable {
+.itemGroupDetailsTable {
     display: grid;
     line-height: 30px;
     gap: 8px;
 }
 
-.bonkDetailsTable > .header {
+.itemGroupDetailsTable > .header {
     grid-column: 1 / 4;
 }
 
 
 
-.bonkDetailsTable > p, #eventsTable > p {
+.itemGroupDetailsTable > p, #eventsTable > p {
     margin: 0;
 }
 
-.bonkDetailsTable > input {
+.itemGroupDetailsTable > input {
     width: 64px;
 }
 
-.bonkDetailsTable > button {
+.itemGroupDetailsTable > button {
     width: 64px;
 }
 
@@ -928,11 +914,11 @@ mark {
     margin: 0;
 }
 
-#testBonks {
+#testItemGroups {
     position: relative;
 }
 
-#testBonksTable {
+#testItemGroupsTable {
     display: flex;
     flex-wrap: wrap;
 }
@@ -1091,7 +1077,7 @@ mark {
     animation-fill-mode: both;
 }
 
-.bonkName {
+.itemGroupName {
     width: calc(100% - 48px) !important;
     margin: 0 16px;
 }
@@ -1131,7 +1117,7 @@ mark {
     padding: 0 8px;
 }
 
-.customBonkRow .imageImage {
+.itemGroupRow .imageImage {
     cursor: pointer;
 }
 
@@ -1407,28 +1393,3 @@ mark {
     transform: rotate(90deg);
 }
 
-.modal-content {
-    border: 1px solid #fff;
-    background-color: #090a22;
-    border-radius: 4px;
-}
-
-.modal-header {
-    padding: 0.2em 1em;
-    background-color: #1f2037;
-    border-bottom: 0px;
-}
-
-.modal-header .close {
-    color: #fff;
-}
-
-.modal-body {
-    padding: 0;
-}
-
-.modal-footer {
-    padding: 0.2em 1em;
-    background-color: #1f2037;
-    border-top: 0px;
-}

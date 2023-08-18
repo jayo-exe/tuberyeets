@@ -1,12 +1,31 @@
 <template>
   <div id="app" class="wrapper">
-    <header>
-      <span class="app-title">TuberYeets</span>
+    <header class="app-header">
+      <span class="app-title"><i class="fa-solid fa-dumpster-fire"></i> TuberYeets</span>
       <div class="game-select">
         Choose Game:
-        <select class="no-drag" :disabled="gameLocked" v-model="currentGameId" @change="setCrowdControlGame" style="font-size:0.85em; padding: 0px;">
-          <option v-for="(game, key) in games" :value="game.menuID">{{ game.name }}</option>
-        </select>
+        <span id="game-select-wrapper">
+          <select class="no-drag mr-2"
+                  :disabled="gameLocked"
+                  v-model="currentGameId"
+                  @change="selectNewGame"
+                  style="font-size:0.85em; padding: 0px;"
+          >
+            <option v-for="(game, key) in games" :value="game.gameID">{{ game.name }}</option>
+          </select>
+          <select class="no-drag"
+                  v-if="currentGame.length > 1"
+                  :disabled="gameLocked"
+                  v-model="currentGamePackId"
+                  @change="selectNewPack"
+                  style="font-size:0.85em; padding: 0px;"
+          >
+            <option v-for="(pack, key) in currentGame" :value="pack.gamePackID">{{ pack.meta.name }}</option>
+          </select>
+        </span>
+        <b-tooltip v-if="gameLocked" target="game-select-wrapper" triggers="hover" placement="bottom">
+          <i class="fa-solid fa-lock"></i> Game selection is locked while browsing game-specific sections
+        </b-tooltip>
         <i style="margin-left: 24px;" class="fa-solid fa-folder-open open-folder no-drag" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
         <span style="clear:both;"></span>
       </div>
@@ -14,68 +33,70 @@
     <div class="app-body">
       <nav>
         <div class="menu-box">
-          <ul>
+          <ul class="main-list">
             <li>
-              <router-link to="/">
-                <a href="#" :class="{active: this.$route.name == 'library'}">Library</a>
+              <a href="javascript:;" @click="() => { showOverlayAssets = this.$route.path.indexOf('/overlay') !== 0 ? !showOverlayAssets : showOverlayAssets }">
+                <i class="fa-solid fa-palette"></i> Overlay Assets
+              </a>
+            </li>
+            <li class="sub-item" v-if="showOverlayAssets || this.$route.path.indexOf('/overlay') === 0">
+              <router-link to="/overlay/items">
+                <i class="fa-solid fa-baseball"></i> Items
               </router-link>
-              <ul v-if="this.$route.name == 'library'">
-                <li>
-                  <a href="#"
-                     @click="setLibrarySection('ItemList')"
-                     :class="{active: this.current_library_section == 'ItemList'}"
-                  >Items</a>
-                </li>
-                <li>
-                  <a href="#"
-                     @click="setLibrarySection('SoundList')"
-                     :class="{active: this.current_library_section == 'SoundList'}"
-                  >Sounds</a>
-                </li>
-                <li>
-                  <a href="#"
-                     @click="setLibrarySection('BonkList')"
-                     :class="{active: this.current_library_section == 'BonkList'}"
-                  >Bonks</a>
-                </li>
-                <li>
-                  <a href="#"
-                     @click="setLibrarySection('EventList')"
-                     :class="{active: this.current_library_section == 'EventList'}"
-                  >CC Triggers</a>
-                </li>
-              </ul>
+            </li>
+            <li class="sub-item" v-if="showOverlayAssets || this.$route.path.indexOf('/overlay') === 0">
+              <router-link to="/overlay/sounds" >
+                <i class="fa-solid fa-music"></i> Sounds
+              </router-link>
+            </li>
+            <li class="sub-item" v-if="showOverlayAssets || this.$route.path.indexOf('/overlay') === 0">
+              <router-link to="/overlay/item-groups">
+                <i class="fa-solid fa-layer-group"></i> Item Groups
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/triggers">
+                <i class="fa-solid fa-bolt"></i> Triggers
+              </router-link>
             </li>
             <li>
               <router-link to="/calibration">
-                <a href="#" :class="{active: this.$route.name == 'calibration'}" >Calibrate</a>
+                <i class="fa-solid fa-crosshairs"></i> Calibrate
               </router-link>
             </li>
             <li>
               <router-link to="/settings">
-                <a href="#" :class="{active: this.$route.name == 'settings'}" >Settings</a>
+                <i class="fa-solid fa-gear"></i> Settings
               </router-link>
             </li>
           </ul>
         </div>
         <div class="menu-box bottom">
           <div class="agent-connections">
-            <div v-for="(agent, key) in current_agent_status">
-              <small><strong>{{agent.name}}</strong>: {{agent.status}}</small>
+            <div v-for="(agent, key) in current_agent_status" class="agent-status">
+              <i :id="agent.key+'-icon'" class="fa-solid fa-circle-check" style="color: var(--cc-color-t300)" v-if="agent.status === 'connected'"></i>
+              <i :id="agent.key+'-icon'" class="fa-solid fa-circle-xmark" style="color: var(--cc-color-r200)" v-else-if="agent.status === 'disconnected'"></i>
+              <i :id="agent.key+'-icon'" class="fa-solid fa-circle-exclamation" style="color: var(--cc-color-w300)" v-else-if="agent.status === 'disabled'"></i>
+              <i :id="agent.key+'-icon'" class="fa-solid fa-circle-dot" style="color: var(--cc-color-y300)" v-else></i>
+              <b-tooltip :target="agent.key+'-icon'" triggers="hover" placement="right">
+                {{agent.status}}
+              </b-tooltip>
+              <span> {{agent.name}}</span>
             </div>
           </div>
         </div>
       </nav>
-      <main class="pl-0">
-          <router-view
-              :vts_data="live_vts_data"
-              :agent_status="current_agent_status"
-              :current_library_section="current_library_section"
-              class="module-container"
-              @set-library-section="setLibrarySection"
-              @lock-game-change="lockGameChange"
-              @unlock-game-change="unlockGameChange"
-          />
+      <main>
+        <router-view
+            :vts_data="live_vts_data"
+            :agent_status="current_agent_status"
+            :calibrate_status="current_calibrate_status"
+            :current_library_section="current_library_section"
+            class="module-container"
+            @set-library-section="setLibrarySection"
+            @lock-game-change="lockGameChange"
+            @unlock-game-change="unlockGameChange"
+        />
       </main>
     </div>
     <footer>
@@ -102,7 +123,7 @@
       </div>
     </footer>
 
-    </div>
+  </div>
 </template>
 
 <script>
@@ -112,18 +133,20 @@ import axios from 'axios'
 export default {
   data : function() {
     return {
-
+      showOverlayAssets:false,
       live_vts_data: {hotkeys:[],expressions:[]},
       user_data_path: '',
 
       current_agent_status: {},
+      current_calibrate_status: -2,
       gameLocked: false,
       update_available: false,
       update_downloaded: false,
-      currentGame: {
-
-      },
-      currentGameId: 9,
+      libraryDropdown: false,
+      currentGame: [],
+      currentPack: {},
+      currentGameId: "SuperMario64",
+      currentGamePackId: "SuperMario64",
       current_library_section: "ItemList",
       games: {
 
@@ -139,24 +162,30 @@ export default {
       console.log('Getting Data Path...');
       window.ipc.send('GET_DATA_PATH', true);
     },
-    getCrowdControlGames() {
-      axios.get("https://api.crowdcontrol.live/available_games")
+    getCrowdControlGamesNew() {
+      axios.get("https://openapi.crowdcontrol.live/games")
           .then((response) => {
             this.games = response.data;
+            console.log(response.data);
           })
           .catch(function (e) {
             console.log(e);
           });
     },
-    setCrowdControlGame() {
-      axios.get("https://api.crowdcontrol.live/menu/"+this.currentGameId).then(response => {
-        console.log('setting selected game to '+response.data.menu.id);
-        this.currentGame = response.data.menu;
-        this.$appData.updateSync('last_game_id', this.currentGameId);
-        window.ipc.send("SET_GAME", this.currentGameId);
-        return true;
-      }).catch(e => {console.log(e); return null; });
+
+    selectNewGame() {
+      this.currentGamePackId = null;
+      this.setCrowdControlGame();
     },
+
+    selectNewPack() {
+      this.setCrowdControlGame();
+    },
+
+    setCrowdControlGame() {
+      window.ipc.send("SET_GAME", {gameId: this.currentGameId, packId: this.currentGamePackId});
+    },
+
     lockGameChange() {
       console.log('locking');
       this.gameLocked = true;
@@ -195,6 +224,9 @@ export default {
     checkForUpdate() {
       window.ipc.send('CHECK_UPDATE');
     },
+    getCrowdControlGame() {
+      window.ipc.send('GET_GAME');
+    },
     restartAndInstall() {
       window.ipc.send('RESTART');
     }
@@ -231,23 +263,15 @@ export default {
       }
     });
 
-    window.ipc.on('GET_VTS_EXPRESSIONS', (payload) => {
-      console.log('Received VTS Expression response');
-      var success = payload.success;
-      if (success) {
-        this.live_vts_data.expressions = payload.expressions;
+    window.ipc.on('GET_GAME', (payload) => {
+      if(payload) {
+        console.log('Game Pack Loading...',payload);
+        this.currentGameId = payload.gameId;
+        this.currentGamePackId = payload.packId;
+        this.currentGame = payload.packs;
+        this.currentPack = this.currentGame.find((gamePack) => gamePack.gamePackID === this.currentGamePackId);
       } else {
-        console.log('Error fetching expressions!');
-      }
-    });
-
-    window.ipc.on('GET_VTS_HOTKEYS', (payload) => {
-      console.log('Received VTS Hotkey response');
-      var success = payload.success;
-      if (success) {
-        this.live_vts_data.hotkeys = payload.hotkeys;
-      } else {
-        console.log('Error fetching hotkeys!');
+        console.log('Error Setting Game Pack!');
       }
     });
 
@@ -261,6 +285,9 @@ export default {
     window.ipc.on('AGENT_STATUS', (payload) => {
       this.current_agent_status = payload;
     });
+    window.ipc.on('CALIBRATE_STATUS', (payload) => {
+      this.current_calibrate_status = payload;
+    });
     window.ipc.on('UPDATE_AVAILABLE', (payload) => {
       this.update_available = true;
     });
@@ -268,7 +295,8 @@ export default {
       this.update_downloaded = true;
     });
     this.getUserDataPath();
-    this.getCrowdControlGames();
+    this.getCrowdControlGamesNew();
+    this.getCrowdControlGame();
   },
 }
 </script>

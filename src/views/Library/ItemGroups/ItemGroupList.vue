@@ -1,25 +1,31 @@
 <template>
-  <div v-if="itemList">
-    <section id="customBonks">
-      <h3>Custom Bonks</h3>
-      <button class="btn btn-green add-btn" @click="uploadItem">Add Bonk</button>
-      <hr>
-      <div id="bonksTable" class="imageTable">
+  <div >
+    <section id="itemGroups" style="flex: 1">
+      <div class="section-heading">
+        <div class="section-title">
+          <h3 class="cc-h5">Item Groups</h3>
+          <span></span>
+        </div>
+        <div class="ml-auto">
+          <button class="btn btn-teal add-btn" @click="uploadItem">New Item Group</button>
+        </div>
+      </div>
+      <div id="itemGroupsTable" class="inner scrollable" v-if="itemList">
         <table class="listTable">
           <thead>
           <tr>
-            <th>Bonk Name</th>
-            <th style="width: 200px;">Actions</th>
+            <th>Group Name</th>
+            <th style="width: 224px;">Actions</th>
           </tr>
           </thead>
           <tbody>
-            <tr v-for="(bonk, key) in itemList"  :key="'bcb_'+key+listKey">
+            <tr v-for="(itemGroup, key) in itemList"  :key="'bcb_'+key+listKey">
               <td>
-                <p class="imageLabel">{{ bonk.name }}</p>
+                <p class="imageLabel">{{ itemGroup.name }}</p>
               </td>
               <td>
                 <button class="btn btn-teal" @click="editItem(key)">Edit</button>
-                <button class="btn btn-blurple" @click="testCustomBonk(key)">Test</button>
+                <button class="btn btn-blurple" @click="testItemGroup(key)">Test</button>
                 <button class="btn btn-red" @click="removeItem(key)">Delete</button>
               </td>
             </tr>
@@ -27,32 +33,32 @@
         </table>
       </div>
     </section>
-    <BonkForm
+    <ItemGroupForm
         ref="editItem"
         @finish-edit="finishEditItem"
-    ></BonkForm>
+    ></ItemGroupForm>
   </div>
 </template>
 
 <script>
 import isotip from 'isotip';
-import BonkForm from '@/components/library/bonklist/BonkForm.vue'
+import ItemGroupForm from '@/views/Library/ItemGroups/ItemGroupForm.vue'
 
 export default {
-  name: 'BonkList',
+  name: 'ItemGroupList',
   props: [],
   components: {
-    BonkForm
+    ItemGroupForm
   },
   data : function() {
     return {
-      libraryType: 'customBonks',
-      libraryName: 'Bonk',
-      libraryUploadHandler: this.$gameData.createBonk,
+      libraryType: 'itemGroups',
+      libraryName: 'Item Group',
+      libraryUploadHandler: this.$gameData.createItemGroup,
       itemList: null,
       listKey: 0,
       gameDataPath: '',
-      editFormSection: "BonkForm",
+      editFormSection: "ItemGroupForm",
     }
   },
   methods: {
@@ -67,6 +73,7 @@ export default {
     uploadItem() {
       console.log(`sending create message for ${this.libraryName}`);
       this.libraryUploadHandler().then((result) => {
+        console.log(result);
         if(result.success) {
           this.$set(this.itemList, result.item.id, result.item);
           this.listKey++;
@@ -83,7 +90,7 @@ export default {
       if(confirm(`are you sure you want to remove this ${this.libraryName}?`)) {
         this.$delete(this.itemList, itemId);
         this.$gameData.delete(`${this.libraryType}.${itemId}`).then((success) => {
-          this.$gameData.clearBonk(itemId);
+          this.$gameData.clearItemGroup(itemId);
           this.listKey++;
         });
       }
@@ -96,14 +103,15 @@ export default {
       this.listItems();
     },
 
-    testCustomBonk(itemId) {
-      console.log('Testing custom bonk: ' + itemId);
-      window.ipc.send('TEST_CUSTOM_BONK', itemId);
+    testItemGroup(itemId) {
+      console.log('Testing item group: ' + itemId);
+      window.ipc.send('TEST_ITEM_GROUP', itemId);
     }
   },
   mounted() {
     isotip.init();
     this.listItems();
+    this.$emit('lock-game-change');
   },
 
 }

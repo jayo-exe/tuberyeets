@@ -21,11 +21,33 @@ module.exports = class VtubeStudioAgent {
         this.agentRegistry = null;
         this.agentName = 'VTube Studio';
         this.agentKey = 'vtubestudio';
-        this.agentLabel = 'VTS';
+        this.agentLabel = 'VTube Studio';
+        this.agentDescription = "Control VTS in response to activated Triggers. Handle Expressions, hotkeys, and more!";
+        this.agentSettingsForm = 'VtubeStudioSettings';
         this.agentSettings = [
-            {"name": "enabled", "default": false},
-            {"name": "port", "default": 8001},
-            {"name": "vtsAuthKey", "default": ""}
+            {
+                key: "enabled",
+                label: "Enabled",
+                type: "toggle",
+                settable: false,
+                default: false
+            },
+            {
+                key: "vtsAuthKey",
+                label: "VTS API Token",
+                type: "text",
+                settable: false,
+                default: ""
+            },
+            {
+                key: "port",
+                label: "VTS API Port",
+                type: "text",
+                help: "The TCP Port that the VTube Studio API is configured to listen on",
+                settable: true,
+                default: "8001"
+            }
+
         ];
         this.agentInputs = {};
         this.agentOutputs = {
@@ -33,25 +55,23 @@ module.exports = class VtubeStudioAgent {
                 'key': 'expression',
                 'label': 'Change Expression',
                 'description': 'Activate or Deactivate a VTS expression',
-                'handler': this.handleExpressionOutput,
+                'handler': "handleExpressionOutput",
                 'settings': [
                     {
                         'key': 'type',
                         'label': 'Action',
                         'type': 'list',
-                        'options': function () {
-                            return [
-                                {'label': 'Activate', 'value': 'activate'},
-                                {'label': 'Deactivate', 'value': 'deactivate'},
-                            ]
-                        },
+                        'options':  [
+                            {'label': 'Activate', 'value': 'activate'},
+                            {'label': 'Deactivate', 'value': 'deactivate'},
+                        ],
                         'default': 'activate'
                     },
                     {
                         'key': 'name',
                         'label': 'VTS Expression',
                         'type': 'list',
-                        'options': this.getExpressionOutputOptions,
+                        'optionsLoader': "getExpressionOutputOptions",
                         'default': ''
                     }
                 ]
@@ -60,13 +80,13 @@ module.exports = class VtubeStudioAgent {
                 'key': 'hotkey',
                 'label': 'Activate Hotkey',
                 'description': 'Activate a VTS Hotkey',
-                'handler': this.handleHotkeyOutput,
+                'handler': "handleHotkeyOutput",
                 'settings': [
                     {
                         'key': 'name',
                         'label': 'VTS Hotkey',
                         'type': 'list',
-                        'options': this.getHotkeyOutputOptions,
+                        'optionsLoader': "getHotkeyOutputOptions",
                         'default': ''
                     }
                 ]
@@ -75,20 +95,20 @@ module.exports = class VtubeStudioAgent {
                 'key': 'negateHotkey',
                 'label': 'Negate Hotkey',
                 'description': 'Negate a VTS Hotkey with another Hotkey',
-                'handler': this.handleNegateHotkeyOutput,
+                'handler': "handleNegateHotkeyOutput",
                 'settings': [
                     {
                         'key': 'target',
                         'label': 'Hotkey to Negate',
                         'type': 'list',
-                        'options': this.getHotkeyOutputOptions,
+                        'optionsLoader': "getHotkeyOutputOptions",
                         'default': ''
                     },
                     {
                         'key': 'name',
                         'label': 'Hotkey to Use',
                         'type': 'list',
-                        'options': this.getHotkeyOutputOptions,
+                        'optionsLoader': "getHotkeyOutputOptions",
                         'default': ''
                     }
                 ]
@@ -107,7 +127,7 @@ module.exports = class VtubeStudioAgent {
 
     agentEnabled() {
         console.log("[VTSAgent] Agent Enabled.");
-        this.apiOptions.port = this.agentRegistry.getAgentFieldData(this,'port');
+        this.apiOptions.port = parseInt(this.agentRegistry.getAgentFieldData(this,'port'));
         this.apiClient = new ApiClient(this.apiOptions);
         this.apiClient.on("connect", () => {
             console.log("[VTSAgent] Connected to VTube Studio!");
@@ -146,9 +166,9 @@ module.exports = class VtubeStudioAgent {
         return status;
     }
 
-    getExpressionOutputOptions() {
-        var expression_names = this.getExpressions();
-        var expression_options = [];
+    async getExpressionOutputOptions() {
+        let expression_options = [];
+        let expression_names = await this.getExpressions();
         expression_names.forEach((expression_name) => {
             expression_options.push({'label': expression_name, 'value': expression_name});
         });
@@ -168,9 +188,9 @@ module.exports = class VtubeStudioAgent {
         }
     }
 
-    getHotkeyOutputOptions() {
-        var hotkey_names = this.getHotkeys();
-        var hotkey_options = [];
+    async getHotkeyOutputOptions() {
+        let hotkey_options = [];
+        let hotkey_names = await this.getHotkeys();
         hotkey_names.forEach((hotkey_name) => {
             hotkey_options.push({'label': hotkey_name, 'value': hotkey_name});
         });
@@ -220,16 +240,16 @@ module.exports = class VtubeStudioAgent {
     async getModelId() {
         if(!this.vtsReady) return;
         const model = await this.apiClient.currentModel();
-        return model.modelLoaded ? model.modelId : false;
+        return model.modelLoaded ? model.modelID : false;
     }
 
     async getHotkeys() {
         if(!this.vtsReady) return;
-        const model = await this.apiClient.currentModel();
-        const hotkeys = await model.hotkeys();
+        const hotkeys = await this.apiClient.hotkeysInCurrentModel();
+        console.log(hotkeys);
         let hotkey_names = [];
 
-        hotkeys.forEach((hotkey) => {
+        hotkeys.availableHotkeys.forEach((hotkey) => {
             hotkey_names.push(hotkey.name);
         });
         console.log("VTS: got current model hotkeys ", hotkey_names);
@@ -238,11 +258,11 @@ module.exports = class VtubeStudioAgent {
 
     async getExpressions() {
         if(!this.vtsReady) return;
-        const model = await this.apiClient.currentModel();
-        const expressions = await model.expressions();
+        const expressions = await this.apiClient.expressionState();
+        console.log(expressions);
         let expression_names = [];
 
-        expressions.forEach((expression) => {
+        expressions.expressions.forEach((expression) => {
             expression_names.push(expression.name);
         });
         console.log("VTS: got current model expressions ", expression_names);

@@ -11,12 +11,153 @@ module.exports = class OverlayAgent {
         this.overlayConnected = false;
         this.agentRegistry = null;
         this.agentName = 'Overlay';
+        this.agentDescription = 'Throw items at your model, play sounds, and more!';
         this.agentKey = 'overlay';
         this.agentLabel = 'Overlay';
+        this.agentSettingsForm = 'OverlaySettings';
         this.agentSettings = [
-            {"name": "enabled", "default": false},
-            {"name": "port", "default": 8081},
-            {"name": "vtsOverlayAuthKey", "default": ""}
+            {
+                key: "enabled",
+                label: "Enabled",
+                type: "toggle",
+                settable: false,
+                default: false
+            },
+            {
+                key: "vtsOverlayAuthKey",
+                label: "VTS API Token for Overlay",
+                type: "text",
+                settable: false,
+                default: ""
+            },
+            {
+                key: "port",
+                label: "Overlay Port",
+                help: "The TCP Port that the overlay will use to connect to TuberYeets. If you change this, your overlay URL will also change",
+                type: "text",
+                settable: true,
+                default: "8081"
+            },
+            {
+                key: "volume",
+                label: "Master Volume",
+                help: "The master volume for all Overlay sounds",
+                type: "number",
+                step: "0.01",
+                min: 0.00,
+                max: 1.00,
+                settable: true,
+                default: "1.00"
+            },
+            {
+                key: "groupCount",
+                label: "Group Quantity",
+                help: "The number of randomly-selected items that are thrown in an Item Group",
+                type: "number",
+                step: "1",
+                min: 1,
+                settable: true,
+                default: "20"
+            },
+            {
+                key: "groupFrequency",
+                label: "Group Frequency",
+                help: "The delay (in seconds) between items that are thrown as an Item Group",
+                type: "number",
+                step: "0.01",
+                settable: true,
+                default: "0.2"
+            },
+            {
+                key: "itemScaleMin",
+                label: "Minimum Item Scale",
+                help: "The minimum scale factor for randomly-sizing thrown items",
+                type: "number",
+                step: "0.01",
+                min: 0,
+                settable: true,
+                default: "0.25"
+            },
+            {
+                key: "itemScaleMax",
+                label: "Maximum Item Scale",
+                help: "The maximum scale factor for randomly-sizing thrown items",
+                type: "number",
+                step: "0.01",
+                min: 0,
+                settable: true,
+                default: "2.00"
+            },
+            {
+                key: "throwAngleMin",
+                label: "Minimum Throw Angle",
+                help: "The minimum incoming angle for thrown items",
+                type: "number",
+                step: "1",
+                settable: true,
+                default: "-45"
+            },
+            {
+                key: "throwAngleMax",
+                label: "Maximum Throw Angle",
+                help: "The maximum incoming angle for thrown items",
+                type: "number",
+                step: "1",
+                settable: true,
+                default: "45"
+            },
+            {
+                key: "spinSpeedMin",
+                label: "Minimum Spin Speed",
+                help: "The minimum random rotational rate for thrown items",
+                type: "number",
+                step: "0.1",
+                settable: true,
+                default: "5.0"
+            },
+            {
+                key: "spinSpeedMax",
+                label: "Maximum Spin Speed",
+                help: "The maximum random rotational rate for thrown items",
+                type: "number",
+                step: "0.1",
+                settable: true,
+                default: "10.0"
+            },
+            {
+                key: "throwDuration",
+                label: "Throw Duration",
+                help: "The number of seconds that the 'Item Throw' animation plays out",
+                type: "number",
+                step: "0.01",
+                settable: true,
+                default: "1.00"
+            },
+            {
+                key: "returnSpeed",
+                label: "(VTS) Model Return Speed",
+                help: "The number of seconds it takes the model to return to position after an impact",
+                type: "number",
+                step: "0.01",
+                settable: true,
+                default: "0.1"
+            },
+            {
+                key: "closeEyes",
+                label: "(VTS) Close Eyes on Impact",
+                help: "If enabled, an item impacting the model will close their eyes",
+                type: "toggle",
+                settable: true,
+                default: false
+            },
+            {
+                key: "openEyes",
+                label: "(VTS) Open Eyes on Impact",
+                help: "If enabled, an item impacting the model will open their eyes",
+                type: "toggle",
+                settable: true,
+                default: false
+            },
         ];
         this.agentInputs = {};
         this.agentOutputs = {
@@ -24,28 +165,48 @@ module.exports = class OverlayAgent {
                 'key': 'throwItem',
                 'label': 'Throw an Item',
                 'description': 'Throw an item from the TuberYeets library',
-                'handler': (values) => { this.handleThrowItemOutput(values) },
+                'handler': "handleThrowItemOutput",
                 'settings': [
                     {
                         'key': 'item',
                         'label': 'Item',
                         'type': 'list',
-                        'options': () => {this.getThrowItemOutputOptions()},
+                        'optionsLoader': "getThrowItemOutputOptions",
                         'default': ''
-                    }
+                    },
+                    {
+                        'key': 'match_quantity',
+                        'label': 'Match Quantity to Event Parameter',
+                        'type': 'toggle',
+                        'default': false
+                    },
+                    {
+                        'key': 'quantity',
+                        'label': 'Quantity',
+                        'type': 'integer',
+                        'hideIfToggled': "match_quantity",
+                        'default': 1
+                    },
+                    {
+                        'key': 'quantity_parameter',
+                        'label': 'Event Parameter',
+                        'type': 'text',
+                        'showIfToggled': "match_quantity",
+                        'default': ''
+                    },
                 ]
             },
-            throwBonk: {
-                'key': 'throwBonk',
-                'label': 'Throw a Bonk',
-                'description': 'Throw a custom bonk from the TuberYeets library',
-                'handler': (values) => { this.handleThrowBonkOutput(values) },
+            throwItemGroup: {
+                'key': 'throwItemGroup',
+                'label': 'Throw a Group of Items',
+                'description': 'Throw an Item Group from the TuberYeets library',
+                'handler': "handleThrowItemGroupOutput",
                 'settings': [
                     {
-                        'key': 'bonk',
-                        'label': 'Bonk',
+                        'key': 'itemGroup',
+                        'label': 'Item Group',
                         'type': 'list',
-                        'options': () => {this.getThrowBonkOutputOptions()},
+                        'optionsLoader': "getThrowItemGroupOutputOptions",
                         'default': ''
                     }
                 ]
@@ -54,13 +215,13 @@ module.exports = class OverlayAgent {
                 'key': 'playSound',
                 'label': 'Play a Sound',
                 'description': 'Play a Sound from the TuberYeets library',
-                'handler': (values) => { this.handlePlaySoundOutput(values) },
+                'handler': "handlePlaySoundOutput",
                 'settings': [
                     {
                         'key': 'sound',
                         'label': 'Sound',
                         'type': 'list',
-                        'options': () => {this.getPlaySoundOutputOptions()},
+                        'optionsLoader': "getPlaySoundOutputOptions",
                         'default': ''
                     }
                 ]
@@ -83,11 +244,10 @@ module.exports = class OverlayAgent {
     }
 
     agentDisabled() {
-        if(this.socketClient) {
-            this.socketClient = null;
-        }
         if(this.socketServer) {
-            this.socketServer = null;
+            if (this.socketServer.readyState !== WebSocket.CLOSED) {
+                this.socketServer.close();
+            }
         }
         console.log("[OverlayAgent] Agent Disabled.");
     }
@@ -111,11 +271,11 @@ module.exports = class OverlayAgent {
         return status;
     }
 
-    getThrowItemOutputOptions() {
-        let item_list = this.agentRegistry.gameData.throws
+    async getThrowItemOutputOptions() {
+        let item_list = this.agentRegistry.gameData.read('throws');
         let item_options = [];
         item_list.forEach((item) => {
-            item_options.push({'label': item.location, 'value': item.location});
+            item_options.push({'label': item.location, 'value': item.id});
         });
         return item_options;
     }
@@ -124,21 +284,21 @@ module.exports = class OverlayAgent {
         this.throwItem(values.item);
     }
 
-    getThrowBonkOutputOptions() {
-        let bonk_list = this.agentRegistry.gameData.customBonks;
-        let bonk_options = [];
-        for (const [key, bonk] of Object.entries(bonk_list)) {
-            bonk_options.push({'label': bonk.name, 'value': key});
+    async getThrowItemGroupOutputOptions() {
+        let item_group_list = this.agentRegistry.gameData.read('itemGroups');
+        let item_group_options = [];
+        for (const [key, item_group] of Object.entries(item_group_list)) {
+            item_group_options.push({'label': item_group.name, 'value': key});
         }
-        return bonk_options;
+        return item_group_options;
     }
 
-    handleThrowBonkOutput(values) {
-        this.throwBonk(values.bonk);
+    handleThrowItemGroupOutput(values) {
+        this.throwItemGroup(values.itemGroup);
     }
 
-    getPlaySoundOutputOptions() {
-        let sound_list = this.agentRegistry.gameData.impacts
+    async getPlaySoundOutputOptions() {
+        let sound_list = this.agentRegistry.gameData.read('impacts');
         let sound_options = [];
         sound_list.forEach((sound) => {
             sound_options.push({'label': sound.location, 'value': sound.location});
@@ -155,6 +315,7 @@ module.exports = class OverlayAgent {
         let targetPort = this.agentRegistry.getAgentFieldData(this,'port');
         this.socketServer = new WebSocket.Server({ port: targetPort });
         this.socketServer.on("error", (err) => { this.socketServerHandleError(err) } );
+        this.socketServer.on("close", (err) => { this.socketServerHandleClose() } );
         if(this.portInUse) { return; }
         console.log("[OverlayAgent] Socket Server Started on port "+targetPort+"!");
         this.socketServer.on("connection", (ws) => { this.socketServerHandleConnection(ws) });
@@ -162,10 +323,18 @@ module.exports = class OverlayAgent {
 
     socketServerHandleError(err) {
         this.portInUse = true;
+        console.log("[Overlay Agent] Socket Error: ", err)
         // Retry server creation after 3 seconds
         setTimeout(() => {
             this.createServer()
         }, 3000);
+    }
+
+    socketServerHandleClose() {
+        console.log("[OverlayAgent] Socket Server Closed!");
+        this.socketServer = null;
+        this.overlayConnected = false;
+        this.calibrateStage = -2;
     }
 
     socketServerHandleConnection(ws) {
@@ -178,6 +347,7 @@ module.exports = class OverlayAgent {
     }
 
     socketClientHandleClose() {
+        console.log("[OverlayAgent] Socket Client Disconnected!");
         this.socketClient = null;
         this.overlayConnected = false;
         this.calibrateStage = -2;
@@ -218,7 +388,10 @@ module.exports = class OverlayAgent {
                     break;
             }
         } else if (request.type == "status") {
-            this.overlayVTSConnected = request.connectedBonkerVTube;
+            this.overlayVTSConnected = request.connectedOverlayVTube;
+        } else if (request.type == "calibrate-status") {
+            console.log('[Overlay] Calibration Status updated',request);
+            this.calibrateStage = request.stageId;
         } else if (request.type == "vtsRequest") {
             let vtsAgent = this.agentRegistry.getAgent('vtubestudio');
 
@@ -236,22 +409,21 @@ module.exports = class OverlayAgent {
     }
 
     getAppSettings() {
-        let appData = this.agentRegistry.appData;
         return {
-            barrageCount: appData.read('barrageCount'),
-            barrageFrequency: appData.read('barrageFrequency'),
-            throwAngleMin: appData.read('throwAngleMin'),
-            throwAngleMax: appData.read('throwAngleMax'),
-            itemScaleMin: appData.read('itemScaleMin'),
-            itemScaleMax: appData.read('itemScaleMax'),
-            throwDuration: appData.read('throwDuration'),
-            delay: appData.read('delay'),
-            spinSpeedMin: appData.read('spinSpeedMin'),
-            spinSpeedMax: appData.read('spinSpeedMax'),
-            volume: appData.read('volume'),
-            closeEyes: appData.read('closeEyes'),
-            openEyes: appData.read('openEyes'),
-            returnSpeed: appData.read('returnSpeed'),
+            groupCount: Number(this.agentRegistry.getAgentFieldData(this,'groupCount')),
+            groupFrequency: Number(this.agentRegistry.getAgentFieldData(this,'groupFrequency')),
+            throwAngleMin: Number(this.agentRegistry.getAgentFieldData(this,'throwAngleMin')),
+            throwAngleMax: Number(this.agentRegistry.getAgentFieldData(this,'throwAngleMax')),
+            itemScaleMin: Number(this.agentRegistry.getAgentFieldData(this,'itemScaleMin')),
+            itemScaleMax: Number(this.agentRegistry.getAgentFieldData(this,'itemScaleMax')),
+            throwDuration: Number(this.agentRegistry.getAgentFieldData(this,'throwDuration')),
+            delay: Number(this.agentRegistry.getAgentFieldData(this,'delay')),
+            spinSpeedMin: Number(this.agentRegistry.getAgentFieldData(this,'spinSpeedMin')),
+            spinSpeedMax: Number(this.agentRegistry.getAgentFieldData(this,'spinSpeedMax')),
+            volume: Number(this.agentRegistry.getAgentFieldData(this,'volume')),
+            closeEyes: this.agentRegistry.getAgentFieldData(this,'closeEyes'),
+            openEyes: this.agentRegistry.getAgentFieldData(this,'openEyes'),
+            returnSpeed: Number(this.agentRegistry.getAgentFieldData(this,'returnSpeed')),
         };
     }
 
@@ -286,70 +458,64 @@ module.exports = class OverlayAgent {
         return this.calibrateStage;
     }
 
-    throwItem(itemIndex) {
-        console.log('[OverlayAgent] Sending Custom Item');
+    throwItem(itemId) {
+        console.log(`[OverlayAgent] Sending Custom Item ${itemId}`);
         let gdh = this.agentRegistry.gameData;
 
-        let itemData = gdh.read(`throws`);
-        let item = itemData.find(obj => {
-            return obj.location === itemIndex
-        });
-        if(item === undefined ) {
+        let itemDetails = gdh.itemGroupEventHelper.getItemById(itemId);
+        if(itemDetails === null) {
+            console.log('[OverlayAgent] Failed to Send Single Item:  Item could not be generated!');
             return;
         }
 
-        let soundIndex = -1;
-        if (gdh.hasActiveSound())
-        {
-            do {
-                soundIndex = Math.floor(Math.random() * gdh.read(`impacts`).length);
-            } while (!gdh.read(`impacts.${soundIndex}.enabled`));
-        }
-
-        let request =
-            {
+        let request = {
+            ...itemDetails,
+            ...{
                 "type": "single",
-                "image": item.location,
-                "weight": item.weight,
-                "scale": item.scale,
-                "sound": item.sound == null && soundIndex != -1 ? gdh.read(`impacts.${soundIndex}.location`) : item.sound,
-                "volume": item.volume,
-                "masterVolume": this.agentRegistry.appData.read('volume'),
+                "masterVolume": Number(this.agentRegistry.getAgentFieldData(this,'volume')),
                 "appSettings": this.getAppSettings(),
                 "game_data_path": gdh.read(`game_data_path`)
+            }
+        };
 
-            }
         if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
-            let currentModelId = this.agentRegistry.getAgent('vtubestudio').getModelId();
-            if(currentModelId) {
-                request.modelCalibration = {
-                    "faceWidthMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[0],
-                    "faceHeightMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[1],
-                    "faceWidthMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[0],
-                    "faceHeightMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[1],
+            this.agentRegistry.getAgent('vtubestudio').getModelId().then(currentModelId => {
+                console.log('current model:',currentModelId);
+                if(currentModelId) {
+                    console.log('current model:',currentModelId);
+                    request.modelCalibration = {
+                        "faceWidthMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[0],
+                        "faceHeightMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[1],
+                        "faceWidthMax": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Max`)[0],
+                        "faceHeightMax": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Max`)[1],
+                    }
                 }
-            }
+                this.socketClient.send(JSON.stringify(request));
+            });
+            return;
+        } else {
+            this.socketClient.send(JSON.stringify(request));
         }
-        this.socketClient.send(JSON.stringify(request));
+
     }
 
-    throwBonk(bonkName,customCount=null) {
-        console.log('[OverlayAgent] Sending Custom Bonk');
+    throwItemGroup(itemGroupId,customCount=null) {
+        console.log('[OverlayAgent] Sending Item Group');
         let gdh = this.agentRegistry.gameData;
-        const imagesWeightsScalesSoundsVolumes = gdh.bonkEventHelper.getCustomImagesWeightsScalesSoundsVolumes(bonkName,customCount);
+        const itemsForGroup = gdh.itemGroupEventHelper.getItemsForGroup(itemGroupId,customCount);
         let images = [], weights = [], scales = [], sounds = [], volumes = [], impactDecals = [], windupSounds = [];
-        for (let i = 0; i < imagesWeightsScalesSoundsVolumes.length; i++) {
-            images[i] = imagesWeightsScalesSoundsVolumes[i].location;
-            weights[i] = imagesWeightsScalesSoundsVolumes[i].weight;
-            scales[i] = imagesWeightsScalesSoundsVolumes[i].scale;
-            sounds[i] = imagesWeightsScalesSoundsVolumes[i].sound;
-            volumes[i] = imagesWeightsScalesSoundsVolumes[i].volume;
-            impactDecals[i] = imagesWeightsScalesSoundsVolumes[i].impactDecal;
-            windupSounds[i] = imagesWeightsScalesSoundsVolumes[i].windupSound;
+        for (let i = 0; i < itemsForGroup.length; i++) {
+            images[i] = itemsForGroup[i].image;
+            weights[i] = itemsForGroup[i].weight;
+            scales[i] = itemsForGroup[i].scale;
+            sounds[i] = itemsForGroup[i].sound;
+            volumes[i] = itemsForGroup[i].volume;
+            impactDecals[i] = itemsForGroup[i].impactDecal;
+            windupSounds[i] = itemsForGroup[i].windupSound;
         }
 
         let request = {
-            "type": bonkName,
+            "type": itemGroupId,
             "image": images,
             "weight": weights,
             "scale": scales,
@@ -359,22 +525,23 @@ module.exports = class OverlayAgent {
             "impactDecal": impactDecals,
             "windupSound": windupSounds,
             "appSettings": this.getAppSettings(),
-            "customBonk": gdh.read(`customBonks.${bonkName}`),
+            "itemGroup": gdh.read(`itemGroups.${itemGroupId}`),
             "game_data_path": gdh.read(`game_data_path`)
         }
 
         if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
-            let currentModelId = this.agentRegistry.getAgent('vtubestudio').getModelId();
-            if(currentModelId) {
-                request.modelCalibration = {
-                    "faceWidthMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[0] || 0,
-                    "faceHeightMin": this.agentRegistry.appData.read(`${currentModelId}Min`)[1] || 0,
-                    "faceWidthMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[0] || 0,
-                    "faceHeightMax": this.agentRegistry.appData.read(`${currentModelId}Max`)[1] || 0,
+            this.agentRegistry.getAgent('vtubestudio').getModelId().then(currentModelId => {
+                if(currentModelId) {
+                    request.modelCalibration = {
+                        "faceWidthMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[0],
+                        "faceHeightMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[1],
+                        "faceWidthMax": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Max`)[0],
+                        "faceHeightMax": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Max`)[1],
+                    }
                 }
-            }
+                this.socketClient.send(JSON.stringify(request));
+            });
         }
-        this.socketClient.send(JSON.stringify(request));
     }
 
     playSound(soundIndex) {
