@@ -2,33 +2,6 @@
   <div id="app" class="wrapper">
     <header class="app-header">
       <span class="app-title"><i class="fa-solid fa-dumpster-fire"></i> TuberYeets</span>
-      <div class="game-select">
-        Choose Game:
-        <span id="game-select-wrapper">
-          <select class="no-drag mr-2"
-                  :disabled="gameLocked"
-                  v-model="currentGameId"
-                  @change="selectNewGame"
-                  style="font-size:0.85em; padding: 0px;"
-          >
-            <option v-for="(game, key) in games" :value="game.gameID">{{ game.name }}</option>
-          </select>
-          <select class="no-drag"
-                  v-if="currentGame.length > 1"
-                  :disabled="gameLocked"
-                  v-model="currentGamePackId"
-                  @change="selectNewPack"
-                  style="font-size:0.85em; padding: 0px;"
-          >
-            <option v-for="(pack, key) in currentGame" :value="pack.gamePackID">{{ pack.meta.name }}</option>
-          </select>
-        </span>
-        <b-tooltip v-if="gameLocked" target="game-select-wrapper" triggers="hover" placement="bottom">
-          <i class="fa-solid fa-lock"></i> Game selection is locked while browsing game-specific sections
-        </b-tooltip>
-        <i style="margin-left: 24px;" class="fa-solid fa-folder-open open-folder no-drag" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
-        <span style="clear:both;"></span>
-      </div>
     </header>
     <div class="app-body">
       <nav>
@@ -99,27 +72,82 @@
         />
       </main>
     </div>
-    <footer>
-      <div style="float:right;">
-        <div class="main-status-icons">
-          <i class="fa-solid fa-gamepad"
-             :class="getIconStatusClass(autoGameSaveStatus)"
-             v-b-tooltip.hover.left="'Game file: ' + autoGameSaveStatus"
-          ></i>
-          <i class="fa-solid fa-gear"
-             :class="getIconStatusClass(autoSaveStatus)"
-             v-b-tooltip.hover.left="'Settings file: ' + autoSaveStatus"
-          ></i>
-        </div>
+    <footer class="d-flex flex-row">
+      <div class="game-select col-9 pl-1">
+        <span class="d-flex flex-row" id="game-select-wrapper" style="margin-top: 4px;" v-if="games">
+          <div class="col-8 px-0 d-flex flex-row">
+            <b-tooltip v-if="gameLocked" target="game-select-wrapper" triggers="hover" placement="bottom">
+              <i class="fa-solid fa-lock"></i> Game selection is locked while browsing game-specific sections
+            </b-tooltip>
+            <i style="padding:6px; float: left;" class="fa-solid fa-folder-open open-folder no-drag" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
+            <v-select v-model="currentGameId"
+              class="no-drag mr-2"
+              style="width: 100%;"
+              append-to-body
+              :calculate-position="withPopper"
+              :clearable="false"
+              :disabled="gameLocked"
+              :options="games"
+              :label="'name'"
+              :reduce="game => game.gameID"
+              @input="selectNewGame"
+            >
+              <template v-slot:option="option">
+                <div class="d-flex" style="align-items: center">
+                  <div class="my-1 mr-2 p-0 text-center">
+                    <div style="height:48px">
+                      <img style="max-height: 48px;"
+                           :src="`https://resources.crowdcontrol.live/images/${option.gameID}/box.jpg`">
+                    </div>
+                  </div>
+                  <div style="white-space: break-spaces; text-align: center; flex: 1">
+                    <small class="cc-fs-sm" >{{ option.name }}</small>
+                  </div>
+                </div>
+              </template>
 
+            </v-select>
+          </div>
+
+          <div class="col-4 px-0">
+            <v-select v-model="currentGamePackId"
+                      v-if="currentGame.length > 1"
+                      class="no-drag"
+                      append-to-body
+                      :calculate-position="withPopper"
+                      :clearable="false"
+                      :disabled="gameLocked"
+                      :options="currentGame"
+                      :get-option-label="pack => pack.meta.name"
+                      :reduce="pack => pack.gamePackID"
+                      @input="selectNewPack"
+            ></v-select>
+          </div>
+        </span>
+        <span style="clear:both;"></span>
       </div>
-      <div class="update-notification" style="float:right;">
-          <span v-if="update_available && !update_downloaded" class="footer-update" >
-            Update Available! Downloading...
-          </span>
-        <span v-if="update_downloaded" class="footer-update">
-            Update Downloaded <a href="#" @click="restartAndInstall">Restart and Install</a>
-          </span>
+      <div class="col-3 pr-0">
+        <div style="float:right;">
+          <div class="main-status-icons">
+            <i class="fa-solid fa-gamepad"
+               :class="getIconStatusClass(autoGameSaveStatus)"
+               v-b-tooltip.hover.left="'Game file: ' + autoGameSaveStatus"
+            ></i>
+            <i class="fa-solid fa-gear"
+               :class="getIconStatusClass(autoSaveStatus)"
+               v-b-tooltip.hover.left="'Settings file: ' + autoSaveStatus"
+            ></i>
+          </div>
+
+        </div>
+        <div class="update-notification" style="float:right;">
+            <span v-if="update_available && !update_downloaded" class="footer-update" >
+              Update Available! Downloading...
+            </span>
+          <span v-if="update_downloaded" class="footer-update">
+              Update Downloaded <a href="#" @click="restartAndInstall">Restart and Install</a>
+            </span>
+        </div>
       </div>
     </footer>
 
@@ -129,6 +157,7 @@
 <script>
 // @ is an alias to /src
 import axios from 'axios'
+import { createPopper } from '@popperjs/core'
 
 export default {
   data : function() {
@@ -148,9 +177,7 @@ export default {
       currentGameId: "SuperMario64",
       currentGamePackId: "SuperMario64",
       current_library_section: "ItemList",
-      games: {
-
-      },
+      games: null,
       autoSaveTimeout: null,
       autoSaveStatus: "unloaded",
       autoGameSaveTimeout: null,
@@ -165,8 +192,8 @@ export default {
     getCrowdControlGamesNew() {
       axios.get("https://openapi.crowdcontrol.live/games")
           .then((response) => {
-            this.games = response.data;
-            console.log(response.data);
+            this.games = Object.values(response.data).filter(game => game.hasOwnProperty('name') && typeof game.name !== 'object');
+            console.log(this.games);
           })
           .catch(function (e) {
             console.log(e);
@@ -229,7 +256,36 @@ export default {
     },
     restartAndInstall() {
       window.ipc.send('RESTART');
-    }
+    },
+    withPopper(dropdownList, component, { width }) {
+      console.log(component.$refs.toggle);
+      dropdownList.style.width = width
+
+      const popper = createPopper(component.$refs.toggle, dropdownList, {
+        placement: 'top',
+        modifiers: [
+          {
+            name: 'offset',
+            options: {
+              offset: [0, -1],
+            },
+          },
+          {
+            name: 'toggleClass',
+            enabled: true,
+            phase: 'write',
+            fn({ state }) {
+              component.$el.classList.toggle(
+                  'drop-up',
+                  state.placement === 'top'
+              )
+            },
+          },
+        ],
+      })
+
+      return () => popper.destroy()
+    },
   },
 
   mounted() {

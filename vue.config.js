@@ -18,7 +18,11 @@ module.exports = defineConfig({
                         releaseType: 'draft'
                     }
                 ],
+                icon: 'public/icon.ico',
                 nsis: {
+                    "installerIcon": 'public/icon.ico',
+                    "uninstallerIcon": 'public/icon.ico',
+                    "artifactName": 'Install ${productName} ${version}.${ext}',
                     oneClick: true,
                     perMachine: false
                 }
@@ -38,6 +42,18 @@ module.exports = defineConfig({
                         // Compiles Sass to CSS
                         { loader: 'sass-loader', options: { sassOptions: {indentedSyntax: false } } },
                     ],
+                },
+                {
+                    test: /\.(woff|woff2|eot|ttf|otf)$/i,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                name: '[name].[ext]',
+                                outputPath: 'fonts/'
+                            }
+                        }
+                        ]
                 },
             ],
         },

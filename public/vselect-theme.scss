@@ -34,8 +34,8 @@
   --vs-controls--deselect-text-shadow: 0 1px 0 #fff;
 
   /* Selected */
-  --vs-selected-bg: #f0f0f0;
-  --vs-selected-color: var(--vs-colors--dark);
+  --vs-selected-bg: --cc-color-s700;
+  --vs-selected-color: var(--cc-color-w100);
   --vs-selected-border-color: var(--vs-border-color);
   --vs-selected-border-style: var(--vs-border-style);
   --vs-selected-border-width: var(--vs-border-width);
@@ -51,7 +51,7 @@
   /* Options */
   --vs-dropdown-option-bg: #000;
   --vs-dropdown-option-color: var(--vs-dropdown-color);
-  --vs-dropdown-option-padding: 3px 20px;
+  --vs-dropdown-option-padding: 3px 3px;
 
   /* Active State */
   --vs-dropdown-option--active-bg: #5897fb;
@@ -64,4 +64,18 @@
   /* Transitions */
   --vs-transition-timing-function: cubic-bezier(1, -0.115, 0.975, 0.855);
   --vs-transition-duration: 150ms;
+}
+
+.v-select, .vs__dropdown-menu {
+  font-size: var(--vs-font-size);
+  line-height: var(--vs-line-height);
+}
+
+.v-select, .vs__dropdown-toggle {
+  height: 24px;
+  margin: 0 4px 0;
+}
+
+.vs__selected {
+  margin: -2px 2px 0;
 }

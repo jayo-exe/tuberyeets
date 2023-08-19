@@ -181,10 +181,9 @@ module.exports = class VtubeStudioAgent {
                 this.activateExpression(values.name);
             }
         } else {
-            if(this.decrementStack('expression', values.name) === 1) {
-                this.activateExpression(values.name);
+            if(this.decrementStack('expression', values.name) === 0) {
+                this.deactivateExpression(values.name);
             }
-            this.deactivateExpression(values.name);
         }
     }
 
@@ -312,12 +311,11 @@ module.exports = class VtubeStudioAgent {
 
     async activateExpression(expression_name) {
         if(!this.vtsReady) return;
-        const model = await this.apiClient.currentModel();
-        const expressions = await model.expressions();
-        var expressionToUse = expressions.find((expression) => expression.name === expression_name);
+        const expressions = await this.apiClient.expressionState();
+        const expressionToUse = expressions.expressions.find((expression) => expression.name === expression_name);
 
         if(expressionToUse) {
-            expressionToUse.activate();
+            this.apiClient.expressionActivation({ expressionFile: expressionToUse.file, active: true});
             console.log(`VTS: Expression ${expression_name} activated`);
         } else {
             console.log(`Could not find Expression: ${expression_name}`);
@@ -326,13 +324,11 @@ module.exports = class VtubeStudioAgent {
 
     async deactivateExpression(expression_name) {
         if(!this.vtsReady) return;
-        const model = await this.apiClient.currentModel();
-        const expressions = await model.expressions();
-        var expressionToUse = expressions.find((expression) => expression.name === expression_name);
+        const expressions = await this.apiClient.expressionState();
+        const expressionToUse = expressions.expressions.find((expression) => expression.name === expression_name);
 
         if(expressionToUse) {
-            //the vtubestudio library has a broken Expression::deactivate method, so we improvise
-            await expressionToUse.vts.apiClient.expressionActivation({ expressionFile: expressionToUse.file, active: false });
+            await this.apiClient.expressionActivation({ expressionFile: expressionToUse.file, active: false });
             console.log(`VTS: Expression ${expression_name} deactivated`);
         } else {
             console.log(`Could not find Expression: ${expression_name}`);
@@ -341,12 +337,11 @@ module.exports = class VtubeStudioAgent {
 
     async triggerHotkey(hotkey_name) {
         if(!this.vtsReady) return;
-        const model = await this.apiClient.currentModel();
-        const hotkeys = await model.hotkeys();
-        var hotkeyToTrigger = hotkeys.find((hotkey) => hotkey.name === hotkey_name);
+        const hotkeys = await this.apiClient.hotkeysInCurrentModel();
+        const hotkeyToTrigger = hotkeys.availableHotkeys.find((hotkey) => hotkey.name === hotkey_name);
 
         if(hotkeyToTrigger) {
-            hotkeyToTrigger.trigger();
+            await this.apiClient.hotkeyTrigger({hotkeyID: hotkeyToTrigger.hotkeyID});
             console.log(`VTS: Hotkey ${hotkey_name} triggered`);
         } else {
             console.log(`Could not find Hotkey: ${hotkey_name}`);

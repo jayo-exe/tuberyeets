@@ -49,8 +49,8 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 720,
-    minWidth: 1200,
-    minHeight: 720,
+    minWidth: 900,
+    minHeight: 600,
     icon: path.resolve(__static, 'icon.ico'),
     title: "'TuberYeets v" + app.getVersion(),
     titleBarStyle: 'hidden',

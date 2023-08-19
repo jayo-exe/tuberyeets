@@ -58,17 +58,7 @@ $color-variant-map: (
 /* Typography */
 
 $font-name: "Poppins";
-$font-weights: (
-        100:"Thin",
-        200:"ExtraLight",
-        300:"Light",
-        400:"Regular",
-        500:"Medium",
-        600:"SemiBold",
-        700:"Bold",
-        800:"ExtraBold",
-        900:"Black"
-);
+
 $font-map: (
         "h1": ("size":40px, "weight":900, "height":60px),
         "h2": ("size":32px, "weight":800, "height":48px),
@@ -82,21 +72,6 @@ $font-map: (
         "xs": ("size":8px, "weight":300, "height":18px),
 );
 $font-headers: 5;
-
-@each $weight, $weight-name in $font-weights {
-    @each $style in [normal, italic] {
-        @font-face {
-            font-family: $font-name;
-            font-style: $style;
-            font-weight: $weight;
-            @if $style == italic {
-                src: url("fonts/#{$font-name}-#{$weight-name}Italic.ttf");
-            } @else {
-                src: url("fonts/#{$font-name}-#{$weight-name}.ttf");
-            }
-        }
-    }
-}
 
 :root {
     @each $key, $rules in $font-map {
@@ -311,16 +286,22 @@ $button-map: (
 }
 
 header {
-    padding: 4px;
-    padding-left: 18px;
+    padding: 2px;
+    padding-left: 12px;
     background: linear-gradient(270deg, var(--cc-color-y200) 0%, var(--cc-color-r100) 45%, var(--cc-color-r100) 55%, var(--cc-color-ro100) 95%);
     color: var(--cc-color-s800);
     font-weight: 500;
     z-index: 100000;
     .app-title {
-        font-size: var(--cc-text-size-md);
-        font-weight: var(--cc-text-weight-h4);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
         text-transform: uppercase;
+        i {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
+        }
     }
     .game-select {
         float: right;
@@ -331,7 +312,7 @@ header {
 
 .app-body {
     display:flex;
-    height: calc(100vh - 32px - 28px - 16px);
+    height: calc(100vh - 32px - 32px - 16px);
     margin-bottom: calc(24px);
     position: relative;
     padding-top: 16px;
