@@ -45,6 +45,9 @@ Vue.prototype.$appData = {
   "getAgentSettings": function(agentKey) {
     return window.ipc.invoke('GET_AGENT_SETTINGS', {agentKey:agentKey});
   },
+  "getOverlayPath": function() {
+    return window.ipc.invoke('GET_OVERLAY_PATH');
+  },
   "hasAgentSettingField": function(agentKey, field) {
     return window.ipc.invoke('HAS_AGENT_SETTING_FIELD', {agentKey:agentKey, field:field});
   },

@@ -18,7 +18,7 @@ const uuid = require('uuid');
 
 let overlayRoot = (app.isPackaged ? '../' : '')+'../public/overlay';
 let overlayPath = path.resolve(__static, overlayRoot+'/overlay.html');
-
+console.log('BIP', overlayPath);
 // Loading core data file
 let appData = new AppDataHelper(userDataPath);
 appData.loadData();
@@ -448,6 +448,10 @@ ipcMain.handle('GET_COMMAND_DETAILS', async (event,payload) => {
 
 ipcMain.handle('GET_AGENT_DETAILS', async (event) => {
   return agentRegistry.getAllAgentDetails();
+});
+
+ipcMain.handle('GET_OVERLAY_PATH', async (event) => {
+  return 'file://'+overlayPath+'?port='+agentRegistry.getAgentFieldData(agentRegistry.getAgent('overlay'),'port');
 });
 
 ipcMain.handle('GET_AGENT_SETTINGS', async (event, payload) => {

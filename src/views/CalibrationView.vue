@@ -7,7 +7,7 @@
           <span></span>
         </div>
         <div class="ml-auto">
-
+          <button class="btn btn-sm btn-blurple ml-1" @click="copyOverlayLink">Copy Overlay Link</button>
         </div>
       </div>
       <div>
@@ -32,6 +32,7 @@ export default {
   props: ['calibrate_status'],
   data : function() {
     return {
+      overlayPath: '',
       calibrarion_status: -2,
       live_app_data: this.app_data,
       calibration_statuses: [3,4,7],
@@ -61,11 +62,19 @@ export default {
     cancelCalibrate() {
       console.log('Cancelling Calibration');
       window.ipc.send('CALIBRATE_CANCEL');
+    },
+    copyOverlayLink() {
+        navigator.clipboard.writeText(this.overlayPath);
+        setTimeout(() => { alert('Overlay Link has been copied to your clipboard!') }, 500);
     }
   },
   mounted: function() {
     this.cancelCalibrate();
     this.$emit('unlock-game-change');
+    this.$appData.getOverlayPath().then((result) => {
+      this.overlayPath = result;
+      console.log('BOOP', this.overlayPath);
+    });
   },
   beforeDestroy() {
     this.cancelCalibrate();
