@@ -56,7 +56,7 @@ module.exports = class ItemGroupEventHelper {
                 validItemIds.push(itemKey);
             }
         });
-        if (itemGroupData.items.length > 0) {
+        if (validItemIds.length > 0) {
             selectedItem = itemData[validItemIds[Math.floor(Math.random()*validItemIds.length)]];
         } else if(defaultItemIds.length > 0) {
             selectedItem = itemData[defaultItemIds[Math.floor(Math.random()*defaultItemIds.length)]];
@@ -76,14 +76,13 @@ module.exports = class ItemGroupEventHelper {
                 validSoundIds.push(soundKey);
             }
         });
-        if (itemGroupData.sounds.length > 0) {
+        if (validSoundIds.length > 0) {
             selectedSound = soundData[validSoundIds[Math.floor(Math.random()*validSoundIds.length)]];
         } else if(selectedItem.sound && soundData.hasOwnProperty(selectedItem.sound)) {
             selectedSound = soundData[selectedItem.sound];
         } else if(defaultSoundIds.length > 0) {
             selectedSound = soundData[defaultSoundIds[Math.floor(Math.random()*defaultSoundIds.length)]];
         }
-
 
         return {
             "image": selectedItem.location,

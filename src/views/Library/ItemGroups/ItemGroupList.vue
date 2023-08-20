@@ -11,26 +11,28 @@
         </div>
       </div>
       <div id="itemGroupsTable" class="inner scrollable" v-if="itemList">
-        <table class="listTable">
-          <thead>
-          <tr>
-            <th>Group Name</th>
-            <th style="width: 224px;">Actions</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(itemGroup, key) in itemList"  :key="'bcb_'+key+listKey">
-              <td>
-                <p class="imageLabel">{{ itemGroup.name }}</p>
-              </td>
-              <td>
-                <button class="btn btn-teal" @click="editItem(key)">Edit</button>
-                <button class="btn btn-blurple" @click="testItemGroup(key)">Test</button>
-                <button class="btn btn-red" @click="removeItem(key)">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <ul class="asset-list with-endcap">
+          <li v-for="(itemGroup, key) in itemList"  :key="'bcb_'+key+listKey" style="grid-template-columns: 4em 1fr 10em;">
+            <div class="asset-endcap">
+              <i class="fa-solid fa-cubes-stacked clickable" style="font-size: 29px;" @click="testItemGroup(key)"></i>
+            </div>
+            <div class="asset-heading">
+              <div class="asset-title">
+                {{ itemGroup.name }}
+              </div>
+              <div class="asset-subtitle">
+
+              </div>
+            </div>
+            <div class="asset-details d-flex flex-row" style="align-items:center;">
+
+            </div>
+            <div class="asset-actions" style="align-items:center; justify-content: center;">
+              <button class="btn btn-teal" @click="editItem(key)">Edit</button>
+              <button class="btn btn-red" @click="removeItem(key)">Delete</button>
+            </div>
+          </li>
+        </ul>
       </div>
     </section>
     <ItemGroupForm

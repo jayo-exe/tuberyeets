@@ -181,6 +181,18 @@ module.exports = class AgentRegistry {
         return settings;
     }
 
+    async getCommandDetails(agentKey, actionKey, values) {
+        console.log(`[AgentRegistry] getting command details for ${agentKey}:${actionKey}`);
+        let agent = this.agents[agentKey];
+        if (!agent) { return false; }
+        let action = agent.agentOutputs[actionKey];
+        if (!action) { return false; }
+        if(!action.hasOwnProperty('infoRenderHandler')) {
+            return '';
+        }
+        return await agent[action.infoRenderHandler](values);
+    }
+
     getAllAgentDetails() {
         console.log(`[AgentRegistry] getting details for all agents`);
         let agentDetails = {};

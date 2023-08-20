@@ -12,7 +12,7 @@
         </div>
       </div>
 
-      <div id="soundTable" class="imageTable inner scrollable">
+      <div id="soundTable" class="inner scrollable">
         <div class="selectAll">
           <div>
             <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
@@ -23,42 +23,27 @@
             </label>
           </div>
         </div>
-        <table class="listTable">
-          <thead>
-          <tr>
-            <th style="text-align:center;">Default</th>
-            <th>Name</th>
-            <th>Volume</th>
-            <th style="text-align:center;">Delete?</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(itemGroupImpact, key) in itemList" :key="'bim_'+itemGroupImpact.id+listKey">
-            <td>
-              <label class="checkbox">
+        <ul class="asset-list with-endcap" style="margin-top: 56px; ">
+          <li v-for="(itemGroupImpact, key) in itemList" :key="'bim_'+itemGroupImpact.id+listKey" style="grid-template-columns: 4em 1fr 10em;">
+            <div class="asset-endcap">
+              <i class="sound-icon fa-solid fa-volume-high" style="font-size: 29px; color: var(--cc-color-w300)"></i>
+            </div>
+            <div class="asset-heading">
+              <div class="asset-title">
+                {{ itemGroupImpact.location }}
+              </div>
+              <div class="asset-subtitle">
                 <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
-              </label>
-            </td>
-            <td>
-              <p class="imageLabel" :title="itemGroupImpact.location">{{ itemGroupImpact.location }}</p>
-            </td>
-            <td class="volume-column">
-              <label class="cogwheel">
-                <img src="ui/speaker.png" class="checkmark" title="Volume" v-b-tooltip.hover.right="'Volume'"></img>
-              </label>
-              <input class="soundVolume" type="range" min="0" max="1" step="0.1" v-model="itemList[key].volume" @input="() => {updateItem(key, 'volume')}">
-            </td>
-            <td>
-              <label class="delete">
-                <button class="imageRemove" @click="removeItem(key)"></button>
-                <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
-              </label>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+            <div class="asset-details d-flex flex-row" style="align-items:center;">
+              <input class="soundVolume mt-2" type="range" min="0" max="1" step="0.01" v-model="itemList[key].volume" @change="() => {updateItem(key, 'volume')}">
+            </div>
+            <div class="asset-actions" style="align-items:center; justify-content: center;">
+              <button class="btn btn-red btn-sm" @click="removeItem(key)">Delete</button>
+            </div>
+          </li>
+        </ul>
       </div>
     </section>
   </div>

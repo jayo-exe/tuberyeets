@@ -442,6 +442,9 @@ ipcMain.handle('GET_ACTION_TYPES', async (event) => {
 ipcMain.handle('GET_ACTION_SETTINGS', async (event,payload) => {
   return await agentRegistry.getActionSettings(payload.agentKey, payload.actionKey);
 });
+ipcMain.handle('GET_COMMAND_DETAILS', async (event,payload) => {
+  return await agentRegistry.getCommandDetails(payload.agentKey, payload.actionKey, payload.values);
+});
 
 ipcMain.handle('GET_AGENT_DETAILS', async (event) => {
   return agentRegistry.getAllAgentDetails();

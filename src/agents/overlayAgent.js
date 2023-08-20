@@ -1,6 +1,6 @@
 const { WebSocket } = require("ws");
 
-module.exports = class OverlayAgent {
+class OverlayAgent {
 
     constructor() {
         this.socketServer = null;
@@ -9,6 +9,8 @@ module.exports = class OverlayAgent {
         this.calibrateStage = -2;
         this.overlayVTSConnected = false;
         this.overlayConnected = false;
+        this.itemStreams = {};
+        this.stacks = {itemStream: {}};
         this.agentRegistry = null;
         this.agentName = 'Overlay';
         this.agentDescription = 'Throw items at your model, play sounds, and more!';
@@ -166,6 +168,7 @@ module.exports = class OverlayAgent {
                 'label': 'Throw an Item',
                 'description': 'Throw an item from the TuberYeets library',
                 'handler': "handleThrowItemOutput",
+                'infoRenderHandler': "handleThrowItemRender",
                 'settings': [
                     {
                         'key': 'item',
@@ -190,9 +193,9 @@ module.exports = class OverlayAgent {
                     {
                         'key': 'quantity_parameter',
                         'label': 'Event Parameter',
-                        'type': 'text',
+                        'type': 'parameter',
                         'showIfToggled': "match_quantity",
-                        'default': ''
+                        'default': 'quantity'
                     },
                 ]
             },
@@ -201,6 +204,72 @@ module.exports = class OverlayAgent {
                 'label': 'Throw a Group of Items',
                 'description': 'Throw an Item Group from the TuberYeets library',
                 'handler': "handleThrowItemGroupOutput",
+                'infoRenderHandler': "handleThrowItemGroupRender",
+                'settings': [
+                    {
+                        'key': 'itemGroup',
+                        'label': 'Item Group',
+                        'type': 'list',
+                        'optionsLoader': "getThrowItemGroupOutputOptions",
+                        'default': ''
+                    },
+                    {
+                        'key': 'match_quantity',
+                        'label': 'Match Quantity to Event Parameter',
+                        'type': 'toggle',
+                        'default': false
+                    },
+                    {
+                        'key': 'quantity_parameter',
+                        'label': 'Event Parameter',
+                        'type': 'parameter',
+                        'showIfToggled': "match_quantity",
+                        'default': 'quantity'
+                    }
+                ]
+            },
+            startItemStream: {
+                'key': 'startItemStream',
+                'label': 'Start throwing a Stream of Items',
+                'description': 'Start throwing a stream of items from an Item Group from the TuberYeets library',
+                'handler': "handleStartItemStreamOutput",
+                'infoRenderHandler': "handleStartItemStreamRender",
+                'settings': [
+                    {
+                        'key': 'itemGroup',
+                        'label': 'Item Group',
+                        'type': 'list',
+                        'optionsLoader': "getThrowItemGroupOutputOptions",
+                        'default': ''
+                    },
+                    {
+                        'key': 'match_duration',
+                        'label': 'Match Duration to Event Parameter',
+                        'type': 'toggle',
+                        'default': false
+                    },
+                    {
+                        'key': 'duration',
+                        'label': 'Max Duration (ms)',
+                        'type': 'integer',
+                        'hideIfToggled': "match_duration",
+                        'default': 60000
+                    },
+                    {
+                        'key': 'duration_parameter',
+                        'label': 'Event Parameter',
+                        'type': 'parameter',
+                        'showIfToggled': "match_duration",
+                        'default': 'duration'
+                    }
+                ]
+            },
+            stopItemStream: {
+                'key': 'stopItemStream',
+                'label': 'Stop throwing a Stream of Items',
+                'description': 'Stop throwing a stream of items from an Item Group from the TuberYeets library',
+                'handler': "handleStopItemStreamOutput",
+                'infoRenderHandler': "handleStopItemStreamRender",
                 'settings': [
                     {
                         'key': 'itemGroup',
@@ -216,6 +285,7 @@ module.exports = class OverlayAgent {
                 'label': 'Play a Sound',
                 'description': 'Play a Sound from the TuberYeets library',
                 'handler': "handlePlaySoundOutput",
+                'infoRenderHandler': "handlePlaySoundRender",
                 'settings': [
                     {
                         'key': 'sound',
@@ -281,7 +351,34 @@ module.exports = class OverlayAgent {
     }
 
     handleThrowItemOutput(values) {
-        this.throwItem(values.item);
+        let throwDelay = this.agentRegistry.getAgentFieldData(this,'groupFrequency');
+        let throwCount = parseInt(values.quantity);
+        if(values.match_quantity && values.quantity_parameter) {
+            if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
+                throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
+            } else {
+                console.log(`[OverlayAgent] quantity_parameter not found`, values);
+            }
+        }
+        this.throwItems(values.item, throwCount);
+    }
+
+    handleThrowItemRender(settings) {
+        let itemName = '[Unknown]';
+        let item = this.agentRegistry.gameData.read(`itemGroups.${settings.item}`);
+        if (item && item.hasOwnProperty('name')) {
+            itemName = item.name;
+        }
+
+        let quantityDescription = `Manual - ${settings.quantity}`;
+        if(settings.match_quantity) {
+            quantityDescription = `Match Event Parameter - ${settings.quantity_parameter}`;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item: </strong><span>${itemGroupName}</span></li>` +
+            `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
+            `</ul>`;
     }
 
     async getThrowItemGroupOutputOptions() {
@@ -294,7 +391,85 @@ module.exports = class OverlayAgent {
     }
 
     handleThrowItemGroupOutput(values) {
+        console.log(`[OverlayAgent] item group debug`, values);
+        //TODO:: quantity from CC is being passed in as an object, need to change it to feed the trigger with the base quantity value
+        let throwCount = parseInt(values.quantity);
+        if(values.match_quantity && values.quantity_parameter) {
+            if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
+                throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
+                this.throwItemGroup(values.itemGroup, throwCount);
+                return;
+            } else {
+                console.log(`[OverlayAgent] quantity_parameter not found`, values);
+            }
+        }
         this.throwItemGroup(values.itemGroup);
+    }
+
+    handleThrowItemGroupRender(settings) {
+        let itemGroupName = '[Unknown]';
+        let itemGroup = this.agentRegistry.gameData.read(`itemGroups.${settings.itemGroup}`);
+        if (itemGroup && itemGroup.hasOwnProperty('name')) {
+            itemGroupName = itemGroup.name;
+        }
+
+        let quantityDescription = 'Use Item Group Settings';
+        if(settings.match_quantity) {
+            quantityDescription = `Match Event Parameter - ${settings.quantity_parameter}`;
+        }
+
+        return `<ul>` +
+                `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+                `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
+               `</ul>`;
+    }
+
+    handleStartItemStreamOutput(values) {
+        let throwDuration = parseInt(values.duration);
+        if(values.match_duration && values.duration_parameter) {
+            if(values.__trigger.parameters.hasOwnProperty(values.duration_parameter)) {
+                throwDuration = parseInt(values.__trigger.parameters[values.duration_parameter]);
+                this.startItemStream(values.itemGroup, throwDuration);
+                return;
+            } else {
+                console.log(`[OverlayAgent] duration_parameter not found`, values);
+            }
+        }
+        this.startItemStream(values.itemGroup);
+    }
+
+    handleStartItemStreamRender(settings) {
+        let itemGroupName = '[Unknown]';
+        let itemGroup = this.agentRegistry.gameData.read(`itemGroups.${settings.itemGroup}`);
+        if (itemGroup && itemGroup.hasOwnProperty('name')) {
+            itemGroupName = itemGroup.name;
+        }
+
+        let durationDescription = `Manual - ${settings.duration}ms`;
+        if(settings.match_duration) {
+            durationDescription = `Match Event Parameter - ${settings.duration_parameter}`;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+            `<li><strong>Max Duration: </strong><span>${durationDescription}</span></li>` +
+            `</ul>`;
+    }
+
+    handleStopItemStreamOutput(values) {
+        this.stopItemStream(values.itemGroup);
+    }
+
+    handleStopItemStreamRender(settings) {
+        let itemGroupName = '[Unknown]';
+        let itemGroup = this.agentRegistry.gameData.read(`itemGroups.${settings.itemGroup}`);
+        if (itemGroup && itemGroup.hasOwnProperty('name')) {
+            itemGroupName = itemGroup.name;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+            `</ul>`;
     }
 
     async getPlaySoundOutputOptions() {
@@ -308,6 +483,18 @@ module.exports = class OverlayAgent {
 
     handlePlaySoundOutput(values) {
         this.playSound(values.sound);
+    }
+
+    handlePlaySoundRender(settings) {
+        let soundName = '[Unknown]';
+        let sound = this.agentRegistry.gameData.read(`impacts.${settings.sound}`);
+        if (sound && sound.hasOwnProperty('location')) {
+            soundName = sound.location;
+        }
+
+        return `<ul>` +
+            `<li><strong>Sound: </strong><span>${soundName}</span></li>` +
+            `</ul>`;
     }
 
     createServer() {
@@ -427,6 +614,34 @@ module.exports = class OverlayAgent {
         };
     }
 
+    incrementStack(type, name) {
+        if(!this.stacks.hasOwnProperty(type)) return false;
+        if(!this.stacks[type].hasOwnProperty(name)) {
+            this.stacks[type][name] = 1;
+            return 1;
+        }
+        this.stacks[type][name] ++;
+        return this.stacks[type][name];
+    }
+
+    decrementStack(type, name) {
+        if(!this.stacks.hasOwnProperty(type)) return false;
+        if(!this.stacks[type].hasOwnProperty(name)) return false;
+        if(this.stacks[type][name] === 1) {
+            delete this.stacks[type][name];
+            return 0;
+        }
+        this.stacks[type][name] --;
+        return this.stacks[type][name];
+    }
+
+    checkStack(type, name) {
+        if(!this.stacks.hasOwnProperty(type)) return false;
+        if(!this.stacks[type].hasOwnProperty(name)) return 0;
+        return this.stacks[type][name];
+
+    }
+
     proceedCalibration()
     {
         var request = {
@@ -468,16 +683,16 @@ module.exports = class OverlayAgent {
             return;
         }
 
-        let request = {
-            ...itemDetails,
-            ...{
-                "type": "single",
-                "masterVolume": Number(this.agentRegistry.getAgentFieldData(this,'volume')),
-                "appSettings": this.getAppSettings(),
-                "game_data_path": gdh.read(`game_data_path`)
-            }
-        };
+        this.sendWithTargeting({
+            "item": itemDetails,
+            "type": "single",
+            "masterVolume": Number(this.agentRegistry.getAgentFieldData(this,'volume')),
+            "appSettings": this.getAppSettings(),
+            "game_data_path": gdh.read(`game_data_path`)
+        });
+    }
 
+    sendWithTargeting(request) {
         if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
             this.agentRegistry.getAgent('vtubestudio').getModelId().then(currentModelId => {
                 console.log('current model:',currentModelId);
@@ -496,51 +711,53 @@ module.exports = class OverlayAgent {
         } else {
             this.socketClient.send(JSON.stringify(request));
         }
+    }
 
+    throwItems(itemId,customCount=1) {
+        console.log('[OverlayAgent] Sending Items');
+        let gdh = this.agentRegistry.gameData;
+        let itemsForGroup = [];
+        for (let i = 0; i < customCount; i++) {
+            itemsForGroup.push(gdh.itemGroupEventHelper.getItemById(itemId));
+        }
+
+        this.sendWithTargeting({
+            "items": itemsForGroup,
+            "type": 'group',
+            "masterVolume": this.agentRegistry.appData.read('volume'),
+            "windupSound": null,
+            "appSettings": this.getAppSettings(),
+            "game_data_path": gdh.read(`game_data_path`)
+        });
     }
 
     throwItemGroup(itemGroupId,customCount=null) {
         console.log('[OverlayAgent] Sending Item Group');
         let gdh = this.agentRegistry.gameData;
-        const itemsForGroup = gdh.itemGroupEventHelper.getItemsForGroup(itemGroupId,customCount);
-        let images = [], weights = [], scales = [], sounds = [], volumes = [], impactDecals = [], windupSounds = [];
-        for (let i = 0; i < itemsForGroup.length; i++) {
-            images[i] = itemsForGroup[i].image;
-            weights[i] = itemsForGroup[i].weight;
-            scales[i] = itemsForGroup[i].scale;
-            sounds[i] = itemsForGroup[i].sound;
-            volumes[i] = itemsForGroup[i].volume;
-            impactDecals[i] = itemsForGroup[i].impactDecal;
-            windupSounds[i] = itemsForGroup[i].windupSound;
-        }
 
-        let request = {
+        this.sendWithTargeting({
+            "items": gdh.itemGroupEventHelper.getItemsForGroup(itemGroupId,customCount),
             "type": itemGroupId,
-            "image": images,
-            "weight": weights,
-            "scale": scales,
-            "sound": sounds,
-            "volume": volumes,
             "masterVolume": this.agentRegistry.appData.read('volume'),
-            "impactDecal": impactDecals,
-            "windupSound": windupSounds,
+            "windupSound": null,
             "appSettings": this.getAppSettings(),
             "itemGroup": gdh.read(`itemGroups.${itemGroupId}`),
             "game_data_path": gdh.read(`game_data_path`)
-        }
+        });
+    }
 
-        if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
-            this.agentRegistry.getAgent('vtubestudio').getModelId().then(currentModelId => {
-                if(currentModelId) {
-                    request.modelCalibration = {
-                        "faceWidthMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[0],
-                        "faceHeightMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[1],
-                        "faceWidthMax": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Max`)[0],
-                        "faceHeightMax": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Max`)[1],
-                    }
-                }
-                this.socketClient.send(JSON.stringify(request));
-            });
+    startItemStream(itemGroupId, customDuration=null) {
+        console.log("overlay stacks",this.stacks);
+        if(this.incrementStack('itemStream', itemGroupId) === 1) {
+            console.log(`[OverlayAgent] Starting Item Stream for ${itemGroupId}`);
+            this.itemStreams[itemGroupId] = new OverlayItemStream(itemGroupId,this,itemGroupId, customDuration);
+        }
+    }
+
+    stopItemStream(itemGroupId) {
+        if(this.decrementStack('itemStream', itemGroupId) === 0) {
+            console.log(`[OverlayAgent] Stopping Item Stream for ${itemGroupId}`);
+            this.itemStreams[itemGroupId].stop();
         }
     }
 
@@ -563,9 +780,78 @@ module.exports = class OverlayAgent {
                 "masterVolume": this.agentRegistry.appData.read('volume'),
                 "appSettings": this.getAppSettings(),
                 "game_data_path": gdh.read(`game_data_path`)
-
             }
         this.socketClient.send(JSON.stringify(request));
     }
 
-};
+}
+class OverlayItem {
+
+}
+class OverlaySound {
+
+}
+class OverlayItemGroup {
+
+}
+class OverlayItemStream {
+    constructor(refId, overlayAgent, itemGroupId, duration = null) {
+        this.refId = refId
+        this.overlayAgent = overlayAgent;
+        this.durationRemaining = duration ? duration : 60000;
+        this.itemGroupId = itemGroupId;
+
+        this.itemTimer = null;
+        this.itemBuffer = this.overlayAgent.agentRegistry.gameData.itemGroupEventHelper.getItemsForGroup(itemGroupId,100);
+        this.itemBufferIndex = 0;
+        this.itemGroup = this.overlayAgent.agentRegistry.gameData.read(`itemGroups.${itemGroupId}`);
+        this.appSettings = this.overlayAgent.getAppSettings();
+        this.start();
+    }
+
+    start() {
+        console.log("Starting Item Stream");
+        if(this.itemBuffer.length > 0) {
+            this.throw();
+        }
+    }
+
+    stop() {
+        console.log("Stopping Item Stream");
+        if(this.itemBuffer.length > 0) {
+            clearTimeout(this.itemTimer);
+            this.overlayAgent.itemStreams[this.refId] = null;
+        }
+    }
+
+    throw() {
+
+        this.itemBufferIndex += 1;
+        if(this.itemBufferIndex >= this.itemBuffer.length) {
+            this.itemBufferIndex = 0;
+        }
+
+        let throwDelay = this.appSettings.groupFrequency * 1000;
+        if(this.itemGroup.groupFrequencyOverride === true) {
+            throwDelay = this.itemGroup.groupFrequency * 1000;
+        }
+        let tickRate = throwDelay + (Math.floor((Math.random() * throwDelay * 1.5) - (throwDelay * 0.75)));
+
+        this.overlayAgent.sendWithTargeting({
+            "item": this.itemBuffer[this.itemBufferIndex],
+            "type": "single",
+            "masterVolume": this.overlayAgent.agentRegistry.appData.read('volume'),
+            "appSettings": this.appSettings,
+            "game_data_path": this.overlayAgent.agentRegistry.gameData.read(`game_data_path`)
+        });
+
+        console.log(`Duration Remaining: ${this.durationRemaining}, Bonk Delay: ${tickRate}`);
+        this.durationRemaining -= tickRate;
+        if(this.durationRemaining > 0) {
+            this.itemTimer = setTimeout(() => {this.throw();},tickRate);
+        } else {
+            this.stop();
+        }
+    }
+}
+module.exports = OverlayAgent;

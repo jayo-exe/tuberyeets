@@ -333,18 +333,12 @@ function connectBridge()
                 switch(data.type)
                 {
                     case "single":
-                        throwItem(data.image, data.weight, data.scale, data.sound, data.volume, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, null);
+                        throwItem(data.item, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, null);
                         break;
-                    case "barrage":
-                        var i = 0;
-                        const images = data.image;
-                        const weights = data.weight;
-                        const scales = data.scale;
-                        const sounds = data.sound;
-                        const volumes = data.volume;
-                        const max = Math.min(images.length, sounds.length, weights.length);
+                    case "group":
+                        const max = data.items.length
                         console.log(data);
-                        barrageTick(images, weights, scales, sounds, volumes, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, [], data.appSettings.groupFrequency * 1000, max, 0);
+                        groupTick(data.items, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters,  data.appSettings.groupFrequency * 1000, 0);
                         break;
                     case "timed":
                         break;
@@ -353,35 +347,25 @@ function connectBridge()
                         break;
                     default:
                         if (data.itemGroup.groupCountOverride)
-                            temp_data.groupCount = data.itemGroup.groupCount;
+                            data.appSettings.groupCount = data.itemGroup.groupCount;
                         if (data.itemGroup.groupFrequencyOverride)
-                            temp_data.groupFrequency = data.itemGroup.groupFrequency;
+                            data.appSettings.groupFrequency = data.itemGroup.groupFrequency;
                         if (data.itemGroup.throwDurationOverride)
-                            temp_data.throwDuration = data.itemGroup.throwDuration;
+                            data.appSettings.throwDuration = data.itemGroup.throwDuration;
                         if (data.itemGroup.throwAway)
-                            temp_data.throwAway = data.itemGroup.throwAway;
+                            data.appSettings.throwAway = data.itemGroup.throwAway;
                         if (data.itemGroup.throwAngleOverride)
                         {
-                            temp_data.throwAngleMin = data.itemGroup.throwAngleMin;
-                            temp_data.throwAngleMax = data.itemGroup.throwAngleMax;
+                            data.appSettings.throwAngleMin = data.itemGroup.throwAngleMin;
+                            data.appSettings.throwAngleMax = data.itemGroup.throwAngleMax;
                         }
                         if (data.itemGroup.spinSpeedOverride)
                         {
-                            temp_data.spinSpeedMin = data.itemGroup.spinSpeedMin;
-                            temp_data.spinSpeedMax = data.itemGroup.spinSpeedMax;
+                            data.appSettings.spinSpeedMin = data.itemGroup.spinSpeedMin;
+                            data.appSettings.spinSpeedMax = data.itemGroup.spinSpeedMax;
                         }
 
-                        var i = 0;
-                        const cImages = data.image;
-                        const cWeights = data.weight;
-                        const cScales = data.scale;
-                        const cSounds = data.sound;
-                        const cVolumes = data.volume;
-                        const cImpactDecals = data.impactDecal;
-                        var windupSound = data.windupSound[0];
-                        const cMax = Math.min(cImages.length, cSounds.length, cWeights.length, cImpactDecals.length);
-
-                        var windup, canPlayWindup;
+                        /*var windup, canPlayWindup;
                         if (windupSound != null)
                         {
                             windup = new Audio();
@@ -398,9 +382,10 @@ function connectBridge()
                             
                         if (windupSound != null)
                             windup.play();
-                            
+                        */
+
                         setTimeout(() => {
-                            barrageTick(cImages, cWeights, cScales, cSounds, cVolumes, temp_data, data.game_data_path, data.modelCalibration, flinchParameters,cImpactDecals, temp_data.groupFrequency * 1000, cMax, 0);
+                            groupTick(data.items, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, temp_data.groupFrequency * 1000, 0);
                         }, data.itemGroup.windupDelay * 1000);
                         break;
                 }
@@ -547,8 +532,15 @@ setInterval(() => {
     }
 }, 5000);
 
-function throwItem(image, weight, scale, sound, volume, appSettings, game_folder, modelCalibration, flinchParameters, impactDecal)
+function throwItem(item, appSettings, game_folder, modelCalibration, flinchParameters)
 {
+    let image = item.image;
+    let weight = item.weight;
+    let scale = item.scale;
+    let sound = item.sound;
+    let volume = item.volume;
+    let impactDecal = item.impactDecal;
+
     if (vTubeIsOpen)
     {
         var request = {
@@ -699,17 +691,17 @@ function playSound(sound, volume, master_volume, game_folder)
     }
 }
 
-function barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, itemGroupDelay, itemGroupCount, currentItem=0) {
+function groupTick(items, appSettings, game_folder, modelCalibration, flinchParameters, itemGroupDelay, currentItem=0) {
     console.log('current Delay is ' + itemGroupDelay);
     let tickRate = itemGroupDelay + (Math.floor((Math.random() * itemGroupDelay * 1.5) - (itemGroupDelay * 0.75)));
     console.log('new Tickrate is ' + tickRate);
-    throwItem(images[currentItem], weights[currentItem], scales[currentItem], sounds[currentItem], volumes[currentItem], appSettings, game_folder, modelCalibration, flinchParameters, impactDecals[currentItem]);
+    throwItem(items[currentItem], appSettings, game_folder, modelCalibration, flinchParameters);
     currentItem++;
-    if (currentItem < itemGroupCount)
+    if (currentItem < items.length)
     {
         setTimeout(function()
         {
-            barrageTick(images, weights, scales, sounds, volumes, appSettings, game_folder, modelCalibration, flinchParameters, impactDecals, itemGroupDelay, itemGroupCount, currentItem);
+            groupTick(items, appSettings, game_folder, modelCalibration, flinchParameters, itemGroupDelay, currentItem);
         }, tickRate);
     }
 }

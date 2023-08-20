@@ -56,6 +56,7 @@ module.exports = class VtubeStudioAgent {
                 'label': 'Change Expression',
                 'description': 'Activate or Deactivate a VTS expression',
                 'handler': "handleExpressionOutput",
+                'infoRenderHandler': "handleExpressionRender",
                 'settings': [
                     {
                         'key': 'type',
@@ -81,6 +82,7 @@ module.exports = class VtubeStudioAgent {
                 'label': 'Activate Hotkey',
                 'description': 'Activate a VTS Hotkey',
                 'handler': "handleHotkeyOutput",
+                'infoRenderHandler': "handleHotkeyRender",
                 'settings': [
                     {
                         'key': 'name',
@@ -96,6 +98,7 @@ module.exports = class VtubeStudioAgent {
                 'label': 'Negate Hotkey',
                 'description': 'Negate a VTS Hotkey with another Hotkey',
                 'handler': "handleNegateHotkeyOutput",
+                'infoRenderHandler': "handleNegateHotkeyRender",
                 'settings': [
                     {
                         'key': 'target',
@@ -187,6 +190,13 @@ module.exports = class VtubeStudioAgent {
         }
     }
 
+    handleExpressionRender(settings) {
+
+        return `<ul>` +
+            `<li><span><strong>${settings.type === 'activate' ? 'Activate' : 'Deactivate'}</strong> the <strong>${settings.name}</strong> expression</span></li>` +
+            `</ul>`;
+    }
+
     async getHotkeyOutputOptions() {
         let hotkey_options = [];
         let hotkey_names = await this.getHotkeys();
@@ -202,10 +212,22 @@ module.exports = class VtubeStudioAgent {
         }
     }
 
+    handleHotkeyRender(settings) {
+        return `<ul>` +
+            `<li><span>Trigger hotkey <strong>${settings.name} </strong></span></li>` +
+            `</ul>`;
+    }
+
     handleNegateHotkeyOutput(values) {
         if(this.decrementStack('hotkey', values.target) === 0) {
             this.triggerHotkey(values.name);
         }
+    }
+
+    handleNegateHotkeyRender(settings) {
+        return `<ul>` +
+            `<li><span>Negate hotkey <strong>${settings.target}</strong> with hotkey <strong>${settings.name}</strong></span></li>` +
+            `</ul>`;
     }
 
     setPort(new_port) {

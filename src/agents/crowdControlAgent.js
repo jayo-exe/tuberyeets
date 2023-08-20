@@ -296,7 +296,7 @@ module.exports = class CrowdControlAgent {
 
     handleEffectRequest(payload) {
 //Initial event feed.  We use this to add a new entity to the list
-        console.log(`[CrowdControlAgent] Incoming Effect Request [${payload.effect.effectID}] (${payload.requestID})`, payload.quantity);
+        console.log(`[CrowdControlAgent] Incoming Effect Request [${payload.effect.effectID}] (${payload.requestID})`, payload);
         let effect = payload.effect;
         let requestID = payload.requestID;
         if (!this.effectQueue.hasOwnProperty(requestID) && payload.hasOwnProperty('target') && payload.target.ccUID === this.ccuid) {
@@ -309,11 +309,11 @@ module.exports = class CrowdControlAgent {
                 }
             };
             if (payload.hasOwnProperty('quantity')) {
-                newEffect.eventInfo.quantity = effect.quantity;
+                newEffect.eventInfo.quantity = payload.quantity;
             }
             if (effect.hasOwnProperty('duration')) {
                 newEffect.timed_effect = true;
-                newEffect.eventInfo.duration = effect.duration;
+                newEffect.eventInfo.duration = effect.duration * 1000;
             }
 
             this.effectQueue[requestID] = newEffect;

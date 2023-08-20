@@ -120,6 +120,9 @@ Vue.prototype.$gameData = {
   "getActionSettings": function(agentKey, actionKey) {
     return window.ipc.invoke('GET_ACTION_SETTINGS', {agentKey:agentKey, actionKey:actionKey});
   },
+  "getCommandDetails": function(agentKey, actionKey, values) {
+    return window.ipc.invoke('GET_COMMAND_DETAILS', {agentKey:agentKey, actionKey:actionKey, values:values});
+  },
 }
 
 new Vue({

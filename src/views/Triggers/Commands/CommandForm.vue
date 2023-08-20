@@ -47,6 +47,13 @@
                   <template v-else-if="setting.type === 'text'">
                     <input type="text" class="form-input" v-model="commandData.settings[setting.key]" @input="updateCommand('settings')">
                   </template>
+                  <template v-else-if="setting.type === 'parameter'">
+                    <select class="form-input" v-model="commandData.settings[setting.key]" @change="updateCommand('settings')">
+                      <option v-for="(settingOption, optionIndex) in eventSettingList" :key="'para_'+optionIndex" :value="settingOption.key">
+                        {{ settingOption.label }}
+                      </option>
+                    </select>
+                  </template>
                   <template v-else>
                     <input type="text" class="form-input" v-model="commandData.settings[setting.key]" @input="updateCommand('settings')">
                   </template>
@@ -68,13 +75,13 @@
 <script>
 export default {
   name: 'CommandForm',
-  props: ['triggerId','scriptId'],
+  props: ['triggerId','scriptId', 'eventSettingList'],
   data : function() {
     return {
       actionTypeList: {},
       actionSettingList: {},
       commandId: null,
-      commandData: null,
+      commandData: null
     }
   },
   methods: {

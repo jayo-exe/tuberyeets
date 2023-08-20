@@ -19,29 +19,32 @@
       </div>
     </div>
     <div class="action-list">
-      <table class="listTable">
-        <thead>
-        <tr>
-          <th>Delay</th>
-          <th>Action</th>
-          <th style="width: 9rem;"><!-- Actions --></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(command, commandKey) in commandList" :key="'scmd_'+commandKey+commandListKey">
-          <td>{{command.delay}}ms</td>
-          <td>{{ `${actionTypeList[command.agent].name}: ${actionTypeList[command.agent].options[command.action].label}` }}</td>
-          <td class="text-right">
+      <ul class="asset-list with-endcap">
+        <li v-for="(command, commandKey) in commandList" :key="'scmd_'+commandKey+commandListKey">
+          <div class="asset-endcap">
+            <span>{{command.delay}}</span>ms
+          </div>
+          <div class="asset-heading">
+            <div class="asset-title">
+              {{ actionTypeList[command.agent].options[command.action].label }}
+            </div>
+            <div class="asset-subtitle">
+              {{ actionTypeList[command.agent].name }}
+            </div>
+          </div>
+          <div class="asset-details" v-html="command.__details"></div>
+          <div class="asset-actions">
             <button class="btn btn-teal btn-sm" @click="editCommand(commandKey)">Edit</button>
-            <button class="btn btn-red btn-sm" @click="removeCommand(commandKey)">Delete</button></td>
-        </tr>
-        </tbody>
-      </table>
+            <button class="btn btn-red btn-sm" @click="removeCommand(commandKey)">Delete</button>
+          </div>
+        </li>
+      </ul>
     </div>
     <CommandForm
         ref="editCommand"
         :scriptId="script.name"
         :triggerId="triggerId"
+        :eventSettingList="eventSettingList"
         @finish-edit="finishEditCommand"
     ></CommandForm>
   </div>
@@ -52,7 +55,7 @@ import CommandForm from '@/views/Triggers/Commands/CommandForm.vue'
 
 export default {
   name: 'CommandList',
-  props: ['script','triggerId'],
+  props: ['script','triggerId', 'eventSettingList'],
   components: {
     CommandForm
   },
@@ -94,8 +97,16 @@ export default {
       this.$set(this, "commandList", null);
       this.$forceUpdate();
       this.$gameData.read(`triggers.${this.triggerId}.scripts.${this.script.name}.commands`).then((result) => {
-        this.$set(this, "commandList", result);
-        this.commandListKey++;
+        let parsedCommands = {};
+        Object.values(result).forEach((command) => {
+          this.$gameData.getCommandDetails(command.agent, command.action, command.settings).then((parsedInfo) => {
+            command.__details = parsedInfo;
+            parsedCommands[command.id] = command;
+            this.$set(this, "commandList", parsedCommands);
+            this.commandListKey++;
+          });
+        });
+
       });
     },
     uploadCommand() {

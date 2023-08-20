@@ -46,6 +46,7 @@
                 <b-tab v-for="(script, scriptKey) in itemData.scripts" :key="`script-tab-${scriptKey}`" :title="script.name">
                   <CommandList
                       :triggerId="itemId"
+                      :eventSettingList="eventSettingList"
                       :script="script"
                   ></CommandList>
                 </b-tab>

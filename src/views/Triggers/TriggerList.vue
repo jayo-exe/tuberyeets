@@ -21,30 +21,26 @@
         </div>
       </div>
 
-      <div id="eventsTable" class="imageTable inner scrollable" v-if="eventTypeList && itemList">
-        <table class="listTable">
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Event</th>
-            <th style="width: 9rem;"><!-- Actions --></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(trigger, key) in itemList" :key="'ev_'+listKey">
-            <td>
-              <p class="imageLabel">{{ trigger.name }}</p>
-            </td>
-            <td>
-              <p style="margin: 0">{{ `${eventTypeList[trigger.agent].name}: ${eventTypeList[trigger.agent].options[trigger.event].label}` }}</p>
-            </td>
-            <td class="text-right">
+      <div id="eventsTable" class="inner scrollable" v-if="eventTypeList && itemList">
+        <ul class="asset-list">
+          <li v-for="(trigger, key) in itemList" :key="'ev_'+listKey">
+            <div class="asset-heading">
+              <div class="asset-title">
+                {{ eventTypeList[trigger.agent].options[trigger.event].label }}
+              </div>
+              <div class="asset-subtitle">
+                {{ eventTypeList[trigger.agent].name }}
+              </div>
+            </div>
+            <div class="asset-details">
+              <span>{{ trigger.name }}</span>
+            </div>
+            <div class="asset-actions">
               <button class="btn btn-teal btn-sm" @click="editItem(key)">Edit</button>
               <button class="btn btn-red btn-sm" @click="removeItem(key)">Delete</button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+            </div>
+          </li>
+        </ul>
       </div>
     </section>
     <TriggerForm
