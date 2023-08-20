@@ -36,8 +36,8 @@
               <span>{{ trigger.name }}</span>
             </div>
             <div class="asset-actions">
-              <button class="btn btn-teal btn-sm" @click="editItem(key)">Edit</button>
-              <button class="btn btn-red btn-sm" @click="removeItem(key)">Delete</button>
+              <a @click="editItem(key)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
+              <a @click="removeItem(key)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
             </div>
           </li>
         </ul>

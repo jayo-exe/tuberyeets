@@ -501,6 +501,13 @@ ul.asset-list {
             grid-row: 1 / span 2;
             display: flex;
             align-items: center;
+            justify-content: flex-end;
+
+            i {
+                margin-left: 0.5em;
+                margin-right: 0.5em;
+                font-size: var(--cc-text-size-md);
+            }
         }
 
         &:first-child {
@@ -522,7 +529,7 @@ ul.asset-list {
 
     &.with-endcap {
         li {
-            grid-template-columns: 10em 1fr 10em;
+            grid-template-columns: 4em 1fr 10em;
             .asset-endcap {
                 grid-column: 1;
                 grid-row: 1 / span 2;

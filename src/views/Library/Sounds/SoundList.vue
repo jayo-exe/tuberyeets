@@ -40,7 +40,7 @@
               <input class="soundVolume mt-2" type="range" min="0" max="1" step="0.01" v-model="itemList[key].volume" @change="() => {updateItem(key, 'volume')}">
             </div>
             <div class="asset-actions" style="align-items:center; justify-content: center;">
-              <button class="btn btn-red btn-sm" @click="removeItem(key)">Delete</button>
+              <a @click="removeItem(key)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
             </div>
           </li>
         </ul>

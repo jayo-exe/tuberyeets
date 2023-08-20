@@ -12,9 +12,9 @@
       </div>
       <div id="itemGroupsTable" class="inner scrollable" v-if="itemList">
         <ul class="asset-list with-endcap">
-          <li v-for="(itemGroup, key) in itemList"  :key="'bcb_'+key+listKey" style="grid-template-columns: 4em 1fr 10em;">
+          <li v-for="(itemGroup, key) in itemList"  :key="'bcb_'+key+listKey">
             <div class="asset-endcap">
-              <i class="fa-solid fa-cubes-stacked clickable" style="font-size: 29px;" @click="testItemGroup(key)"></i>
+              <i class="fa-solid fa-cubes-stacked clickable" style="font-size: 29px;" @click="testItemGroup(key)" v-b-tooltip.hover.bottom.viewport="'Test'"></i>
             </div>
             <div class="asset-heading">
               <div class="asset-title">
@@ -27,9 +27,9 @@
             <div class="asset-details d-flex flex-row" style="align-items:center;">
 
             </div>
-            <div class="asset-actions" style="align-items:center; justify-content: center;">
-              <button class="btn btn-teal" @click="editItem(key)">Edit</button>
-              <button class="btn btn-red" @click="removeItem(key)">Delete</button>
+            <div class="asset-actions">
+              <a @click="editItem(key)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
+              <a @click="removeItem(key)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
             </div>
           </li>
         </ul>

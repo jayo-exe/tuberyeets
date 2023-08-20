@@ -33,7 +33,7 @@ export default {
   data : function() {
     return {
       overlayPath: '',
-      calibrarion_status: -2,
+      calibration_status: -2,
       live_app_data: this.app_data,
       calibration_statuses: [3,4,7],
       status_details: {

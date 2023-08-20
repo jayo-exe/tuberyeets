@@ -34,8 +34,8 @@
           </div>
           <div class="asset-details" v-html="command.__details"></div>
           <div class="asset-actions">
-            <button class="btn btn-teal btn-sm" @click="editCommand(commandKey)">Edit</button>
-            <button class="btn btn-red btn-sm" @click="removeCommand(commandKey)">Delete</button>
+            <a @click="editCommand(commandKey)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
+            <a @click="removeCommand(commandKey)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
           </div>
         </li>
       </ul>

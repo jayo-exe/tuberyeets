@@ -143,7 +143,11 @@ module.exports = class CrowdControlAgent {
             if(! effectOptions.hasOwnProperty(groupName)) {
                 effectOptions[groupName] = {'group': groupName, items: []};
             }
-            effectOptions[groupName].items.push({label: effect.name, value: effectId});
+            let effectName = effect.name;
+            if(typeof effect.name === "object" && effect.name.hasOwnProperty('public')) {
+                effectName = effect.name.public;
+            }
+            effectOptions[groupName].items.push({label: effectName, value: effectId});
         }
 
         return Object.values(effectOptions);
