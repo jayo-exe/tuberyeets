@@ -340,9 +340,16 @@ class OverlayAgent {
                         'default': ''
                     },
                     {
+                        'key': 'auto_payload',
+                        'label': 'Send Event Parameters as payload',
+                        'type': 'toggle',
+                        'default': true
+                    },
+                    {
                         'key': 'json',
                         'label': 'JSON Payload',
                         'type': 'textarea',
+                        'hideIfToggled': 'auto_payload',
                         'default': ''
                     },
                 ]
@@ -542,7 +549,12 @@ class OverlayAgent {
 
     handleFirePostWebhookOutput(values) {
         console.log(`[CrowdControlAgent] Firing webhook "${values.description}"`);
-        axios.post(values.url, values.json, {headers: {"content-type": "application/json"}}).then(response => {
+        let payload = values.json;
+        if(values.auto_payload) {
+            payload = JSON.stringify(values);
+        }
+        console.log(`[CrowdControlAgent] post hook payload`, payload);
+        axios.post(values.url, payload, {headers: {"content-type": "application/json"}}).then(response => {
             console.log(`[CrowdControlAgent] Successfully fired webhook "${values.description}"`, response);
         }).catch(e => {
             console.log(`[CrowdControlAgent] Error firing webhook "${values.description}"`, e);
