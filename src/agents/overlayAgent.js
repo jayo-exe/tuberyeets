@@ -1,4 +1,5 @@
 const { WebSocket } = require("ws");
+const axios = require("axios");
 
 class OverlayAgent {
 
@@ -296,6 +297,56 @@ class OverlayAgent {
                     }
                 ]
             },
+            fireGetWebhook: {
+                'key': 'fireGetWebhook',
+                'label': 'Fire a GET Webhook',
+                'description': 'send a HTTP GET Request',
+                'handler': "handleFireGetWebhookOutput",
+                'infoRenderHandler': "handleFireGetWebhookRender",
+                'settings': [
+
+                    {
+                        'key': 'description',
+                        'label': 'Webhook Description',
+                        'type': 'text',
+                        'default': 'My New Webhook'
+                    },
+                    {
+                        'key': 'url',
+                        'label': 'Webhook URL',
+                        'type': 'text',
+                        'default': ''
+                    },
+                ]
+            },
+            firePostWebhook: {
+                'key': 'firePostWebhook',
+                'label': 'Fire a POST Webhook',
+                'description': 'send a HTTP POST Request',
+                'handler': "handleFirePostWebhookOutput",
+                'infoRenderHandler': "handleFirePostWebhookRender",
+                'settings': [
+
+                    {
+                        'key': 'description',
+                        'label': 'Webhook Description',
+                        'type': 'text',
+                        'default': 'My New Webhook'
+                    },
+                    {
+                        'key': 'url',
+                        'label': 'Webhook URL',
+                        'type': 'text',
+                        'default': ''
+                    },
+                    {
+                        'key': 'json',
+                        'label': 'JSON Payload',
+                        'type': 'textarea',
+                        'default': ''
+                    },
+                ]
+            },
         };
 
     }
@@ -469,6 +520,40 @@ class OverlayAgent {
 
         return `<ul>` +
             `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+            `</ul>`;
+    }
+
+    handleFireGetWebhookOutput(values) {
+        console.log(`[CrowdControlAgent] Firing webhook "${values.description}"`);
+        axios.get(values.url).then(response => {
+            console.log(`[CrowdControlAgent] Successfully fired webhook "${values.description}"`, response);
+        }).catch(e => {
+            console.log(`[CrowdControlAgent] Error firing webhook "${values.description}"`, e);
+        });
+    }
+
+    handleFireGetWebhookRender(settings) {
+
+        return `<ul>` +
+            `<li><strong>Description: </strong><span>${settings.description}</span></li>` +
+            `<li><strong>URL: </strong><span><em>(hidden for security purposes)</em></span></li>` +
+            `</ul>`;
+    }
+
+    handleFirePostWebhookOutput(values) {
+        console.log(`[CrowdControlAgent] Firing webhook "${values.description}"`);
+        axios.post(values.url, values.json, {headers: {"content-type": "application/json"}}).then(response => {
+            console.log(`[CrowdControlAgent] Successfully fired webhook "${values.description}"`, response);
+        }).catch(e => {
+            console.log(`[CrowdControlAgent] Error firing webhook "${values.description}"`, e);
+        });
+    }
+
+    handleFirePostWebhookRender(settings) {
+
+        return `<ul>` +
+            `<li><strong>Description: </strong><span>${settings.description}</span></li>` +
+            `<li><strong>URL: </strong><span><em>(hidden for security purposes)</em></span></li>` +
             `</ul>`;
     }
 
