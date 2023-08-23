@@ -144,8 +144,7 @@ module.exports = class AgentRegistry {
     getAvailableActions() {
         let availableActions = {};
         for (const [key, agent] of Object.entries(this.agents)) {
-            if(this.getAgentFieldData(agent,'enabled') === true
-                && agent.hasOwnProperty('agentOutputs')
+            if( agent.hasOwnProperty('agentOutputs')
                 && Object.keys(agent.agentOutputs).length > 0)
             {
                 availableActions[key] = {name:agent.agentLabel, options:{}};
@@ -154,6 +153,7 @@ module.exports = class AgentRegistry {
                         key:output.key,
                         label:output.label,
                         description:output.description,
+                        requireAgentConnection: output.requireAgentConnection,
                         agent:key,
                     };
                 }

@@ -18,7 +18,20 @@ import '../public/style-new.scss';
 import '../public/style-cc2.scss';
 import '../public/vselect-theme.scss';
 
-Vue.component('v-select', vSelect)
+Vue.component('v-select', vSelect);
+
+Vue.prototype.$agencyStatus = {
+  "statusData": {},
+  "setData": function(data) {
+    this.statusData = data;
+  },
+  "getStatus": function(agent) {
+    if(this.statusData.hasOwnProperty(agent)) {
+      return this.statusData[agent];
+    }
+    return null;
+  }
+}
 
 Vue.prototype.$appData = {
   "read": function(field) {

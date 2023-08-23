@@ -7,16 +7,31 @@
       <div class="ml-auto">
         <select @change="handleSelectNewAction">
           <option :value="null" >Select an Action</option>
-          <optgroup v-for="(actionTypeGroup, gindex) in actionTypeList" :key="'actg_'+gindex+commandListKey" :label="actionTypeGroup.name">
+          <optgroup v-if="!getActionTypeGroupHidden(gindex)" v-for="(actionTypeGroup, gindex) in actionTypeList" :key="'actg_'+gindex+commandListKey" :label="actionTypeGroup.name">
             <option v-for="(actionType, aindex) in actionTypeGroup.options"
                     :key="'acto_'+aindex+commandListKey"
-                    :value="`${actionType.agent}:${actionType.key}`">
+                    :value="`${actionType.agent}:${actionType.key}`"
+                    :disabled="getActionTypeOptionDisabled(actionType)"
+                    :test-attr="$agencyStatus.getStatus(actionType.agent).status"
+            >
+
               {{ `${actionTypeGroup.name}: ${actionType.label}` }}
             </option>
           </optgroup>
         </select>
         <button :disabled="selectedActionId === null" class="btn btn-teal add-btn" @click="uploadCommand()">New Command</button>
       </div>
+    </div>
+    <div class="script-timeline" v-if="commandTimeline && actionTypeList">
+      <ul>
+        <li v-for="(commands, timeCode) in commandTimeline"
+            :id="'ctlc'+timeCode"
+            :key="'scmdt_'+timeCode+commandListKey"
+            :style="`left: calc( (100% * (${timeCode} / ${Math.max(...Object.values(commandList).map(o => parseInt(o.delay)))})) - 8px);`"
+            v-b-tooltip.hover.html="getTimelineTooltip(timeCode)"
+        >
+        </li>
+      </ul>
     </div>
     <div class="action-list">
       <ul class="asset-list with-endcap">
@@ -34,7 +49,7 @@
           </div>
           <div class="asset-details" v-html="command.__details"></div>
           <div class="asset-actions">
-            <a @click="editCommand(commandKey)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
+            <a v-if="!getCommandEditDisabled(command)" @click="editCommand(commandKey)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
             <a @click="removeCommand(commandKey)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
           </div>
         </li>
@@ -64,6 +79,7 @@ export default {
       actionTypeList: {},
       commandList: {},
       commandListKey: 0,
+      commandTimeline: {},
       libraryUploadHandler: this.$gameData.createTriggerCommand,
       libraryType: "commands",
       libraryName: "command",
@@ -94,15 +110,22 @@ export default {
       }
     },
     listCommands() {
-      this.$set(this, "commandList", null);
+      this.$set(this, "commandList", {});
+      this.$set(this, "commandTimeline", {});
       this.$forceUpdate();
       this.$gameData.read(`triggers.${this.triggerId}.scripts.${this.script.name}.commands`).then((result) => {
-        let parsedCommands = {};
-        Object.values(result).forEach((command) => {
+        let commands = Object.values(result);
+        commands.sort(function(a,b) {
+          return parseInt(a.delay) - parseInt(b.delay);
+        });
+        commands.forEach((command) => {
           this.$gameData.getCommandDetails(command.agent, command.action, command.settings).then((parsedInfo) => {
             command.__details = parsedInfo;
-            parsedCommands[command.id] = command;
-            this.$set(this, "commandList", parsedCommands);
+            this.$set(this.commandList, command.id, command);
+            if(!this.commandTimeline.hasOwnProperty(command.delay)) {
+              this.$set(this.commandTimeline, command.delay, {});
+            }
+            this.$set(this.commandTimeline[command.delay], command.id, command);
             this.commandListKey++;
           });
         });
@@ -116,7 +139,7 @@ export default {
           this.commandListKey++;
           this.selectedActionId = null;
           this.selectedAction = {};
-          this.listCommands();
+          this.editCommand(result.item.id);
         }
       });
     },
@@ -125,6 +148,7 @@ export default {
         this.$delete(this.commandList, commandId);
         this.$gameData.delete(`triggers.${this.triggerId}.scripts.${this.script.name}.commands.${commandId}`).then((success) => {
           this.commandListKey++;
+          this.listCommands();
         });
       }
     },
@@ -133,6 +157,29 @@ export default {
     },
     finishEditCommand() {
       this.listCommands();
+    },
+    getTimelineTooltip(timeCode) {
+      let html = `<div><strong>${timeCode}ms:</strong></div>`;
+      for (const [key, command] of Object.entries(this.commandTimeline[timeCode])) {
+        console.log('command',command);
+        console.log('atl',this.actionTypeList);
+        html = html + `<div>${this.actionTypeList[command.agent].options[command.action].label}</div>`;
+      }
+      return html;
+    },
+    getActionTypeOptionDisabled(actionType) {
+      console.log('at',actionType);
+      if(actionType.requireAgentConnection === true) {
+        return this.$agencyStatus.getStatus(actionType.agent).status !== 'connected';
+      }
+      return true;
+    },
+    getActionTypeGroupHidden(agent) {
+      return this.$agencyStatus.getStatus(agent).status === 'disabled';
+    },
+    getCommandEditDisabled(command) {
+      let actionType = this.actionTypeList[command.agent].options[command.action];
+      return this.getActionTypeOptionDisabled(actionType);
     },
   },
   mounted() {

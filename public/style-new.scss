@@ -355,3 +355,21 @@ header.app-header .no-drag {
         }
     }
 }
+
+.script-timeline {
+    ul {
+        list-style: none;
+        height: 2px;
+        background: var(--cc-color-white);
+        position: relative;
+        margin: 24px;
+        li {
+            position: absolute;
+            background: var(--cc-color-w300);
+            width: 16px;
+            height: 16px;
+            top: -8px;
+            border-radius: 8px;
+        }
+    }
+}

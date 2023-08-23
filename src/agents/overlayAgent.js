@@ -170,6 +170,7 @@ class OverlayAgent {
                 'description': 'Throw an item from the TuberYeets library',
                 'handler': "handleThrowItemOutput",
                 'infoRenderHandler': "handleThrowItemRender",
+                'requireAgentConnection': false,
                 'settings': [
                     {
                         'key': 'item',
@@ -206,6 +207,7 @@ class OverlayAgent {
                 'description': 'Throw an Item Group from the TuberYeets library',
                 'handler': "handleThrowItemGroupOutput",
                 'infoRenderHandler': "handleThrowItemGroupRender",
+                'requireAgentConnection': false,
                 'settings': [
                     {
                         'key': 'itemGroup',
@@ -235,6 +237,7 @@ class OverlayAgent {
                 'description': 'Start throwing a stream of items from an Item Group from the TuberYeets library',
                 'handler': "handleStartItemStreamOutput",
                 'infoRenderHandler': "handleStartItemStreamRender",
+                'requireAgentConnection': false,
                 'settings': [
                     {
                         'key': 'itemGroup',
@@ -271,6 +274,7 @@ class OverlayAgent {
                 'description': 'Stop throwing a stream of items from an Item Group from the TuberYeets library',
                 'handler': "handleStopItemStreamOutput",
                 'infoRenderHandler': "handleStopItemStreamRender",
+                'requireAgentConnection': false,
                 'settings': [
                     {
                         'key': 'itemGroup',
@@ -287,6 +291,7 @@ class OverlayAgent {
                 'description': 'Play a Sound from the TuberYeets library',
                 'handler': "handlePlaySoundOutput",
                 'infoRenderHandler': "handlePlaySoundRender",
+                'requireAgentConnection': false,
                 'settings': [
                     {
                         'key': 'sound',
@@ -303,6 +308,7 @@ class OverlayAgent {
                 'description': 'send a HTTP GET Request',
                 'handler': "handleFireGetWebhookOutput",
                 'infoRenderHandler': "handleFireGetWebhookRender",
+                'requireAgentConnection': false,
                 'settings': [
 
                     {
@@ -325,6 +331,7 @@ class OverlayAgent {
                 'description': 'send a HTTP POST Request',
                 'handler': "handleFirePostWebhookOutput",
                 'infoRenderHandler': "handleFirePostWebhookRender",
+                'requireAgentConnection': false,
                 'settings': [
 
                     {
@@ -402,9 +409,9 @@ class OverlayAgent {
     async getThrowItemOutputOptions() {
         let item_list = this.agentRegistry.gameData.read('throws');
         let item_options = [];
-        item_list.forEach((item) => {
-            item_options.push({'label': item.location, 'value': item.id});
-        });
+        for (const [key, item] of Object.entries(item_list)) {
+            item_options.push({'label': item.name, 'value': key});
+        }
         return item_options;
     }
 
@@ -423,7 +430,7 @@ class OverlayAgent {
 
     handleThrowItemRender(settings) {
         let itemName = '[Unknown]';
-        let item = this.agentRegistry.gameData.read(`itemGroups.${settings.item}`);
+        let item = this.agentRegistry.gameData.read(`throws.${settings.item}`);
         if (item && item.hasOwnProperty('name')) {
             itemName = item.name;
         }
@@ -434,7 +441,7 @@ class OverlayAgent {
         }
 
         return `<ul>` +
-            `<li><strong>Item: </strong><span>${itemGroupName}</span></li>` +
+            `<li><strong>Item: </strong><span>${itemName}</span></li>` +
             `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
             `</ul>`;
     }
@@ -450,7 +457,6 @@ class OverlayAgent {
 
     handleThrowItemGroupOutput(values) {
         console.log(`[OverlayAgent] item group debug`, values);
-        //TODO:: quantity from CC is being passed in as an object, need to change it to feed the trigger with the base quantity value
         let throwCount = parseInt(values.quantity);
         if(values.match_quantity && values.quantity_parameter) {
             if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {

@@ -45,6 +45,7 @@
     </section>
     <TriggerForm
         ref="editItem"
+
         @finish-edit="finishEditItem"
     ></TriggerForm>
   </div>
@@ -56,7 +57,7 @@ import isotip from "isotip";
 
 export default {
   name: 'TriggerList',
-  props: [],
+  props: ['agent_status'],
   components: {
     TriggerForm,
   },

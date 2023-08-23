@@ -340,6 +340,7 @@ export default {
     });
     window.ipc.on('AGENT_STATUS', (payload) => {
       this.current_agent_status = payload;
+      this.$agencyStatus.setData(payload);
     });
     window.ipc.on('CALIBRATE_STATUS', (payload) => {
       this.current_calibrate_status = payload;
