@@ -4,10 +4,10 @@
       <h5 class="modal-title">Edit Event - <span v-if="itemData">{{ itemData.name }}</span></h5>
       <button type="button" class="close" @click="finishEdit()"><i class="fa-solid fa-xmark"></i></button>
     </template>
-    <template #default>
-      <div id="eventActionDetails" v-if="itemData && eventTypeList" class="row">
-        <div class="col-12 mb-3">
-          <div class="input-section trigger-form-grid">
+    <template #default class="d-flex flex-column">
+      <div id="eventActionDetails" v-if="itemData && eventTypeList" class="row flex-grow-1">
+        <div class="col-12 d-flex flex-column">
+          <section class="input-section trigger-form-grid mb-3">
             <div class="input-details">
               <div class="form-group">
                 <label class="form-label">Trigger Name</label>
@@ -34,10 +34,8 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="col-12 mb-3">
-          <div class="output-section">
+          </section>
+          <section class="output-section flex-grow-1">
             <div class="script-selector">
 
             </div>
@@ -52,7 +50,7 @@
                 </b-tab>
               </b-tabs>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </template>

@@ -61,7 +61,6 @@
       </nav>
       <main>
         <router-view
-            :vts_data="live_vts_data"
             :agent_status="current_agent_status"
             :calibrate_status="current_calibrate_status"
             :current_library_section="current_library_section"
@@ -163,7 +162,6 @@ export default {
   data : function() {
     return {
       showOverlayAssets:false,
-      live_vts_data: {hotkeys:[],expressions:[]},
       user_data_path: '',
 
       current_agent_status: {},

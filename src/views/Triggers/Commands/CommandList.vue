@@ -33,7 +33,7 @@
         </li>
       </ul>
     </div>
-    <div class="action-list">
+    <div class="action-list inner scrollable">
       <ul class="asset-list with-endcap">
         <li v-for="(command, commandKey) in commandList" :key="'scmd_'+commandKey+commandListKey">
           <div class="asset-endcap">
@@ -172,7 +172,7 @@ export default {
       if(actionType.requireAgentConnection === true) {
         return this.$agencyStatus.getStatus(actionType.agent).status !== 'connected';
       }
-      return true;
+      return false;
     },
     getActionTypeGroupHidden(agent) {
       return this.$agencyStatus.getStatus(agent).status === 'disabled';

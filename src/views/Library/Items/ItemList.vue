@@ -12,7 +12,7 @@
         </div>
       </div>
 
-      <div id="imageTable" class="imageTable inner scrollable">
+      <div id="imageTable" class="inner scrollable">
         <div class="selectAll">
           <div>
             <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
@@ -23,27 +23,33 @@
             </label>
           </div>
         </div>
-
-        <div v-for="(overlayItem, key) in itemList" id="imageRow" class="row" :key="'bi_'+overlayItem.id+listKey">
-          <div class="imageRowInner">
-            <label class="checkbox">
-              <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
-              <div class="checkHover"></div>
-              <img src="ui/checkmark.png" class="checkmark">
-            </label>
-            <label class="cogwheel">
-              <button class="imageDetails" @click="editItem(key)">Details</button>
-              <img src="ui/cog.png" class="checkmark" v-b-tooltip.hover.right="'Edit'">
-            </label>
-            <img class="imageImage img-pxl" :src="'file://'+getItemPath(overlayItem.location)" @click="testCustomItem(overlayItem.id)" v-b-tooltip.click.right="'Test'"></img>
-            <p class="imageLabel" :title="overlayItem.name">{{ overlayItem.name }}</p>
-            <label class="delete">
-              <button class="imageRemove" @click="removeItem(key)"></button>
-              <img src="ui/x.png" class="checkmark" v-b-tooltip.hover.left="'Remove'"></img>
-            </label>
-            <div class="imageRowHover"></div>
-          </div>
-        </div>
+        <ul class="asset-list with-endcap" style="margin-top: 56px; ">
+          <li v-for="(overlayItem, key) in itemList" :key="'bi_'+overlayItem.id+listKey" style="grid-template-columns: 5em 1fr 10em;">
+            <div class="asset-endcap">
+              <img class="imageImage img-pxl" :src="'file://'+getItemPath(overlayItem.location)" @click="testCustomItem(overlayItem.id)" v-b-tooltip.hover="'Test'"></img>
+            </div>
+            <div class="asset-heading">
+              <div class="asset-title">
+                {{ overlayItem.name }}
+              </div>
+              <div class="asset-subtitle">
+                <span>{{ overlayItem.location }}</span>
+                <input type="checkbox" class="imageEnabled" :checked="itemIsEnabled(key)" @change="handleIncludeCheckbox($event,key)">
+              </div>
+            </div>
+            <div class="asset-details d-flex flex-row" style="align-items:center;">
+              <ul>
+                <li><strong>Weight: </strong><span>{{ overlayItem.weight }}</span></li>
+                <li><strong>Scale: </strong><span>{{ overlayItem.scale }}</span></li>
+                <li><strong>Volume: </strong><span>{{ overlayItem.volume }}</span></li>
+              </ul>
+            </div>
+            <div class="asset-actions" style="align-items:center; justify-content: center;">
+              <a @click="editItem(key)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
+              <a @click="removeItem(key)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
+            </div>
+          </li>
+        </ul>
       </div>
     </section>
     <ItemForm

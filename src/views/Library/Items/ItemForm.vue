@@ -1,54 +1,62 @@
 <template>
-  <b-modal ref="editModal" size="xl">
+  <b-modal ref="editModal" scrollable size="md">
     <template #modal-header="{ close }">
       <h5 class="modal-title">Edit Item - <span v-if="itemData">{{ itemData.location }}</span></h5>
       <button type="button" class="close" @click="finishEdit()"><i class="fa-solid fa-xmark"></i></button>
     </template>
-    <template #default>
-      <div id="imageDetails" v-if="itemData">
-        <div id="imageDetailsInner">
-          <img class="imageImage" :src="'file://'+getItemPath(itemData.location)">
-          <div id="imageSettings">
-            <div id="imageSettings1">
-              <div class="imageDetailsShadow">
-                <div class="imageDetailsInner">
-                  <div class="settingsTable">
-                    <p>Name <i class="fa fa-info-circle" v-b-tooltip.hover.left="'Item Name'"></i></p>
-                    <input type="text" class="imageScale"  v-model="itemData.name" @input="updateItem('name')">
-                    <p>Scale <i class="fa fa-info-circle"
-                                v-b-tooltip.hover.left="'The relative size of the object compared to the input image'"
-                    ></i></p>
-                    <input type="number" class="imageScale" min="0" step="0.1" v-model="itemData.scale" @input="updateItem('scale')">
-
-                    <p>Weight <i class="fa fa-info-circle"
-                                 v-b-tooltip.hover.left="'This determines how much force is applied to the vTube model on impact'"
-                    ></i></p>
-                    <input type="range" class="imageWeight" min="0" max="1" step="0.1" v-model="itemData.weight" @input="updateItem('weight')">
-                    <p>Volume <i class="fa fa-info-circle"
-                                 v-b-tooltip.hover.left="'The volume of the impact sound'"
-                    ></i></p>
-                    <input class="imageSoundVolume" type="range" min="0" max="1" step="0.1" v-model="itemData.volume" @input="updateItem('volume')">
-                  </div>
-                </div>
+    <template #default class="d-flex flex-column">
+      <div id="imageDetails" v-if="itemData" class="row flex-grow-1" style="max-height: calc(100% - 32px)">
+        <div class="col-12 d-flex flex-row">
+          <section class="input-section mr-3 flex-shrink-1" style="flex-basis: 50%">
+            <div class="input-details">
+              <div class="form-group">
+                <label class="form-label cc-fs-sm">Item Name</label>
+                <input type="text" class="form-input d-block w-100" v-model="itemData.name" @input="updateItem('name')">
               </div>
-            </div>
-            <div id="imageSettings2">
-              <div class="imageDetailsShadow">
-                <div class="imageDetailsInner">
-                  <div class="settingsTable">
-                    <p>Sound</p>
-                    <div>
-                      <select class="imageSoundName" v-model="itemData.sound" @change="updateItem('sound')">
-                        <option value="">(Use default sounds)</option>
-                        <option v-for="(overlaySound, key) in soundList" :value="overlaySound.id">{{ overlaySound.location }}</option>
-                      </select>
+              <div class="form-group">
+                <label class="form-label cc-fs-sm">Scale</label>
+                <input type="number" class="form-input d-block w-100" min="0" step="0.1" v-model="itemData.scale" @input="updateItem('scale')">
+              </div>
+              <div class="form-group">
+                <label class="form-label cc-fs-sm">Weight</label>
+                <input type="range" class="form-input d-block w-100" min="0" max="1" step="0.1" v-model="itemData.weight" @input="updateItem('weight')">
+              </div>
+              <div class="form-group">
+                <label class="form-label cc-fs-sm">Sound</label>
+                <v-select v-model="itemData.sound"
+                          append-to-body
+                          :calculate-position="withPopper"
+                          class="mb-2"
+                          placeholder="Select a Sound"
+                          @input="updateItem('sound')"
+                          :options="Object.values(soundList)"
+                          label="location"
+                          :reduce="sound => sound.id"
+                >
+                  <template v-slot:option="option">
+                    <div class="d-flex">
+                      <div class="mr-2 pl-0 ml-n1 text-center">
+                        <i class="sound-icon fa-solid fa-volume-high" style="font-size:29px; color: var(--cc-color-w300)"></i>
+                      </div>
+                      <div class="text-right" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">
+                        <small class="cc-fs-sm" >{{ option.location }}</small>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </template>
+                </v-select>
+              </div>
+              <div class="form-group">
+                <label class="form-label cc-fs-sm">Volume</label>
+                <input class="form-input d-block w-100" type="range" min="0" max="1" step="0.1" v-model="itemData.volume" @input="updateItem('volume')">
               </div>
             </div>
-          </div>
+          </section>
+
+          <section class="input-section justify-content-center align-items-center flex-grow-1" style="flex-basis: 50%">
+            <img class="imageImage" :src="'file://'+getItemPath(itemData.location)">
+          </section>
         </div>
+
       </div>
 
     </template>
@@ -64,6 +72,8 @@
 </template>
 
 <script>
+import {createPopper} from "@popperjs/core";
+
 export default {
   name: 'ItemForm',
   props: [],
@@ -112,6 +122,29 @@ export default {
     testCustomItem() {
       console.log('Testing custom item: ' + this.itemData.id);
       window.ipc.send('TEST_CUSTOM_ITEM', this.itemData.id);
+    },
+    withPopper(dropdownList, component, { width }) {
+      console.log(component.$refs.toggle);
+      dropdownList.style.width = width;
+      dropdownList.style.zIndex = 999999;
+      const popper = createPopper(component.$refs.toggle, dropdownList, {
+        placement: 'top',
+        modifiers: [
+          {
+            name: 'toggleClass',
+            enabled: true,
+            phase: 'write',
+            fn({ state }) {
+              component.$el.classList.toggle(
+                  'drop-up',
+                  state.placement === 'top'
+              )
+            },
+          },
+        ],
+      })
+
+      return () => popper.destroy()
     },
   },
   mounted() {

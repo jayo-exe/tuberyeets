@@ -1,6 +1,7 @@
 const { WebSocket } = require("ws");
 const { ApiClient } = require("vtubestudio");
 const Base64Icon = require('../base64Icon');
+const Vue = require("vue");
 module.exports = class VtubeStudioAgent {
 
     constructor() {

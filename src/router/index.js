@@ -9,6 +9,11 @@ Vue.use(VueRouter)
 
 const routes = [
   {
+    path: '/',
+    name: 'home',
+    redirect: { path: "/settings" }
+  },
+  {
     path: '/overlay/items',
     name: 'overlay.items',
     component: ItemList

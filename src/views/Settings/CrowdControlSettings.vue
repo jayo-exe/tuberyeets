@@ -4,9 +4,7 @@
       <label class="form-label">Crowd Control Auth</label>
       <div class="form-input" style="height: auto;">
         <div v-if="!token_data">
-          <button class="btn btn-sm btn-blurple w-100 mb-1" @click="authorizeCrowdControl('twitch')"><i class="fa-brands fa-twitch"></i> Twitch</button>
-          <button class="btn btn-sm btn-teal w-100 mb-1" @click="authorizeCrowdControl('discord')"><i class="fa-brands fa-discord"></i> Discord</button>
-          <button class="btn btn-sm btn-red w-100" @click="authorizeCrowdControl('youtube')"><i class="fa-brands fa-youtube"></i> Youtube</button>
+          <button class="btn btn-sm btn-teal w-100 mb-1" @click="authorizeCrowdControl()"><i class="fa-solid fa-lock-open"></i> Authorize</button>
         </div>
         <div v-else>
           <button class="btn btn-sm btn-red w-100" @click="deauthorizeCrowdControl()">Deauthorize</button>
@@ -110,8 +108,8 @@ export default {
       this.updateSettings();
       this.restartAgent();
     },
-    authorizeCrowdControl(service) {
-      window.ipc.send('BEGIN_CC_AUTH', {service: service});
+    authorizeCrowdControl() {
+      window.ipc.send('BEGIN_CC_AUTH');
       this.updateSettings();
     }
   }

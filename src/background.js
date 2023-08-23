@@ -135,28 +135,9 @@ async function createWindow() {
   });
 }
 
-async function createAuthWindow(connectionId, service) {
-  let authUrl = `https://auth.crowdcontrol.live/?platform=${service}&connectionID=${encodeURIComponent(connectionId)}`;
-  authWindow = new BrowserWindow({
-    width: 360,
-    height: 600,
-    minWidth: 360,
-    minHeight: 600,
-    icon: path.resolve(__static, 'icon.ico'),
-    title: "Authorize",
-    webPreferences: {
-
-    },
-    autoHideMenuBar: true,
-    useContentSize: true
-  });
-  console.log(`auth URL is ${authUrl}`);
-  try {
-    await authWindow.loadURL(authUrl);
-  } catch (e) {
-    console.log('auth window redirected');
-  }
-
+async function createAuthWindow(connectionId) {
+  let authUrl = `https://auth.crowdcontrol.live/?connectionID=${encodeURIComponent(connectionId)}`;
+  await shell.openExternal(authUrl);
 }
 
 function setTray()
@@ -307,8 +288,8 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
   event.reply('LOAD_DATA', appData.getAllData());
 });
 
-ipcMain.on('BEGIN_CC_AUTH', async(event, payload) => {
-  await createAuthWindow(agentRegistry.getAgent('crowdcontrol').connectionId, payload.service);
+ipcMain.on('BEGIN_CC_AUTH', async(event) => {
+  await createAuthWindow(agentRegistry.getAgent('crowdcontrol').connectionId);
 });
 
 ipcMain.on('SET_GAME', (event, payload) => {
@@ -523,7 +504,7 @@ ipcMain.on("TEST_ITEM_GROUP", (_, message) => { console.log('testing item group 
 function testItem(_, item)
 {
   if(agentRegistry.getAgentStatus('overlay') == 'connected') {
-    return agentRegistry.eventManager.handleOutputAction('overlay','throwItem',{item: item});
+    return agentRegistry.eventManager.handleOutputAction('overlay','throwItem',{item: item, quantity: 1});
   }
 }
 

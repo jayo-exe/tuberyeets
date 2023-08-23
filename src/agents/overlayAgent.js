@@ -420,6 +420,7 @@ class OverlayAgent {
         let throwCount = parseInt(values.quantity);
         if(values.match_quantity && values.quantity_parameter) {
             if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
+                console.log(values.__trigger.parameters[values.quantity_parameter]);
                 throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
             } else {
                 console.log(`[OverlayAgent] quantity_parameter not found`, values);
@@ -817,10 +818,11 @@ class OverlayAgent {
     }
 
     throwItems(itemId,customCount=1) {
-        console.log('[OverlayAgent] Sending Items');
+        console.log(`[OverlayAgent] Sending ${customCount} Items`);
         let gdh = this.agentRegistry.gameData;
         let itemsForGroup = [];
         for (let i = 0; i < customCount; i++) {
+            console.log(`[OverlayAgent] Pushing ${itemId}`);
             itemsForGroup.push(gdh.itemGroupEventHelper.getItemById(itemId));
         }
 
