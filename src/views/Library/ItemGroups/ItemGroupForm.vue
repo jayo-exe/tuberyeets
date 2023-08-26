@@ -37,7 +37,7 @@
                       <div class="mr-2 pl-0 ml-n1 text-center">
                         <div style="width:32px;height:32px">
                           <img style="max-height: 32px; max-width: 32px;"
-                               :src="`file://${gameDataPath}/throws/${option.location}`">
+                               :src="`file://${gameDataPath}/items/${option.location}`">
                         </div>
                       </div>
                       <div class="text-right" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">
@@ -48,7 +48,7 @@
                 </v-select>
                 <ul class="group-item-list">
                   <li v-for="(itemKey) in itemGroupData.items" v-if="itemList.hasOwnProperty(itemKey)">
-                    <img class="item-image" :src="`file://${gameDataPath}/throws/${itemList[itemKey].location}`">
+                    <img class="item-image" :src="`file://${gameDataPath}/items/${itemList[itemKey].location}`">
                     <div class="item-name">{{ itemList[itemKey].name }}</div>
                     <a class="remove-item" href="javascript:;" @click="deselectItem(itemKey)"><i class="fa-solid fa-xmark"></i></a>
                   </li>
@@ -289,12 +289,12 @@ export default {
 
     getItemPath(filename) {
       let gameDataPath = this.$gameData.readSync('game_data_path');
-      return `${gameDataPath}/impacts/${filename}`;
+      return `${gameDataPath}/sounds/${filename}`;
     },
     listItems() {
       this.$set(this, "itemList", null);
       this.$forceUpdate();
-      this.$gameData.read(`throws`).then((result) => {
+      this.$gameData.read(`items`).then((result) => {
         this.$set(this, "itemList", result);
       });
     },
@@ -315,12 +315,12 @@ export default {
     },
     getSoundPath(filename) {
       let gameDataPath = this.$gameData.readSync('game_data_path');
-      return `${gameDataPath}/impacts/${filename}`;
+      return `${gameDataPath}/sounds/${filename}`;
     },
     listSounds() {
       this.$set(this, "soundList", null);
       this.$forceUpdate();
-      this.$gameData.read(`impacts`).then((result) => {
+      this.$gameData.read(`sounds`).then((result) => {
         this.$set(this, "soundList", result);
       });
     },

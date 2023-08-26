@@ -8,7 +8,7 @@ module.exports = class ItemGroupEventHelper {
     }
 
     getItemById(itemId) {
-        let itemData = this.gameData.read(`throws`);
+        let itemData = this.gameData.read(`items`);
 
         if (!itemData.hasOwnProperty(itemId)) {
             return null;
@@ -16,7 +16,7 @@ module.exports = class ItemGroupEventHelper {
 
         let selectedItem = itemData[itemId];
 
-        let soundData = this.gameData.read(`impacts`);
+        let soundData = this.gameData.read(`sounds`);
         let defaultSounds = Object.keys(soundData).reduce((previous, current) => {
             if (soundData[current].enabled) previous[current] = soundData[current];
             return previous;
@@ -43,7 +43,7 @@ module.exports = class ItemGroupEventHelper {
         let itemGroupData = this.gameData.read(`itemGroups.${itemGroupId}`);
 
         //Get item to use
-        let itemData = this.gameData.read(`throws`);
+        let itemData = this.gameData.read(`items`);
         let defaultItems = Object.keys(itemData).reduce((previous, current) => {
             if (itemData[current].enabled) previous[current] = itemData[current];
             return previous;
@@ -63,7 +63,7 @@ module.exports = class ItemGroupEventHelper {
         }
 
 
-        let soundData = this.gameData.read(`impacts`);
+        let soundData = this.gameData.read(`sounds`);
         let defaultSounds = Object.keys(soundData).reduce((previous, current) => {
             if (soundData[current].enabled) previous[current] = soundData[current];
             return previous;

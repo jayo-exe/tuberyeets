@@ -9,8 +9,13 @@
           <ul class="main-list">
             <li>
               <a href="javascript:;" @click="() => { showOverlayAssets = this.$route.path.indexOf('/overlay') !== 0 ? !showOverlayAssets : showOverlayAssets }">
-                <i class="fa-solid fa-palette"></i> Overlay Assets
+                <i class="fa-solid fa-palette"></i> Overlay
               </a>
+            </li>
+            <li class="sub-item" v-if="showOverlayAssets || this.$route.path.indexOf('/overlay') === 0">
+              <router-link to="/overlay/setup">
+                <i class="fa-solid fa-crosshairs"></i> Setup
+              </router-link>
             </li>
             <li class="sub-item" v-if="showOverlayAssets || this.$route.path.indexOf('/overlay') === 0">
               <router-link to="/overlay/items">
@@ -27,14 +32,10 @@
                 <i class="fa-solid fa-layer-group"></i> Item Groups
               </router-link>
             </li>
+            
             <li>
               <router-link to="/triggers">
                 <i class="fa-solid fa-bolt"></i> Triggers
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/calibration">
-                <i class="fa-solid fa-crosshairs"></i> Calibrate
               </router-link>
             </li>
             <li>
@@ -331,14 +332,14 @@ export default {
 
     window.ipc.on('DELETE_THROW', (payload) => {
       if(payload) {
-        console.log('Throw deleted!');
+        console.log('Item deleted!');
       } else {
-        console.log('Error deleting throw!');
+        console.log('Error deleting item!');
       }
     });
     window.ipc.on('AGENT_STATUS', (payload) => {
       this.current_agent_status = payload;
-      this.$agencyStatus.setData(payload);
+      this.$agentStatus.setData(payload);
     });
     window.ipc.on('CALIBRATE_STATUS', (payload) => {
       this.current_calibrate_status = payload;

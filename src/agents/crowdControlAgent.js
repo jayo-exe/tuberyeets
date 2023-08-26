@@ -51,8 +51,8 @@ module.exports = class CrowdControlAgent {
                 default: "SuperMario64"
             },
             {
-                key: "Current Game Pack",
-                label: "",
+                key: "selectedGamePackId",
+                label: "Current Game Pack",
                 type: "text",
                 settable: false,
                 default: "SuperMario64"

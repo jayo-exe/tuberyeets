@@ -20,7 +20,7 @@ import '../public/vselect-theme.scss';
 
 Vue.component('v-select', vSelect);
 
-Vue.prototype.$agencyStatus = {
+Vue.prototype.$agentStatus = {
   "statusData": {},
   "setData": function(data) {
     this.statusData = data;
@@ -100,11 +100,11 @@ Vue.prototype.$gameData = {
   "deleteSync": function(field) {
     return window.ipc.sendSync('GAME_CRUD_SYNC', 'delete', {field:field});
   },
-  "uploadThrow": function(filePath, filename) {
-    return window.ipc.invoke('UPLOAD_THROW', {filePath:filePath, filename:filename});
+  "uploadItem": function(filePath, filename) {
+    return window.ipc.invoke('UPLOAD_ITEM', {filePath:filePath, filename:filename});
   },
-  "uploadImpact": function(filePath, filename) {
-    return window.ipc.invoke('UPLOAD_IMPACT', {filePath:filePath, filename:filename});
+  "uploadSound": function(filePath, filename) {
+    return window.ipc.invoke('UPLOAD_SOUND', {filePath:filePath, filename:filename});
   },
   "uploadDecal": function(filePath, filename,itemGroupId) {
     return window.ipc.invoke('UPLOAD_DECAL', {filePath:filePath, filename:filename, itemGroupId:itemGroupId});

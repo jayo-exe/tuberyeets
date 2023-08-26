@@ -569,7 +569,7 @@ function throwItem(item, appSettings, game_folder, modelCalibration, flinchParam
                 if (sound != null)
                 {
                     audio = new Audio();
-                    audio.src =  game_folder + "/" + "impacts/" + encodeURIComponent(sound);
+                    audio.src =  game_folder + "/" + "sounds/" + encodeURIComponent(sound);
                     audio.volume = volume * appSettings.volume;
                     canPlayAudio = false;
                     audio.oncanplaythrough = function() { canPlayAudio = true; }
@@ -593,7 +593,7 @@ function throwItem(item, appSettings, game_folder, modelCalibration, flinchParam
                 if (image.startsWith("https://static-cdn.jtvnw.net/emoticons/v1/"))
                     img.src = image;
                 else
-                    img.src = game_folder + "/" + "throws/" + encodeURIComponent(image);
+                    img.src = game_folder + "/" + "items/" + encodeURIComponent(image);
 
                 img.onload = async function()
                 {
@@ -623,7 +623,7 @@ function throwItem(item, appSettings, game_folder, modelCalibration, flinchParam
                     movement.style.animationDelay = (appSettings.delay / 1000) + "s";
                     var thrown = document.createElement("img");
                     thrown.classList.add("animated");
-                    thrown.src = game_folder + "/" + "throws/" + encodeURIComponent(image);
+                    thrown.src = game_folder + "/" + "items/" + encodeURIComponent(image);
                     thrown.style.width = img.width * scale * sizeScale + "px";
                     thrown.style.height = img.height * scale * sizeScale + "px";
                     if (appSettings.spinSpeedMax - appSettings.spinSpeedMin == 0)
@@ -685,7 +685,7 @@ function playSound(sound, volume, master_volume, game_folder)
     if (sound != null)
     {
         let audio = new Audio();
-        audio.src =  game_folder + "/" + "impacts/" + encodeURIComponent(sound);
+        audio.src =  game_folder + "/" + "sounds/" + encodeURIComponent(sound);
         audio.volume = volume * master_volume;
         audio.oncanplaythrough = function() { audio.play(); }
     }

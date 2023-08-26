@@ -170,11 +170,9 @@ module.exports = class AgentRegistry {
         if (!action) { return false; }
         let settings = {...action.settings};
         for (const [settingKey, setting] of Object.entries(settings)) {
-            if(!setting.hasOwnProperty('options')) {
-                if (setting.hasOwnProperty('optionsLoader')) {
-                    let parsed_options = await agent[setting.optionsLoader]();
-                    setting.options = parsed_options;
-                }
+            if (setting.hasOwnProperty('optionsLoader')) {
+                let parsed_options = await agent[setting.optionsLoader]();
+                setting.options = parsed_options;
             }
         }
         console.log(settings)

@@ -14,6 +14,11 @@ const routes = [
     redirect: { path: "/settings" }
   },
   {
+    path: '/overlay/setup',
+    name: 'overlay.setup',
+    component: () => import(/* webpackChunkName: "calibration" */ '../views/CalibrationView.vue')
+  },
+  {
     path: '/overlay/items',
     name: 'overlay.items',
     component: ItemList
@@ -32,11 +37,6 @@ const routes = [
     path: '/triggers',
     name: 'triggers',
     component: TriggerList
-  },
-  {
-    path: '/calibration',
-    name: 'calibration',
-    component: () => import(/* webpackChunkName: "calibration" */ '../views/CalibrationView.vue')
   },
   {
     path: '/settings',

@@ -380,12 +380,12 @@ ipcMain.on("SET_GAME_FIELD", (event, payload) =>
   } catch {}
 });
 
-ipcMain.handle('UPLOAD_THROW', async (event, payload) => {
-  return gameData.uploadThrow(payload.filePath,payload.filename);
+ipcMain.handle('UPLOAD_ITEM', async (event, payload) => {
+  return gameData.uploadItem(payload.filePath,payload.filename);
 });
 
-ipcMain.handle('UPLOAD_IMPACT', async (event, payload) => {
-  return gameData.uploadImpact(payload.filePath,payload.filename);
+ipcMain.handle('UPLOAD_SOUND', async (event, payload) => {
+  return gameData.uploadSound(payload.filePath,payload.filename);
 });
 
 ipcMain.handle('UPLOAD_DECAL', async (event, payload) => {

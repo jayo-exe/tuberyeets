@@ -407,7 +407,7 @@ class OverlayAgent {
     }
 
     async getThrowItemOutputOptions() {
-        let item_list = this.agentRegistry.gameData.read('throws');
+        let item_list = this.agentRegistry.gameData.read(`items`);
         let item_options = [];
         for (const [key, item] of Object.entries(item_list)) {
             item_options.push({'label': item.name, 'value': key});
@@ -431,7 +431,7 @@ class OverlayAgent {
 
     handleThrowItemRender(settings) {
         let itemName = '[Unknown]';
-        let item = this.agentRegistry.gameData.read(`throws.${settings.item}`);
+        let item = this.agentRegistry.gameData.read(`items.${settings.item}`);
         if (item && item.hasOwnProperty('name')) {
             itemName = item.name;
         }
@@ -577,7 +577,7 @@ class OverlayAgent {
     }
 
     async getPlaySoundOutputOptions() {
-        let sound_list = this.agentRegistry.gameData.read('impacts');
+        let sound_list = this.agentRegistry.gameData.read('sounds');
         let sound_options = [];
         sound_list.forEach((sound) => {
             sound_options.push({'label': sound.location, 'value': sound.location});
@@ -591,7 +591,7 @@ class OverlayAgent {
 
     handlePlaySoundRender(settings) {
         let soundName = '[Unknown]';
-        let sound = this.agentRegistry.gameData.read(`impacts.${settings.sound}`);
+        let sound = this.agentRegistry.gameData.read(`sounds.${settings.sound}`);
         if (sound && sound.hasOwnProperty('location')) {
             soundName = sound.location;
         }
@@ -862,14 +862,20 @@ class OverlayAgent {
     stopItemStream(itemGroupId) {
         if(this.decrementStack('itemStream', itemGroupId) === 0) {
             console.log(`[OverlayAgent] Stopping Item Stream for ${itemGroupId}`);
-            this.itemStreams[itemGroupId].stop();
+            if (this.itemStreams.hasOwnProperty(itemGroupId) && this.itemStreams[itemGroupId] !== null) {
+                try {
+                    this.itemStreams[itemGroupId].stop();
+                } catch (e) {
+                    //this is fine, another item probably removed it
+                }
+            }
         }
     }
 
     playSound(soundIndex) {
         console.log('[OverlayAgent] Sending Sound');
         let gdh = this.agentRegistry.gameData;
-        let soundData = gdh.read(`impacts`);
+        let soundData = gdh.read(`sounds`);
         let sound = soundData.find(obj => {
             return obj.location === soundIndex
         });

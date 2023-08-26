@@ -31,7 +31,7 @@ module.exports = class GameDataHelper {
 
     checkGameFolder() {
         const packPath = path.join(this.folderPath, this.gameId.toString(), this.packId.toString());
-        let subfolders = ['throws', 'decals', 'impacts', 'windups'];
+        let subfolders = ['items', 'decals', 'sounds', 'windups'];
 
         subfolders.forEach(subfolder => {
             if (!fs.existsSync(path.join(packPath, subfolder))) {
@@ -187,10 +187,10 @@ module.exports = class GameDataHelper {
         return returnval;
     }
 
-    uploadThrow(filePath, filename)
+    uploadItem(filePath, filename)
     {
         try {
-            let fileInfo = this.checkFilename("throws", filename);
+            let fileInfo = this.checkFilename("items", filename);
             console.log(fileInfo);
             console.log('Filepath: ' + filePath);
             fs.copyFileSync(filePath, fileInfo.filePath);
@@ -206,7 +206,7 @@ module.exports = class GameDataHelper {
                 "volume": 1.0,
                 "customs": []
             }
-            this.update(`throws.${throwId}`, throwItem, true);
+            this.update(`items.${throwId}`, throwItem, true);
             console.log('[GameDataHelper] Successfully uploaded new item!');
             return {
                 success: true,
@@ -218,10 +218,10 @@ module.exports = class GameDataHelper {
         }
     }
 
-    uploadImpact(filePath, filename)
+    uploadSound(filePath, filename)
     {
         try {
-            let fileInfo = this.checkFilename("impacts", filename);
+            let fileInfo = this.checkFilename("sounds", filename);
             fs.copyFileSync(filePath, fileInfo.filePath);
             let impactId = uuid.v1();
             let impactItem = {
@@ -231,7 +231,7 @@ module.exports = class GameDataHelper {
                 "volume": 1.0,
                 "customs": [],
             }
-            this.update(`impacts.${impactId}`, impactItem, true);
+            this.update(`sounds.${impactId}`, impactItem, true);
             console.log('[GameDataHelper] Successfully uploaded new sound!');
             return {
                 success: true,

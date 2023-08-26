@@ -68,9 +68,9 @@ export default {
   props: [],
   data : function() {
     return {
-      libraryType: 'impacts',
+      libraryType: 'sounds',
       libraryName: 'Sound',
-      libraryUploadHandler: this.$gameData.uploadImpact,
+      libraryUploadHandler: this.$gameData.uploadSound,
       itemList: {},
       listKey: 0,
       gameDataPath: '',

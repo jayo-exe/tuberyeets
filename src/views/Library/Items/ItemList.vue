@@ -72,9 +72,9 @@ export default {
   },
   data : function() {
     return {
-      libraryType: 'throws',
+      libraryType: 'items',
       libraryName: 'Item',
-      libraryUploadHandler: this.$gameData.uploadThrow,
+      libraryUploadHandler: this.$gameData.uploadItem,
       itemList: {},
       soundList: {},
       listKey: 0,

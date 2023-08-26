@@ -12,7 +12,7 @@
                     :key="'acto_'+aindex+commandListKey"
                     :value="`${actionType.agent}:${actionType.key}`"
                     :disabled="getActionTypeOptionDisabled(actionType)"
-                    :test-attr="$agencyStatus.getStatus(actionType.agent).status"
+                    :test-attr="$agentStatus.getStatus(actionType.agent).status"
             >
 
               {{ `${actionTypeGroup.name}: ${actionType.label}` }}
@@ -170,12 +170,12 @@ export default {
     getActionTypeOptionDisabled(actionType) {
       console.log('at',actionType);
       if(actionType.requireAgentConnection === true) {
-        return this.$agencyStatus.getStatus(actionType.agent).status !== 'connected';
+        return this.$agentStatus.getStatus(actionType.agent).status !== 'connected';
       }
       return false;
     },
     getActionTypeGroupHidden(agent) {
-      return this.$agencyStatus.getStatus(agent).status === 'disabled';
+      return this.$agentStatus.getStatus(agent).status === 'disabled';
     },
     getCommandEditDisabled(command) {
       let actionType = this.actionTypeList[command.agent].options[command.action];

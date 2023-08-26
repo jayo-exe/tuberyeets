@@ -79,7 +79,7 @@ export default {
   props: [],
   data : function() {
     return {
-      libraryType: "throws",
+      libraryType: "items",
       libraryName: "Item",
       itemId: null,
       itemData: null,
@@ -109,7 +109,7 @@ export default {
 
     },
     listSounds() {
-      this.$gameData.read(`impacts`).then((result) => {
+      this.$gameData.read(`sounds`).then((result) => {
         this.$set(this, "soundList", result);
       });
     },
