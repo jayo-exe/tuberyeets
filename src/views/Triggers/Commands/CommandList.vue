@@ -54,6 +54,15 @@
           </div>
         </li>
       </ul>
+
+      <div class="section-panel mt-3" v-if="commandList && Object.keys(commandList).length < 1">
+        <div class="section-heading">
+          <div class="section-title">
+            <h5>No Commands defined for this script</h5>
+            <span class="cc-fs-sm">Add some commands to react to the action!</span>
+          </div>
+        </div>
+      </div>
     </div>
     <CommandForm
         ref="editCommand"

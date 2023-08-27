@@ -44,6 +44,16 @@
             </div>
           </li>
         </ul>
+
+        <div class="section-panel mt-3" v-if="itemList && Object.keys(itemList).length < 1">
+          <div class="section-heading">
+            <div class="section-title">
+              <h5>No Sounds defined for this game</h5>
+              <span class="cc-fs-sm">Add some Sounds to spice up your Items and Groups!</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   </div>

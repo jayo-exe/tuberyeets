@@ -33,6 +33,16 @@
             </div>
           </li>
         </ul>
+
+        <div class="section-panel mt-3" v-if="itemList && Object.keys(itemList).length < 1">
+          <div class="section-heading">
+            <div class="section-title">
+              <h5>No Item Groups defined for this game</h5>
+              <span class="cc-fs-sm">Combine Items and Sounds into structured Groups for more controlled chaos!</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
     <ItemGroupForm

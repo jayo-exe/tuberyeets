@@ -50,6 +50,16 @@
             </div>
           </li>
         </ul>
+
+        <div class="section-panel mt-3" v-if="itemList && Object.keys(itemList).length < 1">
+          <div class="section-heading">
+            <div class="section-title">
+              <h5>No Items defined for this game</h5>
+              <span class="cc-fs-sm">Create some Items so you've got something to throw!</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
     <ItemForm
