@@ -25,6 +25,14 @@ module.exports = class GameDataHelper {
 
     }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [GameDataHelper]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
     setAgentRegistry(agentRegistry) {
         this.agentRegistry = agentRegistry;
     }
@@ -51,21 +59,21 @@ module.exports = class GameDataHelper {
     loadData(gameId, packId) {
         this.gameId = gameId;
         this.packId = packId;
-        console.log('[GameDataHelper] Attempting to load game-pack-specific data...');
+        this.log('Attempting to load game-pack-specific data...');
         this.checkGameFolder();
         try {
             this.data = JSON.parse(fs.readFileSync(this.dataPath, "utf8"));
             this.data.game_data_path = this.gameDataFolder;
-            console.log('[GameDataHelper] Successfully Loaded game-specific data!');
+            this.log('Successfully Loaded game-specific data!');
             if(this.statusCallback) this.statusCallback("ok (loaded)");
             if(!this.has('events')) {
-                console.log("[GameDataHelper] Event Data store not found for this game! Creating...");
+                this.log("Event Data store not found for this game! Creating...");
                 this.update('events', {}, true);
             }
 
             return true;
         } catch(err) {
-            console.log('[GameDataHelper] Error reading Game Data file:' + err.message);
+            this.log('Error reading Game Data file:' + err.message);
             return false;
         }
     }
@@ -73,10 +81,10 @@ module.exports = class GameDataHelper {
     saveData() {
         try {
             fs.writeFileSync(this.dataPath, JSON.stringify(this.data));
-            console.log('[GameDataHelper] Game Data saved!');
+            this.log('Game Data saved!');
             return true;
         } catch (err) {
-            console.log('[GameDataHelper] Error writing Game Data file:' + err.message);
+            this.log('Error writing Game Data file:' + err.message);
             return false;
         }
     }
@@ -183,7 +191,7 @@ module.exports = class GameDataHelper {
             filePath: this.gameDataFolder + "/"+folder+"/" + finalFilename,
             filename: finalFilename
         };
-        console.log(returnval);
+        this.log(returnval);
         return returnval;
     }
 
@@ -191,8 +199,8 @@ module.exports = class GameDataHelper {
     {
         try {
             let fileInfo = this.checkFilename("items", filename);
-            console.log(fileInfo);
-            console.log('Filepath: ' + filePath);
+            this.log(fileInfo);
+            this.log('Filepath: ' + filePath);
             fs.copyFileSync(filePath, fileInfo.filePath);
             let throwId = uuid.v1();
             let throwItem = {
@@ -207,13 +215,13 @@ module.exports = class GameDataHelper {
                 "customs": []
             }
             this.update(`items.${throwId}`, throwItem, true);
-            console.log('[GameDataHelper] Successfully uploaded new item!');
+            this.log('Successfully uploaded new item!');
             return {
                 success: true,
                 item: throwItem
             };
         } catch (err) {
-            console.log('[GameDataHelper] Error uploading item: ' + err.message);
+            this.log('Error uploading item: ' + err.message);
             return { success: false };
         }
     }
@@ -232,13 +240,13 @@ module.exports = class GameDataHelper {
                 "customs": [],
             }
             this.update(`sounds.${impactId}`, impactItem, true);
-            console.log('[GameDataHelper] Successfully uploaded new sound!');
+            this.log('Successfully uploaded new sound!');
             return {
                 success: true,
                 item: impactItem
             };
         } catch (err) {
-            console.log('[GameDataHelper] Error uploading sound: ' + err.message);
+            this.log('Error uploading sound: ' + err.message);
             return { success: false };
         }
     }
@@ -269,7 +277,7 @@ module.exports = class GameDataHelper {
         }
 
         this.update(`itemGroups.${itemGroupId}`, itemGroupItem, true);
-        console.log('[GameDataHelper] Successfully created new item group!');
+        this.log('Successfully created new item group!');
         return {
             success: true,
             item: itemGroupItem,
@@ -294,13 +302,13 @@ module.exports = class GameDataHelper {
                 "duration": 0.25,
             }
             this.update(`itemGroups.${itemGroupId}.impactDecals.${decalId}`, decalItem, true);
-            console.log('[GameDataHelper] Successfully uploaded new decal!');
+            this.log('Successfully uploaded new decal!');
             return {
                 success: true,
                 item: decalItem,
             };
         } catch (err) {
-            console.log('[GameDataHelper] Error uploading decal: ' + err.message);
+            this.log('Error uploading decal: ' + err.message);
             return { success: false };
         }
     }
@@ -317,13 +325,13 @@ module.exports = class GameDataHelper {
                 "volume": 1,
             }
             this.update(`itemGroups.${itemGroupId}.windupSounds.${windupId}`, windupItem, true);
-            console.log('[GameDataHelper] Successfully uploaded new windup!');
+            this.log('Successfully uploaded new windup!');
             return {
                 success: true,
                 item: windupItem,
             };
         } catch (err) {
-            console.log('[GameDataHelper] Error uploading windup: ' + err.message);
+            this.log('Error uploading windup: ' + err.message);
             return { success: false };
         }
     }

@@ -3,6 +3,14 @@ module.exports = class ItemGroupEventHelper {
         this.gameData = gameDataHelper;
     }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [GameDataHelper]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
     getItemGroup(itemGroupId) {
         return this.gameData.read(`itemGroups.${itemGroupId}`);
     }
@@ -102,7 +110,6 @@ module.exports = class ItemGroupEventHelper {
         let itemsForGroup = [];
         if(customCount == null) customCount = itemGroupData.groupCount;
         for (let i = 0; i < customCount; i++) {
-            console.log(itemGroupId,customCount,i);
             itemsForGroup.push(this.getItemForGroup(itemGroupId));
         }
 

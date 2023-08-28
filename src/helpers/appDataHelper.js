@@ -17,21 +17,29 @@ module.exports = class AppDataHelper {
         this.defaultData.sys_sep = path.sep;
     }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [AppDataHelper]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
     //load data from the file, create it if it doesn't exist
     loadData() {
         if (!fs.existsSync(this.dataPath))
             fs.writeFileSync(this.dataPath, JSON.stringify(this.defaultData));
         this.data = JSON.parse(fs.readFileSync(this.dataPath, "utf8"));
-        console.log('[AppDataHelper] App Data loaded!');
+        this.log('App Data loaded!');
     }
 
     saveData() {
         try {
             fs.writeFileSync(this.dataPath, JSON.stringify(this.data));
-            console.log('[AppDataHelper] App Data saved!');
+            this.log('App Data saved!');
             return true;
         } catch (err) {
-            console.log('Error writing App Data file:' + err.message);
+            this.log('Error writing App Data file:' + err.message);
             return false;
         }
     }

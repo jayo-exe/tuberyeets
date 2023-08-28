@@ -125,7 +125,7 @@ module.exports = class VtubeStudioAgent {
     }
 
     agentRegistered(agentRegistry) {
-        console.log("[VTSAgent] running agentRegistered()...");
+        this.log("running agentRegistered()...");
         this.agentRegistry = agentRegistry;
         if(this.agentRegistry.getAgentFieldData(this,'enabled')) {
             this.agentEnabled();
@@ -133,19 +133,19 @@ module.exports = class VtubeStudioAgent {
     }
 
     agentEnabled() {
-        console.log("[VTSAgent] Agent Enabled.");
+        this.log("Agent Enabled.");
         this.apiOptions.port = parseInt(this.agentRegistry.getAgentFieldData(this,'port'));
         this.apiClient = new ApiClient(this.apiOptions);
         this.apiClient.on("connect", () => {
-            console.log("[VTSAgent] Connected to VTube Studio!");
+            this.log("Connected to VTube Studio!");
             this.getStats();
         }) ;
         this.apiClient.on("disconnect", () => {
-            console.log("[VTSAgent] Lost connection to VTube Studio!");
+            this.log("Lost connection to VTube Studio!");
         }) ;
         this.apiClient.on("error", (err) => {
-            console.log("[VTSAgent] Error In VTube Studio");
-            console.log(err);
+            this.log("Error In VTube Studio");
+            this.log(err);
         }) ;
     }
 
@@ -154,7 +154,7 @@ module.exports = class VtubeStudioAgent {
             this.apiClient.disconnect;
         }
         this.apiClient = null;
-        console.log("[VTSAgent] Agent Disabled.");
+        this.log("Agent Disabled.");
     }
 
     agentStatus() {
@@ -171,6 +171,14 @@ module.exports = class VtubeStudioAgent {
             }
         }
         return status;
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [VTubeStudioAgent]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
     }
 
     async getExpressionOutputOptions() {
@@ -256,7 +264,7 @@ module.exports = class VtubeStudioAgent {
     async getStats() {
         try {
             const stats = await this.apiClient.statistics();
-            console.log("[VTSAgent] Connected to VTube Studio version ", stats.vTubeStudioVersion);
+            this.log("Connected to VTube Studio version ", stats.vTubeStudioVersion);
             this.vtsReady = true;
         } catch (e) {
             this.vtsReady = false;
@@ -273,26 +281,26 @@ module.exports = class VtubeStudioAgent {
     async getHotkeys() {
         if(!this.vtsReady) return;
         const hotkeys = await this.apiClient.hotkeysInCurrentModel();
-        console.log(hotkeys);
+        this.log(hotkeys);
         let hotkey_names = [];
 
         hotkeys.availableHotkeys.forEach((hotkey) => {
             hotkey_names.push(hotkey.name);
         });
-        console.log("VTS: got current model hotkeys ", hotkey_names);
+        this.log("VTS: got current model hotkeys ", hotkey_names);
         return hotkey_names;
     }
 
     async getExpressions() {
         if(!this.vtsReady) return;
         const expressions = await this.apiClient.expressionState();
-        console.log(expressions);
+        this.log(expressions);
         let expression_names = [];
 
         expressions.expressions.forEach((expression) => {
             expression_names.push(expression.name);
         });
-        console.log("VTS: got current model expressions ", expression_names);
+        this.log("VTS: got current model expressions ", expression_names);
         return expression_names;
     }
 
@@ -304,9 +312,9 @@ module.exports = class VtubeStudioAgent {
 
         if(parameterToSet) {
             parameterToSet.setValue(value);
-            console.log(`VTS: Parameter ${param} set to ${value}`);
+            this.log(`VTS: Parameter ${param} set to ${value}`);
         } else {
-            console.log(`Could not find Parameter: ${param}`);
+            this.log(`Could not find Parameter: ${param}`);
         }
     }
 
@@ -344,9 +352,9 @@ module.exports = class VtubeStudioAgent {
 
         if(expressionToUse) {
             this.apiClient.expressionActivation({ expressionFile: expressionToUse.file, active: true});
-            console.log(`VTS: Expression ${expression_name} activated`);
+            this.log(`VTS: Expression ${expression_name} activated`);
         } else {
-            console.log(`Could not find Expression: ${expression_name}`);
+            this.log(`Could not find Expression: ${expression_name}`);
         }
     }
 
@@ -357,9 +365,9 @@ module.exports = class VtubeStudioAgent {
 
         if(expressionToUse) {
             await this.apiClient.expressionActivation({ expressionFile: expressionToUse.file, active: false });
-            console.log(`VTS: Expression ${expression_name} deactivated`);
+            this.log(`VTS: Expression ${expression_name} deactivated`);
         } else {
-            console.log(`Could not find Expression: ${expression_name}`);
+            this.log(`Could not find Expression: ${expression_name}`);
         }
     }
 
@@ -370,9 +378,9 @@ module.exports = class VtubeStudioAgent {
 
         if(hotkeyToTrigger) {
             await this.apiClient.hotkeyTrigger({hotkeyID: hotkeyToTrigger.hotkeyID});
-            console.log(`VTS: Hotkey ${hotkey_name} triggered`);
+            this.log(`VTS: Hotkey ${hotkey_name} triggered`);
         } else {
-            console.log(`Could not find Hotkey: ${hotkey_name}`);
+            this.log(`Could not find Hotkey: ${hotkey_name}`);
         }
     }
 };

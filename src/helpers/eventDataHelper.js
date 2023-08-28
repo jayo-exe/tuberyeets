@@ -5,6 +5,14 @@ module.exports = class EventDataHelper {
         this.gameData = gameDataHelper;
     }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [EventDataHelper]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
     findTriggersForScript(agentKey, eventKey, scriptName, parameters) {
         let agent = this.gameData.agentRegistry.getAgent(agentKey);
         if(!agent) return false;
@@ -36,11 +44,11 @@ module.exports = class EventDataHelper {
     createTrigger(agentKey,eventKey) {
         let agent = this.gameData.agentRegistry.getAgent(agentKey);
         if(!agent) {
-            console.log(`[EventDataHelper] Agent "${agentKey}" not found!`);
+            this.log(`Agent "${agentKey}" not found!`);
             return false;
         }
         if(!agent.agentInputs.hasOwnProperty(eventKey)) {
-            console.log(`[EventDataHelper] Input "${eventKey}" not found in Agent "${agentKey}"!`);
+            this.log(`Input "${eventKey}" not found in Agent "${agentKey}"!`);
             return false;
         }
         let event = agent.agentInputs[eventKey];
@@ -66,8 +74,7 @@ module.exports = class EventDataHelper {
             trigger.scripts[script] = {'name': script, 'commands': {}};
         });
 
-        console.log('trigger to make: ');
-        console.log(trigger);
+        this.log('trigger to make: ', trigger);
 
         this.gameData.update(`triggers.${triggerId}`, trigger, true);
         return this.gameData.read(`triggers.${triggerId}`);

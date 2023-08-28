@@ -10,9 +10,17 @@ module.exports = class AgentRegistry {
         this.gameData = gameDataHelper;
         this.eventManager = new EventManager(this);
         if(!this.appData.has('agents')) {
-            console.log(`[AgentRegistry] Agent Data store not found! Creating...`);
+            this.log(`Agent Data store not found! Creating...`);
             this.appData.update('agents', {});
         }
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [AgentRegistry]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
     }
 
     hasAgentFieldData(agent, field) {
@@ -31,15 +39,15 @@ module.exports = class AgentRegistry {
         if(!agentData.hasOwnProperty(agent.agentKey)) agentData[agent.agentKey] = {};
         if(!agentData[agent.agentKey].hasOwnProperty(field)) agentData[agent.agentKey][field] = {};
         agentData[agent.agentKey][field] = value;
-        console.log(`[AgentRegistry] Setting field ${field} for agent ${agent.agentKey}...`);
+        this.log(`Setting field ${field} for agent ${agent.agentKey}...`);
         return this.appData.update('agents',agentData);
     }
 
     registerAgent(agent) {
-        console.log(`[AgentRegistry] Registering agent ${agent.agentKey}...`);
+        this.log(`Registering agent ${agent.agentKey}...`);
         //add agent to list
         if (this.agents.hasOwnProperty(agent.agentKey)) {
-            console.log(`[AgentRegistry] cannot register ${agent.agentKey}, the agent is already registered`);
+            this.log(`cannot register ${agent.agentKey}, the agent is already registered`);
             return false;
         }
         this.agents[agent.agentKey] = agent;
@@ -51,7 +59,7 @@ module.exports = class AgentRegistry {
         });
 
         //fire agent init routine
-        console.log(`[AgentRegistry] Firing registry routine for agent ${agent.agentKey}...`);
+        this.log(`Firing registry routine for agent ${agent.agentKey}...`);
         agent.agentRegistered(this);
     }
 
@@ -60,7 +68,7 @@ module.exports = class AgentRegistry {
         if (!agent) { return false; }
         this.setAgentFieldData(agent,'enabled', true);
         agent.agentEnabled();
-        console.log(`[AgentRegistry] Activated agent ${agent.agentKey}...`);
+        this.log(`Activated agent ${agent.agentKey}...`);
         return true;
     }
 
@@ -69,7 +77,7 @@ module.exports = class AgentRegistry {
         if (!agent) { return false; }
         this.setAgentFieldData(agent,'enabled', false);
         agent.agentDisabled();
-        console.log(`[AgentRegistry] Deactivated agent ${agent.agentKey}...`);
+        this.log(`Deactivated agent ${agent.agentKey}...`);
         return true;
     }
 
@@ -78,7 +86,7 @@ module.exports = class AgentRegistry {
         if (!agent) { return false; }
         this.deactivateAgent(agentKey);
         this.activateAgent(agentKey);
-        console.log(`[AgentRegistry] Reloaded agent ${agent.agentKey}...`);
+        this.log(`Reloaded agent ${agent.agentKey}...`);
         return true;
     }
 
@@ -137,7 +145,7 @@ module.exports = class AgentRegistry {
                 setting.options = parsed_options;
             }
         }
-        console.log(settings)
+        this.log(settings)
         return settings;
     }
 
@@ -163,7 +171,7 @@ module.exports = class AgentRegistry {
     }
 
     async getActionSettings(agentKey, actionKey) {
-        console.log(`[AgentRegistry] getting action settings for ${agentKey}:${actionKey}`);
+        this.log(`getting action settings for ${agentKey}:${actionKey}`);
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
         let action = agent.agentOutputs[actionKey];
@@ -175,12 +183,12 @@ module.exports = class AgentRegistry {
                 setting.options = parsed_options;
             }
         }
-        console.log(settings)
+        this.log(settings)
         return settings;
     }
 
     async getCommandDetails(agentKey, actionKey, values) {
-        console.log(`[AgentRegistry] getting command details for ${agentKey}:${actionKey}`);
+        this.log(`getting command details for ${agentKey}:${actionKey}`);
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
         let action = agent.agentOutputs[actionKey];
@@ -192,7 +200,7 @@ module.exports = class AgentRegistry {
     }
 
     getAllAgentDetails() {
-        console.log(`[AgentRegistry] getting details for all agents`);
+        this.log(`getting details for all agents`);
         let agentDetails = {};
         for (const [key, agent] of Object.entries(this.agents)) {
             let agentItem = {

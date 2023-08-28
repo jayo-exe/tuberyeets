@@ -366,7 +366,7 @@ class OverlayAgent {
     }
 
     agentRegistered(agentRegistry) {
-        console.log("[OverlayAgent] running agentRegistered()...");
+        this.log("running agentRegistered()...");
         this.agentRegistry = agentRegistry;
         if(this.agentRegistry.getAgentFieldData(this,'enabled')) {
             this.agentEnabled();
@@ -374,7 +374,7 @@ class OverlayAgent {
     }
 
     agentEnabled() {
-        console.log("[OverlayAgent] Agent Enabled.");
+        this.log("Agent Enabled.");
         this.createServer();
     }
 
@@ -384,7 +384,7 @@ class OverlayAgent {
                 this.socketServer.close();
             }
         }
-        console.log("[OverlayAgent] Agent Disabled.");
+        this.log("Agent Disabled.");
     }
 
     agentStatus() {
@@ -406,6 +406,14 @@ class OverlayAgent {
         return status;
     }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
     async getThrowItemOutputOptions() {
         let item_list = this.agentRegistry.gameData.read(`items`);
         let item_options = [];
@@ -420,10 +428,10 @@ class OverlayAgent {
         let throwCount = parseInt(values.quantity);
         if(values.match_quantity && values.quantity_parameter) {
             if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
-                console.log(values.__trigger.parameters[values.quantity_parameter]);
+                this.log(values.__trigger.parameters[values.quantity_parameter]);
                 throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
             } else {
-                console.log(`[OverlayAgent] quantity_parameter not found`, values);
+                this.log(`quantity_parameter not found`, values);
             }
         }
         this.throwItems(values.item, throwCount);
@@ -457,7 +465,7 @@ class OverlayAgent {
     }
 
     handleThrowItemGroupOutput(values) {
-        console.log(`[OverlayAgent] item group debug`, values);
+        this.log(`item group debug`, values);
         let throwCount = parseInt(values.quantity);
         if(values.match_quantity && values.quantity_parameter) {
             if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
@@ -465,7 +473,7 @@ class OverlayAgent {
                 this.throwItemGroup(values.itemGroup, throwCount);
                 return;
             } else {
-                console.log(`[OverlayAgent] quantity_parameter not found`, values);
+                this.log(`quantity_parameter not found`, values);
             }
         }
         this.throwItemGroup(values.itemGroup);
@@ -497,7 +505,7 @@ class OverlayAgent {
                 this.startItemStream(values.itemGroup, throwDuration);
                 return;
             } else {
-                console.log(`[OverlayAgent] duration_parameter not found`, values);
+                this.log(`duration_parameter not found`, values);
             }
         }
         this.startItemStream(values.itemGroup);
@@ -538,11 +546,11 @@ class OverlayAgent {
     }
 
     handleFireGetWebhookOutput(values) {
-        console.log(`[CrowdControlAgent] Firing webhook "${values.description}"`);
+        this.log(`Firing webhook "${values.description}"`);
         axios.get(values.url).then(response => {
-            console.log(`[CrowdControlAgent] Successfully fired webhook "${values.description}"`, response);
+            this.log(`Successfully fired webhook "${values.description}"`, response);
         }).catch(e => {
-            console.log(`[CrowdControlAgent] Error firing webhook "${values.description}"`, e);
+            this.log(`Error firing webhook "${values.description}"`, e);
         });
     }
 
@@ -555,16 +563,16 @@ class OverlayAgent {
     }
 
     handleFirePostWebhookOutput(values) {
-        console.log(`[CrowdControlAgent] Firing webhook "${values.description}"`);
+        this.log(`Firing webhook "${values.description}"`);
         let payload = values.json;
         if(values.auto_payload) {
             payload = JSON.stringify(values);
         }
-        console.log(`[CrowdControlAgent] post hook payload`, payload);
+        this.log(`post hook payload`, payload);
         axios.post(values.url, payload, {headers: {"content-type": "application/json"}}).then(response => {
-            console.log(`[CrowdControlAgent] Successfully fired webhook "${values.description}"`, response);
+            this.log(`Successfully fired webhook "${values.description}"`, response);
         }).catch(e => {
-            console.log(`[CrowdControlAgent] Error firing webhook "${values.description}"`, e);
+            this.log(`Error firing webhook "${values.description}"`, e);
         });
     }
 
@@ -608,13 +616,13 @@ class OverlayAgent {
         this.socketServer.on("error", (err) => { this.socketServerHandleError(err) } );
         this.socketServer.on("close", (err) => { this.socketServerHandleClose() } );
         if(this.portInUse) { return; }
-        console.log("[OverlayAgent] Socket Server Started on port "+targetPort+"!");
+        this.log("Socket Server Started on port "+targetPort+"!");
         this.socketServer.on("connection", (ws) => { this.socketServerHandleConnection(ws) });
     }
 
     socketServerHandleError(err) {
         this.portInUse = true;
-        console.log("[Overlay Agent] Socket Error: ", err)
+        this.log("[Overlay Agent] Socket Error: ", err)
         // Retry server creation after 3 seconds
         setTimeout(() => {
             this.createServer()
@@ -622,7 +630,7 @@ class OverlayAgent {
     }
 
     socketServerHandleClose() {
-        console.log("[OverlayAgent] Socket Server Closed!");
+        this.log("Socket Server Closed!");
         this.socketServer = null;
         this.overlayConnected = false;
         this.calibrateStage = -2;
@@ -638,7 +646,7 @@ class OverlayAgent {
     }
 
     socketClientHandleClose() {
-        console.log("[OverlayAgent] Socket Client Disconnected!");
+        this.log("Socket Client Disconnected!");
         this.socketClient = null;
         this.overlayConnected = false;
         this.calibrateStage = -2;
@@ -681,7 +689,7 @@ class OverlayAgent {
         } else if (request.type == "status") {
             this.overlayVTSConnected = request.connectedOverlayVTube;
         } else if (request.type == "calibrate-status") {
-            console.log('[Overlay] Calibration Status updated',request);
+            this.log('[Overlay] Calibration Status updated',request);
             this.calibrateStage = request.stageId;
         } else if (request.type == "vtsRequest") {
             let vtsAgent = this.agentRegistry.getAgent('vtubestudio');
@@ -756,19 +764,19 @@ class OverlayAgent {
     }
 
     startCalibration() {
-        console.log('[OverlayAgent] Starting VTS Calibration');
+        this.log('Starting VTS Calibration');
         this.calibrateStage = -1;
         this.proceedCalibration();
     }
 
     nextCalibration() {
-        console.log('[OverlayAgent] Continuing VTS Calibration');
+        this.log('Continuing VTS Calibration');
         this.calibrateStage ++;
         this.proceedCalibration();
     }
 
     cancelCalibration() {
-        console.log('[OverlayAgent] Cancelling VTS Calibration');
+        this.log('Cancelling VTS Calibration');
         this.calibrateStage = 4;
         this.proceedCalibration();
     }
@@ -778,12 +786,12 @@ class OverlayAgent {
     }
 
     throwItem(itemId) {
-        console.log(`[OverlayAgent] Sending Custom Item ${itemId}`);
+        this.log(`Sending Custom Item ${itemId}`);
         let gdh = this.agentRegistry.gameData;
 
         let itemDetails = gdh.itemGroupEventHelper.getItemById(itemId);
         if(itemDetails === null) {
-            console.log('[OverlayAgent] Failed to Send Single Item:  Item could not be generated!');
+            this.log('Failed to Send Single Item:  Item could not be generated!');
             return;
         }
 
@@ -799,9 +807,9 @@ class OverlayAgent {
     sendWithTargeting(request) {
         if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
             this.agentRegistry.getAgent('vtubestudio').getModelId().then(currentModelId => {
-                console.log('current model:',currentModelId);
+                this.log('current model:',currentModelId);
                 if(currentModelId) {
-                    console.log('current model:',currentModelId);
+                    this.log('current model:',currentModelId);
                     request.modelCalibration = {
                         "faceWidthMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[0],
                         "faceHeightMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[1],
@@ -818,11 +826,11 @@ class OverlayAgent {
     }
 
     throwItems(itemId,customCount=1) {
-        console.log(`[OverlayAgent] Sending ${customCount} Items`);
+        this.log(`Sending ${customCount} Items`);
         let gdh = this.agentRegistry.gameData;
         let itemsForGroup = [];
         for (let i = 0; i < customCount; i++) {
-            console.log(`[OverlayAgent] Pushing ${itemId}`);
+            this.log(`Pushing ${itemId}`);
             itemsForGroup.push(gdh.itemGroupEventHelper.getItemById(itemId));
         }
 
@@ -837,7 +845,7 @@ class OverlayAgent {
     }
 
     throwItemGroup(itemGroupId,customCount=null) {
-        console.log('[OverlayAgent] Sending Item Group');
+        this.log('Sending Item Group');
         let gdh = this.agentRegistry.gameData;
 
         this.sendWithTargeting({
@@ -852,16 +860,16 @@ class OverlayAgent {
     }
 
     startItemStream(itemGroupId, customDuration=null) {
-        console.log("overlay stacks",this.stacks);
+        this.log("overlay stacks",this.stacks);
         if(this.incrementStack('itemStream', itemGroupId) === 1) {
-            console.log(`[OverlayAgent] Starting Item Stream for ${itemGroupId}`);
+            this.log(`Starting Item Stream for ${itemGroupId}`);
             this.itemStreams[itemGroupId] = new OverlayItemStream(itemGroupId,this,itemGroupId, customDuration);
         }
     }
 
     stopItemStream(itemGroupId) {
         if(this.decrementStack('itemStream', itemGroupId) === 0) {
-            console.log(`[OverlayAgent] Stopping Item Stream for ${itemGroupId}`);
+            this.log(`Stopping Item Stream for ${itemGroupId}`);
             if (this.itemStreams.hasOwnProperty(itemGroupId) && this.itemStreams[itemGroupId] !== null) {
                 try {
                     this.itemStreams[itemGroupId].stop();
@@ -873,7 +881,7 @@ class OverlayAgent {
     }
 
     playSound(soundIndex) {
-        console.log('[OverlayAgent] Sending Sound');
+        this.log('Sending Sound');
         let gdh = this.agentRegistry.gameData;
         let soundData = gdh.read(`sounds`);
         let sound = soundData.find(obj => {
@@ -921,14 +929,14 @@ class OverlayItemStream {
     }
 
     start() {
-        console.log("Starting Item Stream");
+        this.overlayAgent.log("Starting Item Stream");
         if(this.itemBuffer.length > 0) {
             this.throw();
         }
     }
 
     stop() {
-        console.log("Stopping Item Stream");
+        this.overlayAgent.log("Stopping Item Stream");
         if(this.itemBuffer.length > 0) {
             clearTimeout(this.itemTimer);
             this.overlayAgent.itemStreams[this.refId] = null;
@@ -956,7 +964,7 @@ class OverlayItemStream {
             "game_data_path": this.overlayAgent.agentRegistry.gameData.read(`game_data_path`)
         });
 
-        console.log(`Duration Remaining: ${this.durationRemaining}, Bonk Delay: ${tickRate}`);
+        this.overlayAgent.log(`Duration Remaining: ${this.durationRemaining}, Bonk Delay: ${tickRate}`);
         this.durationRemaining -= tickRate;
         if(this.durationRemaining > 0) {
             this.itemTimer = setTimeout(() => {this.throw();},tickRate);
