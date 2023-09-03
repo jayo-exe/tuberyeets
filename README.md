@@ -135,7 +135,7 @@ See the [Overlay Setup and Calibration Guide](https://github.com/jayo-exe/tubery
 
 See these guides for more information on the basics of creating experiences with TuberYeets:
 - [Overlay Assets](https://github.com/jayo-exe/tuberyeets/wiki/Overlay-Assets)
-- [Triggers and Scripts](https://github.com/jayo-exe/tuberyeets/wiki/Triggers-and-Scripts)
+- [Triggers, Scripts and Commands](https://github.com/jayo-exe/tuberyeets/wiki/Triggers,-Scripts-and-Commands)
 
 <a name="installingsharing-trigger-profiles"></a>
 ## Installing/Sharing Trigger Profiles
