@@ -1,4 +1,4 @@
-# TuberYeets: your local automation agent
+# TuberYeets: your local automation agent [EXPERIMENTAL]
 
 Create more immersive viewer experiences by turning events in one app/service into actions in others.
 
@@ -8,6 +8,7 @@ Connecting Crowd Control 2, VTube Studio, and more.
 
 - [TuberYeets?!](#tuberyeets)
   * [What is TuberYeets?](#what-is-tuberyeets)
+    + [Disclaimer](#disclaimer)
   * [What isn't TuberYeets?](#what-isnt-tuberyeets)
   * [Who is it for?](#who-is-it-for)
 - [Supported Connections](#supported-connections)
@@ -41,6 +42,13 @@ This allows you to respond to an event in one app (like Crowd Control) with some
 _Unlike_ the aforementioned delivery service, TuberYeets is more about throwing stuff at VTubers.
 
 TuberYeets is an **application** that runs entirely on your own machine.
+
+<a name="disclaimer"></a>
+#### Disclaimer
+
+Along with the above, TuberYeets is also **experimental software** in an early state of development.  It will have bugs, it might break sometimes, and it is possible that core features or data structures could change, rendering effects you've previously set up unusable!
+
+Wherever possible I'll aim to create some tool or process to convert existing Trigger Profiles to conform to any data changes to avoid issues
 
 <a name="what-isnt-tuberyeets"></a>
 ### What isn't TuberYeets?
