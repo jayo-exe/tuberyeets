@@ -45,7 +45,11 @@ TuberYeets is an **application** that runs entirely on your own machine.
 <a name="what-isnt-tuberyeets"></a>
 ### What isn't TuberYeets?
 
-TuberYeets is not a SaaS product (or a service at all), and it doesn't offer (or rely on) "cloud"-type features that use an offsite server to do the thing. That means the project can be offered completely free of charge (or recurring costs), and you never have to worry it might stop working because someone decided to shut down a server.
+TuberYeets is not a SaaS product, and it doesn't directly offer (or rely on) "cloud"-type features that use an offsite server to perform its main functionality. 
+
+That means the project can be offered completely free of charge (or recurring costs), and you never have to worry it might stop working because someone decided to shut down a server.  That also means it doesn't collect analytics or usage data, and doesn't "phone home".
+
+TuberYeets does integrate with SaaS services (such as Crowd Control) to allow it to connect those servives to other things, but TuberYeets itself is just a program, **is not a service**
 
 <a name="who-is-it-for"></a>
 ### Who is it for?
