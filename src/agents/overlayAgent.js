@@ -111,7 +111,7 @@ class OverlayAgent {
             },
             {
                 key: "spinSpeedMin",
-                label: "Minimum Spin Speed",
+                label: "Minimum Spin Rate",
                 help: "The minimum random rotational rate for thrown items",
                 type: "number",
                 step: "0.1",
@@ -120,7 +120,7 @@ class OverlayAgent {
             },
             {
                 key: "spinSpeedMax",
-                label: "Maximum Spin Speed",
+                label: "Maximum Spin Rate",
                 help: "The maximum random rotational rate for thrown items",
                 type: "number",
                 step: "0.1",

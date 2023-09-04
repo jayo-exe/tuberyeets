@@ -16,10 +16,8 @@
         <div class="selectAll">
           <div>
             <p><span v-if="!allItemsEnabled()">Select</span><span v-else>Deselect</span> All</p>
-            <label class="checkbox">
+            <label>
               <input type="checkbox" class="imageEnabled" :checked="allItemsEnabled()" @change="handleIncludeAllCheckbox">
-              <div class="checkHover"></div>
-              <img src="ui/checkmark.png" class="checkmark">
             </label>
           </div>
         </div>
@@ -58,17 +56,6 @@
     </section>
   </div>
 </template>
-
-<style scoped>
-.volume-column .cogwheel {
-  float: left;
-}
-.volume-column .soundVolume {
-  width: calc(100% - 32px);
-  float: left;
-  margin-top: 8px;
-}
-</style>
 
 <script>
 

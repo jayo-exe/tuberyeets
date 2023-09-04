@@ -104,83 +104,76 @@
                      v-model="itemGroupData.groupCount"
                      @input="updateItem('groupCount')">
 
-              <label class="checkbox grid1">
-                <input type="checkbox" class="throwAway"
+              <label class="grid1">
+                <input type="checkbox"
                        v-model="itemGroupData.throwAway"
                        @change="updateItem('throwAway')">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
               </label>
               <p class="grid2-3" >Throw Away <i class="fa fa-info-circle"
                                                 v-b-tooltip.hover.left="'Throw items away instead of towards model'"
               ></i></p>
 
-              <label class="checkbox grid1">
-                <input type="checkbox" class="groupFrequencyOverride"
+              <label class="grid1">
+                <input type="checkbox"
                        v-model="itemGroupData.groupFrequencyOverride"
                        @change="updateItem('groupFrequencyOverride')">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
               </label>
-              <p class="grid2">Barrage Frequency (s) <i class="fa fa-info-circle"
-                                                        v-b-tooltip.hover.left="'Average number of seconds between thrown items in a barrage'"
-              ></i></p>
-              <input type="number" min="0" step="1" class="groupFrequency grid3"
+
+              <p class="grid2">
+                Group Frequency (s)
+                <i class="fa fa-info-circle"
+                   v-b-tooltip.hover.left="'Average number of seconds between thrown items in a group'"></i>
+              </p>
+              <input type="number" min="0" step="0.01" class="groupFrequency grid3"
                      v-model="itemGroupData.groupFrequency"
                      @input="updateItem('groupFrequency')"
                      :disabled="!itemGroupData.groupFrequencyOverride"
               >
 
-              <label class="checkbox grid1">
+              <label class="grid1">
                 <input type="checkbox" class="throwDurationOverride"
                        v-model="itemGroupData.throwDurationOverride"
                        @change="updateItem('throwDurationOverride')">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
               </label>
               <p class="grid2">Throw Duration <i class="fa fa-info-circle"
                                                  v-b-tooltip.hover.left="'The number of seconds that a thrown item exists on the screen'"
               ></i></p>
-              <input type="number" min="0" step="1" class="throwDuration grid3"
+              <input type="number" min="0" step="0.01" class="throwDuration grid3"
                      v-model="itemGroupData.throwDuration"
                      @input="updateItem('throwDuration')"
                      :disabled="!itemGroupData.throwDurationOverride"
               >
 
-              <label class="checkbox grid1">
+              <label class="grid1">
                 <input type="checkbox" class="spinSpeedOverride"
                        v-model="itemGroupData.spinSpeedOverride"
                        @change="updateItem('spinSpeedOverride')"
                 >
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
               </label>
-              <p class="grid2">Spin Speed (Min) <i class="fa fa-info-circle"
-                                                   v-b-tooltip.hover.left="'Minimum Spin Speed of thrown items'"
+              <p class="grid2">Spin Rate (Min) <i class="fa fa-info-circle"
+                                                   v-b-tooltip.hover.left="'Minimum Spin Rate of thrown items'"
               ></i></p>
-              <input type="number" min="0" step="1" class="spinSpeedMin grid3"
+              <input type="number" min="0" step="0.1" class="spinSpeedMin grid3"
                      v-model="itemGroupData.spinSpeedMin"
                      @input="updateItem('spinSpeedMin')"
                      :disabled="!itemGroupData.spinSpeedOverride"
               >
 
-              <p class="grid2">Spin Speed (Max) <i class="fa fa-info-circle"
-                                                   v-b-tooltip.hover.left="'Maximum Spin Speed of thrown items'"
+              <p class="grid2">Spin Rate (Max) <i class="fa fa-info-circle"
+                                                   v-b-tooltip.hover.left="'Maximum Spin Rate of thrown items'"
               ></i></p>
-              <input type="number" min="0" step="1" class="spinSpeedMax grid3"
+              <input type="number" min="0" step="0.1" class="spinSpeedMax grid3"
                      v-model="itemGroupData.spinSpeedMax"
                      @input="updateItem('spinSpeedMax')"
                      :disabled="!itemGroupData.spinSpeedOverride"
               >
 
-              <label class="checkbox grid1">
+              <label class="grid1">
                 <input type="checkbox" class="throwAngleOverride"
                        v-model="itemGroupData.throwAngleOverride"
                        @change="updateItem('throwAngleOverride')">
-                <div class="checkHover"></div>
-                <img src="ui/checkmark.png" class="checkmark">
               </label>
-              <p class="grid2">Throw Angle (Min) <i class="fa fa-info-circle"
+              <p class="grid2">Angle (Min) <i class="fa fa-info-circle"
                                                     v-b-tooltip.hover.left="'Minimum Throw Angle for thrown items'"
               ></i></p>
               <input type="number" min="-90" step="1" class="throwAngleMin grid3"
@@ -189,7 +182,7 @@
                      :disabled="!itemGroupData.throwAngleOverride"
               >
 
-              <p class="grid2">Throw Angle (Max) <i class="fa fa-info-circle"
+              <p class="grid2">Angle (Max) <i class="fa fa-info-circle"
                                                     v-b-tooltip.hover.left="'Maximum Throw Angle for thrown items'"
               ></i></p>
               <input type="number" min="90" step="1" class="throwAngleMax grid3"
@@ -201,7 +194,7 @@
               <p class="grid2">Windup Time (s) <i class="fa fa-info-circle"
                                                   v-b-tooltip.hover.left="'Number of seconds of delay between a barrage being triggered and the first item being thrown'"
               ></i></p>
-              <input type="number" min="0" class="windupDelay grid3"
+              <input type="number" min="0" step="0.1" class="windupDelay grid3"
                      v-model="itemGroupData.windupDelay"
                      @input="updateItem('windupDelay')"
               >
