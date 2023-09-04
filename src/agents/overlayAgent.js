@@ -587,9 +587,9 @@ class OverlayAgent {
     async getPlaySoundOutputOptions() {
         let sound_list = this.agentRegistry.gameData.read('sounds');
         let sound_options = [];
-        sound_list.forEach((sound) => {
-            sound_options.push({'label': sound.location, 'value': sound.location});
-        });
+        for (const [key, sound] of Object.entries(sound_list)) {
+            sound_options.push({'label': sound.location, 'value': key});
+        }
         return sound_options;
     }
 
@@ -881,13 +881,11 @@ class OverlayAgent {
     }
 
     playSound(soundIndex) {
-        this.log('Sending Sound');
+        this.log('Sending Sound to Overlay');
+
         let gdh = this.agentRegistry.gameData;
-        let soundData = gdh.read(`sounds`);
-        let sound = soundData.find(obj => {
-            return obj.location === soundIndex
-        });
-        if(sound === undefined ) {
+        let sound = this.agentRegistry.gameData.read(`sounds.${soundIndex}`);
+        if (!sound || !sound.hasOwnProperty('location')) {
             return;
         }
 

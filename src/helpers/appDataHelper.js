@@ -9,8 +9,12 @@ module.exports = class AppDataHelper {
         this.data = null;
         this.userDataPath = userDataPath
         this.dataPath = path.join(userDataPath, 'tuberyeets-data.json');
-        this.defaultDataPath = path.resolve(__static, 'data/defaultData.json');
-        this.defaultData = JSON.parse(fs.readFileSync(this.defaultDataPath, "utf8"));
+        this.defaultData = {
+            "sysdata_format_version": 3,
+            "last_game_id": null,
+            "minimizeToTray": false,
+            "agents": {}
+        }
         this.statusCallback = null;
         this.autoSaveTimeout = null;
 

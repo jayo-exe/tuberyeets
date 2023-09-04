@@ -11,8 +11,13 @@ module.exports = class GameDataHelper {
         this.userFilesPath = userFilesPath;
         this.dataPath = null;
         this.folderPath = path.join(this.userFilesPath, 'gamedata');
-        this.defaultDataPath = path.resolve(staticPath, 'data/defaultGameData.json');
-        this.defaultData = JSON.parse(fs.readFileSync(this.defaultDataPath, "utf8"));
+        this.defaultData = {
+            "profiledata_format_version": 3,
+            "items": {},
+            "sounds": {},
+            "itemGroups": {},
+            "triggers": {}
+        };
         this.statusCallback = null;
         this.itemGroupDefaultsCallback = null;
         this.autoSaveTimeout = null;

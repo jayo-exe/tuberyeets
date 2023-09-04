@@ -11,7 +11,7 @@ module.exports = class EventManager {
     log(...messages) {
         console.group(`${new Date().toISOString()} [EventManager]`);
         for (const message of messages) {
-            this.log(message);
+            console.log(message);
         }
         console.groupEnd();
     }

@@ -34,7 +34,7 @@
           </li>
         </ul>
 
-        <div class="section-panel mt-3" v-if="itemList && Object.keys(itemList).length < 1">
+        <div class="section-panel" v-if="itemList && Object.keys(itemList).length < 1">
           <div class="section-heading">
             <div class="section-title">
               <h5>No Item Groups defined for this game</h5>
