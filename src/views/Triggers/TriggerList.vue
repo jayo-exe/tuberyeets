@@ -8,7 +8,7 @@
         </div>
         <div class="ml-auto">
           <select @change="handleSelectNewEvent">
-            <option :value="null" >Select an Event</option>
+            <option :value="null" >Select an Event Type</option>
             <optgroup v-for="(eventTypeGroup) in eventTypeList" :key="'evtg_'+listKey" :label="eventTypeGroup.name">
               <option v-for="(eventType) in eventTypeGroup.options"
                       :key="'evto_'+listKey"

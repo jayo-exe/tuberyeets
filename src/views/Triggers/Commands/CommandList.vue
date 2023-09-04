@@ -6,7 +6,7 @@
       </div>
       <div class="ml-auto">
         <select @change="handleSelectNewAction">
-          <option :value="null" >Select an Action</option>
+          <option :value="null" >Select an Action Type</option>
           <optgroup v-if="!getActionTypeGroupHidden(gindex)" v-for="(actionTypeGroup, gindex) in actionTypeList" :key="'actg_'+gindex+commandListKey" :label="actionTypeGroup.name">
             <option v-for="(actionType, aindex) in actionTypeGroup.options"
                     :key="'acto_'+aindex+commandListKey"

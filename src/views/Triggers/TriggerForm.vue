@@ -14,7 +14,7 @@
                 <input type="text" min="0" step="1" class="triggerName form-input" v-model="itemData.name" @input="updateItem('name')">
               </div>
               <div class="form-group">
-                <label class="form-label">Event</label>
+                <label class="form-label">Event Type</label>
                 <p style="margin: 0">{{ `${eventTypeList[itemData.agent].name}: ${eventTypeList[itemData.agent].options[itemData.event].label}` }}</p>
               </div>
             </div>

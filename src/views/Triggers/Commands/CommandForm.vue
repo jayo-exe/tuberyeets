@@ -14,7 +14,7 @@
                 <input type="number" min="0" step="1" class="form-input" v-model="commandData.delay" @input="updateCommand('delay')">
               </div>
               <div class="form-group">
-                <label class="form-label">Action</label>
+                <label class="form-label">Action Type</label>
                 <p style="margin: 0">{{ `${actionTypeList[commandData.agent].name}: ${actionTypeList[commandData.agent].options[commandData.action].label}` }}</p>
               </div>
             </div>
