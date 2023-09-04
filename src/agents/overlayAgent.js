@@ -39,7 +39,7 @@ class OverlayAgent {
                 help: "The TCP Port that the overlay will use to connect to TuberYeets. If you change this, your overlay URL will also change",
                 type: "text",
                 settable: true,
-                default: "8081"
+                default: "9090"
             },
             {
                 key: "volume",
