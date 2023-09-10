@@ -69,7 +69,7 @@ class OverlayAgent {
                 type: "number",
                 step: "0.01",
                 settable: true,
-                default: "0.2"
+                default: "0.25"
             },
             {
                 key: "itemScaleMin",
@@ -79,7 +79,7 @@ class OverlayAgent {
                 step: "0.01",
                 min: 0,
                 settable: true,
-                default: "0.25"
+                default: "0.50"
             },
             {
                 key: "itemScaleMax",
@@ -89,7 +89,7 @@ class OverlayAgent {
                 step: "0.01",
                 min: 0,
                 settable: true,
-                default: "2.00"
+                default: "1.50"
             },
             {
                 key: "throwAngleMin",
@@ -116,7 +116,7 @@ class OverlayAgent {
                 type: "number",
                 step: "0.1",
                 settable: true,
-                default: "5.0"
+                default: "0.5"
             },
             {
                 key: "spinSpeedMax",
@@ -125,7 +125,7 @@ class OverlayAgent {
                 type: "number",
                 step: "0.1",
                 settable: true,
-                default: "10.0"
+                default: "3.0"
             },
             {
                 key: "throwDuration",
@@ -134,7 +134,7 @@ class OverlayAgent {
                 type: "number",
                 step: "0.01",
                 settable: true,
-                default: "1.00"
+                default: "2.40"
             },
             {
                 key: "returnSpeed",
@@ -610,7 +610,7 @@ class OverlayAgent {
         let targetPort = this.agentRegistry.getAgentFieldData(this,'port');
         this.socketServer = new WebSocket.Server({ port: targetPort });
         this.socketServer.on("error", (err) => { this.socketServerHandleError(err) } );
-        this.socketServer.on("close", (err) => { this.socketServerHandleClose() } );
+        this.socketServer.on("close", () => { this.socketServerHandleClose() } );
         if(this.portInUse) { return; }
         this.log("Socket Server Started on port "+targetPort+"!");
         this.socketServer.on("connection", (ws) => { this.socketServerHandleConnection(ws) });
@@ -661,7 +661,7 @@ class OverlayAgent {
     socketClientHandleMessage(request) {
         request = JSON.parse(request);
 
-        if (request.type == "calibrating")
+        if (request.type === "calibrating")
         {
             switch (request.stage)
             {
@@ -692,12 +692,12 @@ class OverlayAgent {
                     }
                     break;
             }
-        } else if (request.type == "status") {
+        } else if (request.type === "status") {
             this.overlayVTSConnected = request.connectedOverlayVTube;
-        } else if (request.type == "calibrate-status") {
+        } else if (request.type === "calibrate-status") {
             this.log('[Overlay] Calibration Status updated',request);
             this.calibrateStage = request.stageId;
-        } else if (request.type == "vtsRequest") {
+        } else if (request.type === "vtsRequest") {
             let vtsAgent = this.agentRegistry.getAgent('vtubestudio');
 
             let response =
@@ -708,7 +708,7 @@ class OverlayAgent {
                     "authKey": this.agentRegistry.getAgentFieldData(this,'vtsOverlayAuthKey')
                 }
             this.socketClient.send(JSON.stringify(response));
-        } else if (request.type == "vtsAuth") {
+        } else if (request.type === "vtsAuth") {
             this.agentRegistry.setAgentFieldData(this,'vtsOverlayAuthKey', request.authKey);
         }
     }

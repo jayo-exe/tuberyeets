@@ -7,7 +7,7 @@
       <nav>
         <div class="menu-box">
           <ul class="main-list">
-            <li>
+            <li v-if="autoSaveStatus !== 'unloaded' && autoGameSaveStatus !== 'unloaded'">
               <a href="javascript:;" @click="() => { showOverlayAssets = this.$route.path.indexOf('/overlay') !== 0 ? !showOverlayAssets : showOverlayAssets }">
                 <i class="fa-solid fa-palette"></i> Overlay
               </a>
@@ -33,7 +33,7 @@
               </router-link>
             </li>
             
-            <li>
+            <li v-if="autoSaveStatus !== 'unloaded' && autoGameSaveStatus !== 'unloaded'">
               <router-link to="/triggers">
                 <i class="fa-solid fa-bolt"></i> Triggers
               </router-link>
@@ -180,7 +180,7 @@ export default {
       autoSaveTimeout: null,
       autoSaveStatus: "unloaded",
       autoGameSaveTimeout: null,
-      autoGameSaveStatus: "ok (loaded)",
+      autoGameSaveStatus: "unloaded",
     }
   },
   methods: {
@@ -224,19 +224,14 @@ export default {
       switch(status) {
         case 'ok (loaded)':
           return 'icon-ok';
-          break;
         case 'ok (saved)':
           return 'icon-ok';
-          break;
         case 'unloaded':
           return 'icon-error';
-          break;
         case 'changed':
           return 'icon-notice';
-          break;
         case 'saving':
           return 'icon-info';
-          break;
         default:
           return 'icon-error';
       }

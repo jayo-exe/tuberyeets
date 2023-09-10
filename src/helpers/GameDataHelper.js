@@ -189,7 +189,7 @@ module.exports = class GameDataHelper {
         let append = "";
 
         while (fs.existsSync(this.gameDataFolder + "/"+folder+"/" + filename.substr(0, filename.lastIndexOf(".")) + append + filename.substr(filename.lastIndexOf("."))))
-            append = append == "" ? 2 : (append + 1);
+            append = append === "" ? 2 : (append + 1);
 
         let finalFilename = filename.substr(0, filename.lastIndexOf(".")) + append + filename.substr(filename.lastIndexOf("."));
         let returnval = {
@@ -273,7 +273,7 @@ module.exports = class GameDataHelper {
             "spinSpeedOverride": false,
             "spinSpeedMin": itemGroupDefaults.spinSpeedMin,
             "spinSpeedMax": itemGroupDefaults.spinSpeedMax,
-            "items": [],
+            "items": {},
             "sounds": [],
             "impactDecals": [],
             "windupSounds": [],

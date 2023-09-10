@@ -109,6 +109,7 @@ Among other things, this can be used to connect TuberYeets to **Mix It Up** thro
 <a name="installation"></a>
 ### Installation
 
+- **IMPORTANT** If you had the legacy version of TuberYeets installed previously (the version that worked with Crowd Control 1), it's imporant that you remove the old TuberYeets data directory (usually located at a path like `C:\Users\YourNameHere\AppData\Roaming\tuberyeets`)
 - Download the latest release, and run the installer
 - To get up and running very quickly, you can also download the pre-configures LttP Trigger Profile listed alongside the latest release
 

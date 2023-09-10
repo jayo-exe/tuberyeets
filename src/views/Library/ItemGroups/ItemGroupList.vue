@@ -25,7 +25,10 @@
               </div>
             </div>
             <div class="asset-details d-flex flex-row" style="align-items:center;">
-
+              <ul>
+                <li><strong>{{ Object.keys(itemGroup.items).length }}</strong> Items</li>
+                <li><strong>{{ itemGroup.sounds.length }}</strong> Sounds</li>
+              </ul>
             </div>
             <div class="asset-actions">
               <a @click="editItem(key)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>

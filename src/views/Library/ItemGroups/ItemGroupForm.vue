@@ -13,7 +13,7 @@
                 <h5>Item Group Name</h5>
               </div>
             </div>
-            <input type="text" min="0" step="1" class="itemGroupName grid1-3" v-model="itemGroupData.name" @input="updateItem('name')">
+            <input type="text" min="0" step="1" class="itemGroupName grid1-3" v-model="itemGroupData.name" @input="updateItemGroup('name')">
           </section>
           <section class="flex-grow-1">
             <div class="section-heading mb-0">
@@ -28,7 +28,7 @@
                           class="mb-2"
                           placeholder="Select an Item"
                           @input="selectItem(selectedItem)"
-                          :options="Object.values(itemList).filter(item => !itemGroupData.items.includes(item.id))"
+                          :options="Object.values(itemList).filter(item => !itemGroupData.items.hasOwnProperty(item.id))"
                           label="name"
                           :reduce="item => item.id"
                 >
@@ -47,10 +47,10 @@
                   </template>
                 </v-select>
                 <ul class="group-item-list">
-                  <li v-for="(itemKey) in itemGroupData.items" v-if="itemList.hasOwnProperty(itemKey)">
-                    <img class="item-image" :src="`file://${gameDataPath}/items/${itemList[itemKey].location}`">
-                    <div class="item-name">{{ itemList[itemKey].name }}</div>
-                    <a class="remove-item" href="javascript:;" @click="deselectItem(itemKey)"><i class="fa-solid fa-xmark"></i></a>
+                  <li v-for="(item) in itemGroupData.items" v-if="itemList.hasOwnProperty(item.key)">
+                    <img class="item-image" :src="`file://${gameDataPath}/items/${itemList[item.key].location}`">
+                    <div class="item-name">{{ itemList[item.key].name }}</div>
+                    <a class="remove-item" href="javascript:;" @click="deselectItem(item.key)"><i class="fa-solid fa-xmark"></i></a>
                   </li>
                 </ul>
               </div>
@@ -102,12 +102,12 @@
               ></i></p>
               <input type="number" min="0" step="1" class="groupCount"
                      v-model="itemGroupData.groupCount"
-                     @input="updateItem('groupCount')">
+                     @input="updateItemGroup('groupCount')">
 
               <label class="grid1">
                 <input type="checkbox"
                        v-model="itemGroupData.throwAway"
-                       @change="updateItem('throwAway')">
+                       @change="updateItemGroup('throwAway')">
               </label>
               <p class="grid2-3" >Throw Away <i class="fa fa-info-circle"
                                                 v-b-tooltip.hover.left="'Throw items away instead of towards model'"
@@ -116,7 +116,7 @@
               <label class="grid1">
                 <input type="checkbox"
                        v-model="itemGroupData.groupFrequencyOverride"
-                       @change="updateItem('groupFrequencyOverride')">
+                       @change="updateItemGroup('groupFrequencyOverride')">
               </label>
 
               <p class="grid2">
@@ -126,28 +126,28 @@
               </p>
               <input type="number" min="0" step="0.01" class="groupFrequency grid3"
                      v-model="itemGroupData.groupFrequency"
-                     @input="updateItem('groupFrequency')"
+                     @input="updateItemGroup('groupFrequency')"
                      :disabled="!itemGroupData.groupFrequencyOverride"
               >
 
               <label class="grid1">
                 <input type="checkbox" class="throwDurationOverride"
                        v-model="itemGroupData.throwDurationOverride"
-                       @change="updateItem('throwDurationOverride')">
+                       @change="updateItemGroup('throwDurationOverride')">
               </label>
               <p class="grid2">Throw Duration <i class="fa fa-info-circle"
                                                  v-b-tooltip.hover.left="'The number of seconds that a thrown item exists on the screen'"
               ></i></p>
               <input type="number" min="0" step="0.01" class="throwDuration grid3"
                      v-model="itemGroupData.throwDuration"
-                     @input="updateItem('throwDuration')"
+                     @input="updateItemGroup('throwDuration')"
                      :disabled="!itemGroupData.throwDurationOverride"
               >
 
               <label class="grid1">
                 <input type="checkbox" class="spinSpeedOverride"
                        v-model="itemGroupData.spinSpeedOverride"
-                       @change="updateItem('spinSpeedOverride')"
+                       @change="updateItemGroup('spinSpeedOverride')"
                 >
               </label>
               <p class="grid2">Spin Rate (Min) <i class="fa fa-info-circle"
@@ -155,7 +155,7 @@
               ></i></p>
               <input type="number" min="0" step="0.1" class="spinSpeedMin grid3"
                      v-model="itemGroupData.spinSpeedMin"
-                     @input="updateItem('spinSpeedMin')"
+                     @input="updateItemGroup('spinSpeedMin')"
                      :disabled="!itemGroupData.spinSpeedOverride"
               >
 
@@ -164,21 +164,21 @@
               ></i></p>
               <input type="number" min="0" step="0.1" class="spinSpeedMax grid3"
                      v-model="itemGroupData.spinSpeedMax"
-                     @input="updateItem('spinSpeedMax')"
+                     @input="updateItemGroup('spinSpeedMax')"
                      :disabled="!itemGroupData.spinSpeedOverride"
               >
 
               <label class="grid1">
                 <input type="checkbox" class="throwAngleOverride"
                        v-model="itemGroupData.throwAngleOverride"
-                       @change="updateItem('throwAngleOverride')">
+                       @change="updateItemGroup('throwAngleOverride')">
               </label>
               <p class="grid2">Angle (Min) <i class="fa fa-info-circle"
                                                     v-b-tooltip.hover.left="'Minimum Throw Angle for thrown items'"
               ></i></p>
               <input type="number" min="-90" step="1" class="throwAngleMin grid3"
                      v-model="itemGroupData.throwAngleMin"
-                     @input="updateItem('throwAngleMin')"
+                     @input="updateItemGroup('throwAngleMin')"
                      :disabled="!itemGroupData.throwAngleOverride"
               >
 
@@ -187,7 +187,7 @@
               ></i></p>
               <input type="number" min="90" step="1" class="throwAngleMax grid3"
                      v-model="itemGroupData.throwAngleMax"
-                     @input="updateItem('throwAngleMax')"
+                     @input="updateItemGroup('throwAngleMax')"
                      :disabled="!itemGroupData.throwAngleOverride"
               >
 
@@ -196,7 +196,7 @@
               ></i></p>
               <input type="number" min="0" step="0.1" class="windupDelay grid3"
                      v-model="itemGroupData.windupDelay"
-                     @input="updateItem('windupDelay')"
+                     @input="updateItemGroup('windupDelay')"
               >
             </div>
           </section>
@@ -228,8 +228,8 @@ export default {
     return {
       libraryType: "itemGroups",
       libraryName: "Item Group",
-      itemId: null,
-      itemGroupData: null,
+      itemGroupId: null,
+      itemGroupData: {},
       itemList:{},
       selectedItem: '',
       soundList:{},
@@ -238,8 +238,8 @@ export default {
     }
   },
   methods: {
-    open(itemId) {
-      this.itemId = itemId;
+    open(itemGroupId) {
+      this.itemGroupId = itemGroupId;
       this.getItemGroupData();
       this.$refs['editModal'].show();
     },
@@ -250,31 +250,56 @@ export default {
     },
 
     getItemGroupData() {
-      this.$gameData.read(`${this.libraryType}.${this.itemId}`).then((result) => {
+      this.$gameData.read(`${this.libraryType}.${this.itemGroupId}`).then((result) => {
         this.$set(this, "itemGroupData", result);
+        this.updateItemsData();
       });
+
       this.listItems();
       this.listSounds();
     },
 
-    updateItem(field) {
-      let itemId = this.itemId;
-      this.$gameData.update(`${this.libraryType}.${itemId}.${field}`, this.itemGroupData[field]).then((success) => {
-        if(!success) console.log(`updateItem failed for ${this.libraryName} ${itemId}`);
+    updateItemGroup(field) {
+      let itemGroupId = this.itemGroupId;
+      this.$gameData.update(`${this.libraryType}.${itemGroupId}.${field}`, this.itemGroupData[field]).then((success) => {
+        if(!success) console.log(`updateItem failed for ${this.libraryName} ${itemGroupId}`);
       });
     },
 
+    updateItemsData() {
+      if(Array.isArray(this.itemGroupData.items)) {
+        let itemsNew = {}
+        this.itemGroupData.items.forEach((itemId) => {
+          itemsNew[itemId] = {
+            key: itemId,
+            chance: 1,
+            value: 1,
+          };
+        });
+        this.itemGroupData.items = itemsNew;
+        this.updateItemGroup('items');
+        console.log('Items have been upgraded to the new format!');
+      } else {
+        console.log('Items are already in the new format!');
+      }
+    },
+
     selectItem(itemId) {
-      if(!this.itemGroupData.items.includes(itemId)) {
-        this.itemGroupData.items.push(itemId);
-        this.updateItem('items');
+      if(!this.itemGroupData.items.hasOwnProperty(itemId)) {
+        this.itemGroupData.items[itemId] = {
+          key: itemId,
+          chance: 1,
+          value: 1,
+        };
+        this.updateItemGroup('items');
       }
       this.selectedItem = '';
     },
+
     deselectItem(itemId) {
-      if(this.itemGroupData.items.includes(itemId)) {
-        this.itemGroupData.items.splice(this.itemGroupData.items.indexOf(itemId),1);
-        this.updateItem('items');
+      if(this.itemGroupData.items.hasOwnProperty(itemId)) {
+        this.$delete(this.itemGroupData.items, itemId);
+        this.updateItemGroup('items');
       } else {
         console.log(`Can't deselect ${itemId} from item group`, this.itemGroupData.items)
       }
@@ -282,7 +307,7 @@ export default {
 
     getItemPath(filename) {
       let gameDataPath = this.$gameData.readSync('game_data_path');
-      return `${gameDataPath}/sounds/${filename}`;
+      return `${gameDataPath}/items/${filename}`;
     },
     listItems() {
       this.$set(this, "itemList", null);
@@ -294,14 +319,14 @@ export default {
     selectSound(soundId) {
       if(!this.itemGroupData.sounds.includes(soundId)) {
         this.itemGroupData.sounds.push(soundId);
-        this.updateItem('sounds');
+        this.updateItemGroup('sounds');
       }
       this.selectedSound = '';
     },
     deselectSound(soundId) {
       if(this.itemGroupData.sounds.includes(soundId)) {
         this.itemGroupData.sounds.splice(this.itemGroupData.sounds.indexOf(soundId),1);
-        this.updateItem('sounds');
+        this.updateItemGroup('sounds');
       } else {
         console.log(`Can't deselect ${soundId} from item group`, this.itemGroupData.sounds)
       }
