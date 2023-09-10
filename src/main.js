@@ -17,6 +17,7 @@ import '../public/style.css';
 import '../public/style-new.scss';
 import '../public/style-cc2.scss';
 import '../public/vselect-theme.scss';
+import {createPopper} from "@popperjs/core";
 
 Vue.component('v-select', vSelect);
 
@@ -31,6 +32,30 @@ Vue.prototype.$agentStatus = {
     }
     return null;
   }
+}
+
+Vue.prototype.$withPopper = function (dropdownList, component, { width }) {
+  console.log(component.$refs.toggle);
+  dropdownList.style.width = width;
+  dropdownList.style.zIndex = 999999;
+  const popper = createPopper(component.$refs.toggle, dropdownList, {
+    placement: 'top',
+    modifiers: [
+      {
+        name: 'toggleClass',
+        enabled: true,
+        phase: 'write',
+        fn({ state }) {
+          component.$el.classList.toggle(
+              'drop-up',
+              state.placement === 'top'
+          )
+        },
+      },
+    ],
+  })
+
+  return () => popper.destroy()
 }
 
 Vue.prototype.$appData = {
@@ -138,6 +163,9 @@ Vue.prototype.$gameData = {
   },
   "getCommandDetails": function(agentKey, actionKey, values) {
     return window.ipc.invoke('GET_COMMAND_DETAILS', {agentKey:agentKey, actionKey:actionKey, values:values});
+  },
+  "getTriggerDetails": function(agentKey, triggerKey, values) {
+    return window.ipc.invoke('GET_TRIGGER_DETAILS', {agentKey:agentKey, triggerKey:triggerKey, values:values});
   },
 }
 

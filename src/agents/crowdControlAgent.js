@@ -66,11 +66,12 @@ module.exports = class CrowdControlAgent {
                 'key': 'effect',
                 'label': 'In-Game Effect',
                 'description': 'A game effect is sent from Crowd Control',
+                'infoRenderHandler': "handleEffectInputRender",
                 'settings': [
                     {
                         'key': 'effectId',
                         'label': 'Effect',
-                        'type': 'groupedList',
+                        'type': 'advancedList',
                         'optionsLoader': 'getEffectInputOptions',
                         'settable': true
                     },
@@ -146,22 +147,43 @@ module.exports = class CrowdControlAgent {
     }
 
     async getEffectInputOptions() {
-        this.log(this);
         let effectList = this.currentPack.effects.game;
+        let gameID = this.currentPack.game.gameID;
+        let gamePackID = this.currentPack.gamePackID;
         let effectOptions = {};
         for(const [effectId, effect] of Object.entries(effectList)) {
-            let groupName = effect.hasOwnProperty('category') ? effect.category[0] : 'Ungrouped';
-            if(! effectOptions.hasOwnProperty(groupName)) {
-                effectOptions[groupName] = {'group': groupName, items: []};
-            }
+
+            let groupName = effect.hasOwnProperty('category') ? effect.category[0] : '';
             let effectName = effect.name;
             if(typeof effect.name === "object" && effect.name.hasOwnProperty('public')) {
                 effectName = effect.name.public;
             }
-            effectOptions[groupName].items.push({label: effectName, value: effectId});
+            let imageKey = effect.hasOwnProperty('image') ? effect.image : effectId;
+            let effectImage = `https://resources.crowdcontrol.live/images/${gameID}/${gamePackID}/icons/${imageKey}.png`;
+
+            effectOptions[effectId] = {
+                value: effectId,
+                label: effectName,
+                category: groupName,
+                image: effectImage
+            };
         }
 
-        return Object.values(effectOptions);
+        return effectOptions;
+    }
+
+    handleEffectInputRender(settings) {
+        let effectList = this.currentPack.effects.game;
+        let effectName = '[Unknown]';
+        for(const [effectId, effect] of Object.entries(effectList)) {
+            if(effectId === settings.effectId) {
+                effectName = effect.name;
+            }
+        }
+
+        return `<ul>` +
+            `<li><strong>Effect: </strong><span>${effectName}</span></li>` +
+            `</ul>`;
     }
 
     getGameSession() {

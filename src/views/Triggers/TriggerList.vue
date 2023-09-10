@@ -7,34 +7,41 @@
           <span></span>
         </div>
         <div class="ml-auto">
-          <select @change="handleSelectNewEvent">
-            <option :value="null" >Select an Event Type</option>
-            <optgroup v-for="(eventTypeGroup) in eventTypeList" :key="'evtg_'+listKey" :label="eventTypeGroup.name">
-              <option v-for="(eventType) in eventTypeGroup.options"
-                      :key="'evto_'+listKey"
-                      :value="`${eventType.agent}:${eventType.key}`">
-                {{ `${eventTypeGroup.name}: ${eventType.label}` }}
-              </option>
-            </optgroup>
-          </select>
-          <button :disabled="selectedTypeId === null" class="btn btn-teal add-btn" @click="uploadItem">New Trigger</button>
+          <v-select
+                    class="mb-2"
+                    style="min-width: 240px;"
+                    placeholder="Select an Event Type"
+                    @input="handleSelectNewEvent"
+                    :options="Object.values(eventTypeList)"
+                    :reduce="eventType => `${eventType.agent}:${eventType.key}`"
+          >
+            <template v-slot:option="option">
+              <div class="d-flex">
+                <div class="text-left" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">
+                  <small class="cc-fs-sm" >{{ option.label }}</small><br />
+                  <small class="cc-fs-sm cc-fc-w400" >{{ option.category }}</small>
+                </div>
+              </div>
+            </template>
+          </v-select>
+        </div>
+        <div class="">
+          <button :disabled="selectedTypeId === ''" class="btn btn-teal add-btn" @click="uploadItem">New Trigger</button>
         </div>
       </div>
 
       <div id="eventsTable" class="inner scrollable" v-if="eventTypeList && itemList">
         <ul class="asset-list">
-          <li v-for="(trigger, key) in itemList" :key="'ev_'+listKey">
+          <li v-for="(trigger, key) in itemList" :key="'ev_'+key">
             <div class="asset-heading">
               <div class="asset-title">
-                {{ eventTypeList[trigger.agent].options[trigger.event].label }}
+                <span>{{ trigger.name }}</span>
               </div>
               <div class="asset-subtitle">
-                {{ eventTypeList[trigger.agent].name }}
+                {{ eventTypeList[trigger.event].category }}: {{ eventTypeList[trigger.event].label }}
               </div>
             </div>
-            <div class="asset-details">
-              <span>{{ trigger.name }}</span>
-            </div>
+            <div class="asset-details" v-html="trigger.__details"></div>
             <div class="asset-actions">
               <a @click="editItem(key)" v-b-tooltip.hover.bottom.viewport="'Edit'"><i class="fa-solid fa-pen-to-square clickable" ></i></a>
               <a @click="removeItem(key)" v-b-tooltip.hover.bottom.viewport="'Remove'"><i class="fa-solid fa-trash-can clickable" ></i></a>
@@ -76,9 +83,9 @@ export default {
       libraryType: 'triggers',
       libraryName: 'Trigger',
       libraryUploadHandler: this.$gameData.createTrigger,
-      itemList: null,
-      eventTypeList: null,
-      selectedTypeId: null,
+      itemList: {},
+      eventTypeList: {},
+      selectedTypeId: '',
       selectedType: {},
       listKey: 0,
       gameDataPath: '',
@@ -87,22 +94,26 @@ export default {
   },
   methods: {
     listItems() {
-      this.$set(this, "itemList", null);
+      this.$set(this, "itemList", {});
       this.$forceUpdate();
       this.$gameData.read(`${this.libraryType}`).then((result) => {
-        this.$set(this, "itemList", result);
-        this.listKey++;
+        Object.values(result).forEach((trigger) => {
+          this.$gameData.getTriggerDetails(trigger.agent, trigger.event, trigger.settings).then((parsedInfo) => {
+            trigger.__details = parsedInfo;
+            this.$set(this.itemList, trigger.id, trigger);
+            this.listKey++;
+          });
+        });
       });
     },
     uploadItem() {
       console.log(`sending create message for ${this.libraryName}`);
       this.libraryUploadHandler(this.selectedType.agent, this.selectedType.event).then((result) => {
         if(result.success) {
-          console.log('event create good!');
           console.log(result.item);
           this.$set(this.itemList, result.item.id, result.item);
           this.listKey++;
-          this.selectedTypeId = null;
+          this.selectedTypeId = '';
           this.selectedType = {};
           this.listItems();
           this.editItem(result.item.id);
@@ -125,8 +136,14 @@ export default {
       }
     },
 
-    handleSelectNewEvent(event) {
-      let [agent , trigger] = event.target.value.split(':');
+    handleSelectNewEvent(value) {
+      if(!value) {
+        console.log('unsetting selected type');
+        this.selectedTypeId = '';
+        this.selectedType = {};
+        return;
+      }
+      let [agent , trigger] = value.split(':');
       this.setSelectedType(agent, trigger);
     },
     listEventTypes() {
@@ -139,6 +156,7 @@ export default {
       });
     },
     setSelectedType(agent, event) {
+      console.log('setting selected type',agent, event);
       let key = `${agent}:${event}`;
       this.selectedTypeId = key;
       if(key) {

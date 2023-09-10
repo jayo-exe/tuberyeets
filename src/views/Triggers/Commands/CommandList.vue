@@ -5,21 +5,27 @@
         <h6>Commands for <em>{{script.name}}</em></h6>
       </div>
       <div class="ml-auto">
-        <select @change="handleSelectNewAction">
-          <option :value="null" >Select an Action Type</option>
-          <optgroup v-if="!getActionTypeGroupHidden(gindex)" v-for="(actionTypeGroup, gindex) in actionTypeList" :key="'actg_'+gindex+commandListKey" :label="actionTypeGroup.name">
-            <option v-for="(actionType, aindex) in actionTypeGroup.options"
-                    :key="'acto_'+aindex+commandListKey"
-                    :value="`${actionType.agent}:${actionType.key}`"
-                    :disabled="getActionTypeOptionDisabled(actionType)"
-                    :test-attr="$agentStatus.getStatus(actionType.agent).status"
-            >
 
-              {{ `${actionTypeGroup.name}: ${actionType.label}` }}
-            </option>
-          </optgroup>
-        </select>
-        <button :disabled="selectedActionId === null" class="btn btn-teal add-btn" @click="uploadCommand()">New Command</button>
+        <v-select
+            class="mb-2"
+            style="min-width: 240px;"
+            placeholder="Select an Action Type"
+            @input="handleSelectNewAction"
+            :options="Object.values(actionTypeList).filter(actionType => !getActionTypeHidden(actionType))"
+            :reduce="actionType => `${actionType.agent}:${actionType.key}`"
+        >
+          <template v-slot:option="option">
+            <div class="d-flex">
+              <div class="text-left" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">
+                <small class="cc-fs-sm" >{{ option.label }}</small><br />
+                <small class="cc-fs-sm cc-fc-w400" >{{ option.category }}</small>
+              </div>
+            </div>
+          </template>
+        </v-select>
+      </div>
+      <div>
+        <button :disabled="selectedActionId === ''" class="btn btn-teal add-btn" @click="uploadCommand()">New Command</button>
       </div>
     </div>
     <div class="script-timeline" v-if="commandTimeline && actionTypeList">
@@ -41,10 +47,10 @@
           </div>
           <div class="asset-heading">
             <div class="asset-title">
-              {{ actionTypeList[command.agent].options[command.action].label }}
+              {{ actionTypeList[command.action].label }}
             </div>
             <div class="asset-subtitle">
-              {{ actionTypeList[command.agent].name }}
+              {{ actionTypeList[command.action].category }}
             </div>
           </div>
           <div class="asset-details" v-html="command.__details"></div>
@@ -92,7 +98,7 @@ export default {
       libraryUploadHandler: this.$gameData.createTriggerCommand,
       libraryType: "commands",
       libraryName: "command",
-      selectedActionId: null,
+      selectedActionId: '',
       selectedAction: {},
     }
   },
@@ -104,11 +110,17 @@ export default {
         this.$set(this, "actionTypeList", result);
       });
     },
-    handleSelectNewAction(event) {
-      let [agent , action] = event.target.value.split(':');
+    handleSelectNewAction(value) {
+      if(!value) {
+        this.selectedActionId = '';
+        this.selectedAction = {};
+        return;
+      }
+      let [agent , action] = value.split(':');
       this.setSelectedAction(agent, action);
     },
     setSelectedAction(agent, action) {
+      console.log('setting selected action', agent, action);
       let key = `${agent}:${action}`;
       this.selectedActionId = key;
       if(key) {
@@ -117,6 +129,7 @@ export default {
           action: action
         };
       }
+      console.log(this.selectedActionId);
     },
     listCommands() {
       this.$set(this, "commandList", {});
@@ -146,7 +159,7 @@ export default {
         if(result.success) {
           this.$set(this.commandList, result.item.id, result.item);
           this.commandListKey++;
-          this.selectedActionId = null;
+          this.selectedActionId = '';
           this.selectedAction = {};
           this.editCommand(result.item.id);
         }
@@ -170,9 +183,7 @@ export default {
     getTimelineTooltip(timeCode) {
       let html = `<div><strong>${timeCode}ms:</strong></div>`;
       for (const [key, command] of Object.entries(this.commandTimeline[timeCode])) {
-        console.log('command',command);
-        console.log('atl',this.actionTypeList);
-        html = html + `<div>${this.actionTypeList[command.agent].options[command.action].label}</div>`;
+        html = html + `<div>${this.actionTypeList[command.action].label}</div>`;
       }
       return html;
     },
@@ -183,11 +194,17 @@ export default {
       }
       return false;
     },
-    getActionTypeGroupHidden(agent) {
-      return this.$agentStatus.getStatus(agent).status === 'disabled';
+    getActionTypeHidden(actionType) {
+      console.log('at',actionType);
+      let isDisabled = this.$agentStatus.getStatus(actionType.agent).status === 'disabled';
+      let isDisconnected = this.$agentStatus.getStatus(actionType.agent).status !== 'connected';
+      if(actionType.requireAgentConnection === true) {
+       return isDisabled || isDisconnected;
+      }
+      return isDisabled;
     },
     getCommandEditDisabled(command) {
-      let actionType = this.actionTypeList[command.agent].options[command.action];
+      let actionType = this.actionTypeList[command.action];
       return this.getActionTypeOptionDisabled(actionType);
     },
   },

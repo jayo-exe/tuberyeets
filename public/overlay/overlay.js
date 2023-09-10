@@ -328,7 +328,6 @@ function connectBridge()
                 }
 
                 console.log("Received " + data.type);
-                var temp_data = {...data.appSettings};
 
                 switch(data.type)
                 {
@@ -346,8 +345,8 @@ function connectBridge()
                         playSound(data.sound, data.volume, data.masterVolume, data.game_data_path);
                         break;
                     default:
-                        if (data.itemGroup.groupCountOverride)
-                            data.appSettings.groupCount = data.itemGroup.groupCount;
+
+                        data.appSettings.groupCount = data.itemGroup.groupCount;
                         if (data.itemGroup.groupFrequencyOverride)
                             data.appSettings.groupFrequency = data.itemGroup.groupFrequency;
                         if (data.itemGroup.throwDurationOverride)
@@ -365,27 +364,8 @@ function connectBridge()
                             data.appSettings.spinSpeedMax = data.itemGroup.spinSpeedMax;
                         }
 
-                        /*var windup, canPlayWindup;
-                        if (windupSound != null)
-                        {
-                            windup = new Audio();
-                            windup.src = game_folder + "/" + "windups/" + encodeURIComponent(windupSound.location);
-                            windup.volume = windupSound.volume * data.masterVolume;
-                            canPlayWindup = false;
-                            windup.oncanplaythrough = function() { canPlayWindup = true; }
-                        }
-                        else
-                            canPlayWindup = true;
-
-                        while (!canPlayWindup)
-                            await new Promise(resolve => setTimeout(resolve, 10));
-                            
-                        if (windupSound != null)
-                            windup.play();
-                        */
-
                         setTimeout(() => {
-                            groupTick(data.items, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, temp_data.groupFrequency * 1000, 0);
+                            groupTick(data.items, data.appSettings, data.game_data_path, data.modelCalibration, flinchParameters, data.appSettings.groupFrequency * 1000, 0);
                         }, data.itemGroup.windupDelay * 1000);
                         break;
                 }
@@ -398,6 +378,10 @@ function connectBridge()
 connectBridge();
 // Retry connection to TuberYeets BRIDGE every 3 seconds
 var tryConnectBridge = setInterval(retryConnectBridge, 1000 * 3);
+
+function applyItemGroupOverrides() {
+
+}
 
 function retryConnectBridge()
 {

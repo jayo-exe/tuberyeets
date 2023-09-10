@@ -84,7 +84,7 @@
               class="no-drag mr-2"
               style="width: 100%;"
               append-to-body
-              :calculate-position="withPopper"
+              :calculate-position="$withPopper"
               :clearable="false"
               :disabled="gameLocked"
               :options="games"
@@ -114,7 +114,7 @@
                       v-if="currentGame.length > 1"
                       class="no-drag"
                       append-to-body
-                      :calculate-position="withPopper"
+                      :calculate-position="$withPopper"
                       :clearable="false"
                       :disabled="gameLocked"
                       :options="currentGame"
@@ -255,36 +255,7 @@ export default {
     },
     restartAndInstall() {
       window.ipc.send('RESTART');
-    },
-    withPopper(dropdownList, component, { width }) {
-      console.log(component.$refs.toggle);
-      dropdownList.style.width = width
-
-      const popper = createPopper(component.$refs.toggle, dropdownList, {
-        placement: 'top',
-        modifiers: [
-          {
-            name: 'offset',
-            options: {
-              offset: [0, -1],
-            },
-          },
-          {
-            name: 'toggleClass',
-            enabled: true,
-            phase: 'write',
-            fn({ state }) {
-              component.$el.classList.toggle(
-                  'drop-up',
-                  state.placement === 'top'
-              )
-            },
-          },
-        ],
-      })
-
-      return () => popper.destroy()
-    },
+    }
   },
 
   mounted() {

@@ -15,28 +15,25 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Action Type</label>
-                <p style="margin: 0">{{ `${actionTypeList[commandData.agent].name}: ${actionTypeList[commandData.agent].options[commandData.action].label}` }}</p>
+                <p style="margin: 0">{{ `${actionTypeList[commandData.action].category}: ${actionTypeList[commandData.action].label}` }}</p>
               </div>
             </div>
             <div class="input-settings">
               <div v-for="(setting, settingName) in actionSettingList" >
                 <div v-if="(setting && shouldDisplayField(setting))" class="form-group" >
                   <label class="form-label">{{ `${setting.label}` }}</label>
-                  <template v-if="setting.type === 'groupedList'">
-                    <select class="form-input" v-model="commandData.settings[setting.key]" @change="updateCommand('settings')">
-                      <optgroup v-for="(settingOptionGroup, groupIndex) in setting.options" :key="'comg_'+groupIndex" :label="settingOptionGroup.group">
-                        <option v-for="(settingOption, optionIndex) in settingOptionGroup.items" :key="'como_'+optionIndex" :value="settingOption.value">
-                          {{ `${settingOptionGroup.group}: ${settingOption.label}` }}
-                        </option>
-                      </optgroup>
-                    </select>
-                  </template>
-                  <template v-else-if="setting.type === 'list'">
-                    <select class="form-input" v-model="commandData.settings[setting.key]" @change="updateCommand('settings')">
-                        <option v-for="(settingOption, optionIndex) in setting.options" :key="'como_'+optionIndex" :value="settingOption.value">
-                          {{ settingOption.label }}
-                        </option>
-                    </select>
+                  <template v-if="setting.type === 'list'">
+                    <v-select v-model="commandData.settings[setting.key]"
+                              append-to-body
+                              :clearable="false"
+                              :calculate-position="$withPopper"
+                              class="mb-2"
+                              placeholder="Select an Option"
+                              @input="updateCommand('settings')"
+                              :options="Object.values(setting.options)"
+                              label="label"
+                              :reduce="option => option.value"
+                    ></v-select>
                   </template>
                   <template v-else-if="setting.type === 'toggle'">
                     <input type="checkbox" class="form-input" v-model="commandData.settings[setting.key]" @change="updateCommand('settings')" >
@@ -48,11 +45,17 @@
                     <input type="text" class="form-input" v-model="commandData.settings[setting.key]" @input="updateCommand('settings')">
                   </template>
                   <template v-else-if="setting.type === 'parameter'">
-                    <select class="form-input" v-model="commandData.settings[setting.key]" @change="updateCommand('settings')">
-                      <option v-for="(settingOption, optionIndex) in eventSettingList" :key="'para_'+optionIndex" :value="settingOption.key">
-                        {{ settingOption.label }}
-                      </option>
-                    </select>
+                    <v-select v-model="commandData.settings[setting.key]"
+                              append-to-body
+                              :clearable="false"
+                              :calculate-position="$withPopper"
+                              class="mb-2"
+                              placeholder="Select an Option"
+                              @input="updateCommand('settings')"
+                              :options="Object.values(eventSettingList)"
+                              label="label"
+                              :reduce="option => option.key"
+                    ></v-select>
                   </template>
                   <template v-else>
                     <input type="text" class="form-input" v-model="commandData.settings[setting.key]" @input="updateCommand('settings')">
@@ -127,14 +130,14 @@ export default {
     },
 
     listActionTypes() {
-      this.$set(this, "actionTypeList", null);
+      this.$set(this, "actionTypeList", {});
       this.$forceUpdate();
       this.$gameData.getActionTypes().then((result) => {
         this.$set(this, "actionTypeList", result);
       });
     },
     listActionSettings() {
-      this.$set(this, "actionSettingList", null);
+      this.$set(this, "actionSettingList", {});
       this.$forceUpdate();
       this.$gameData.getActionSettings(this.commandData.agent, this.commandData.action).then((result) => {
         this.$set(this, "actionSettingList", result);

@@ -119,11 +119,11 @@ module.exports = class AgentRegistry {
                 && agent.hasOwnProperty('agentInputs')
                 && Object.keys(agent.agentInputs).length > 0)
             {
-                availableEvents[key] = {name:agent.agentLabel, options:{}};
                 for (const [inputKey, input] of Object.entries(agent.agentInputs)) {
-                    availableEvents[key].options[inputKey] = {
+                    availableEvents[inputKey] = {
                         key:input.key,
                         label:input.label,
+                        category: agent.agentLabel,
                         description:input.description,
                         agent:key,
                     };
@@ -155,11 +155,11 @@ module.exports = class AgentRegistry {
             if( agent.hasOwnProperty('agentOutputs')
                 && Object.keys(agent.agentOutputs).length > 0)
             {
-                availableActions[key] = {name:agent.agentLabel, options:{}};
                 for (const [outputKey, output] of Object.entries(agent.agentOutputs)) {
-                    availableActions[key].options[outputKey] = {
+                    availableActions[outputKey] = {
                         key:output.key,
                         label:output.label,
+                        category: agent.agentLabel,
                         description:output.description,
                         requireAgentConnection: output.requireAgentConnection,
                         agent:key,
@@ -197,6 +197,18 @@ module.exports = class AgentRegistry {
             return '';
         }
         return await agent[action.infoRenderHandler](values);
+    }
+
+    async getTriggerDetails(agentKey, triggerKey, values) {
+        this.log(`getting trigger details for ${agentKey}:${triggerKey}`);
+        let agent = this.agents[agentKey];
+        if (!agent) { return false; }
+        let event = agent.agentInputs[triggerKey];
+        if (!event) { return false; }
+        if(!event.hasOwnProperty('infoRenderHandler')) {
+            return '';
+        }
+        return await agent[event.infoRenderHandler](values);
     }
 
     getAllAgentDetails() {

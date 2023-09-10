@@ -847,8 +847,7 @@ class OverlayAgent {
     throwItemGroup(itemGroupId,customCount=null) {
         this.log('Sending Item Group');
         let gdh = this.agentRegistry.gameData;
-
-        this.sendWithTargeting({
+        let data= {
             "items": gdh.itemGroupEventHelper.getItemsForGroup(itemGroupId,customCount),
             "type": itemGroupId,
             "masterVolume": this.agentRegistry.appData.read('volume'),
@@ -856,7 +855,9 @@ class OverlayAgent {
             "appSettings": this.getAppSettings(),
             "itemGroup": gdh.read(`itemGroups.${itemGroupId}`),
             "game_data_path": gdh.read(`game_data_path`)
-        });
+        };
+        console.log(data)
+        this.sendWithTargeting(data);
     }
 
     startItemStream(itemGroupId, customDuration=null) {

@@ -15,22 +15,53 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Event Type</label>
-                <p style="margin: 0">{{ `${eventTypeList[itemData.agent].name}: ${eventTypeList[itemData.agent].options[itemData.event].label}` }}</p>
+                <p style="margin: 0">{{ eventTypeList[itemData.event].category }}: {{ eventTypeList[itemData.event].label }}</p>
               </div>
             </div>
             <div class="input-settings">
               <div v-for="(setting, settingKey) in eventSettingList" >
                 <div v-if="setting.settable" class="form-group" >
                   <label class="form-label">{{ `${setting.label}` }}</label>
-                  <template v-if="setting.type === 'groupedList'">
-                    <select class="form-input" v-model="itemData.settings[setting.key]" @change="updateItem('settings')">
-                      <optgroup v-for="(settingOptionGroup, groupIndex) in setting.options" :key="'evtg_'+groupIndex" :label="settingOptionGroup.group">
-                        <option v-for="(settingOption, optionIndex) in settingOptionGroup.items" :key="'evto_'+optionIndex" :value="settingOption.value">
-                          {{ `${settingOptionGroup.group}: ${settingOption.label}` }}
-                        </option>
-                      </optgroup>
-                    </select>
+                  <template v-if="setting.type === 'list'">
+                    <v-select v-model="itemData.settings[setting.key]"
+                              append-to-body
+                              :clearable="false"
+                              :calculate-position="$withPopper"
+                              class="mb-2"
+                              placeholder="Select an Option"
+                              @input="updateItem('settings')"
+                              :options="Object.values(setting.options)"
+                              label="label"
+                              :reduce="option => option.value"
+                    ></v-select>
                   </template>
+
+                  <template v-else-if="setting.type === 'advancedList'">
+                    <v-select
+                        class="mb-2"
+                        v-model="itemData.settings[setting.key]"
+                        :clearable="false"
+                        placeholder="Select an Option"
+                        @input="updateItem('settings')"
+                        :options="Object.values(setting.options)"
+                        :reduce="option => option.value"
+                    >
+                      <template v-slot:option="option">
+                        <div class="d-flex">
+                          <div class="mr-2 pl-0 ml-n1 text-center">
+                            <div style="width:32px;height:32px">
+                              <img style="max-height: 32px; max-width: 32px;" :src="option.image">
+                            </div>
+                          </div>
+                          <div class="text-right" style="overflow-x:hidden; text-overflow:ellipsis; white-space:nowrap">
+                            <small class="cc-fs-sm" >{{ option.label }}</small><br />
+                            <small class="cc-fs-sm cc-fc-w400" >{{ option.category }}</small>
+                          </div>
+                        </div>
+                      </template>
+                    </v-select>
+                  </template>
+
                 </div>
               </div>
             </div>

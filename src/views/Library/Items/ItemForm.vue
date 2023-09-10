@@ -25,7 +25,7 @@
                 <label class="form-label cc-fs-sm">Sound</label>
                 <v-select v-model="itemData.sound"
                           append-to-body
-                          :calculate-position="withPopper"
+                          :calculate-position="$withPopper"
                           class="mb-2"
                           placeholder="Select a Sound"
                           @input="updateItem('sound')"
@@ -122,29 +122,6 @@ export default {
     testCustomItem() {
       console.log('Testing custom item: ' + this.itemData.id);
       window.ipc.send('TEST_CUSTOM_ITEM', this.itemData.id);
-    },
-    withPopper(dropdownList, component, { width }) {
-      console.log(component.$refs.toggle);
-      dropdownList.style.width = width;
-      dropdownList.style.zIndex = 999999;
-      const popper = createPopper(component.$refs.toggle, dropdownList, {
-        placement: 'top',
-        modifiers: [
-          {
-            name: 'toggleClass',
-            enabled: true,
-            phase: 'write',
-            fn({ state }) {
-              component.$el.classList.toggle(
-                  'drop-up',
-                  state.placement === 'top'
-              )
-            },
-          },
-        ],
-      })
-
-      return () => popper.destroy()
     },
   },
   mounted() {

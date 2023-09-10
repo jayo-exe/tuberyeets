@@ -2,21 +2,18 @@
   <div class="settings-form-grid" v-if="agent_details && agent_settings">
     <div class="form-group" v-for="(setting, key) in agent_details.settings" v-if="setting.settable">
       <label class="form-label">{{ `${setting.label}` }}</label>
-      <template v-if="setting.type === 'groupedList'">
-        <select class="form-input" v-model="live_agent_settings[setting.key]" @change="updateSettings">
-          <optgroup v-for="(settingOptionGroup, groupIndex) in setting.options" :key="'comg_'+groupIndex" :label="settingOptionGroup.group">
-            <option v-for="(settingOption, optionIndex) in settingOptionGroup.items" :key="'como_'+optionIndex" :value="settingOption.value">
-              {{ `${settingOptionGroup.group}: ${settingOption.label}` }}
-            </option>
-          </optgroup>
-        </select>
-      </template>
-      <template v-else-if="setting.type === 'list'">
-        <select class="form-input" v-model="live_agent_settings[setting.key]" @change="updateSettings">
-          <option v-for="(settingOption, optionIndex) in setting.options" :key="'como_'+optionIndex" :value="settingOption.value">
-            {{ settingOption.label }}
-          </option>
-        </select>
+      <template v-if="setting.type === 'list'">
+        <v-select v-model="live_agent_settings[setting.key]"
+                  append-to-body
+                  :clearable="false"
+                  :calculate-position="$withPopper"
+                  class="mb-2"
+                  placeholder="Select an Option"
+                  @input="updateSettings"
+                  :options="Object.values(setting.options)"
+                  label="label"
+                  :reduce="option => option.value"
+        ></v-select>
       </template>
       <template v-else-if="setting.type === 'toggle'">
         <input type="checkbox" class="form-input" v-model="live_agent_settings[setting.key]" @change="updateSettings" >
