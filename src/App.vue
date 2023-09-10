@@ -77,7 +77,7 @@
         <span class="d-flex flex-row" id="game-select-wrapper" style="margin-top: 4px;" v-if="games">
           <div class="col-8 px-0 d-flex flex-row">
             <b-tooltip v-if="gameLocked" target="game-select-wrapper" triggers="hover" placement="bottom">
-              <i class="fa-solid fa-lock"></i> Game selection is locked while browsing game-specific sections
+              <i class="fa-solid fa-lock"></i> Game selection can only be changed while on the Settings screen
             </b-tooltip>
             <i style="padding:6px; float: left;" class="fa-solid fa-folder-open open-folder no-drag" @click="openGameFolder" v-b-tooltip.hover.left="'Delete files and import/export effect packs'"></i>
             <v-select v-model="currentGameId"
@@ -275,6 +275,7 @@ export default {
       console.log('Game Data Loaded!');
     });
     window.ipc.on('GAME_SAVE_STATUS', (payload) => {
+      console.log('GAME SAVE STATUS');
       if(payload) {
         this.autoGameSaveStatus = payload;
         if(payload == "saving") { this.game_data_loading = true; }

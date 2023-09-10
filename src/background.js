@@ -43,6 +43,7 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindow;
 let authWindow;
+let mainAppReady = false;
 
 async function createWindow() {
   // Create the browser window.
@@ -256,14 +257,27 @@ setInterval(() => {
 // ----------------
 
 appData.statusCallback = function(status) {
+  if(!mainAppReady) {
+    console.log('window doesnt exist yet!');
+    setTimeout(() => {this.statusCallback(status)}, 500);
+    return;
+  }
   if (mainWindow != null && !exiting) {
+    console.log('sending status');
     mainWindow.webContents.send("SAVE_STATUS", status);
   }
 }
 gameData.statusCallback = function(status) {
+  if(!mainAppReady) {
+    console.log('window doesnt exist yet!');
+    setTimeout(() => {this.statusCallback(status)}, 500);
+    return;
+  }
   if (mainWindow != null && !exiting) {
+    console.log('sending gamefile load status: ', status);
     mainWindow.webContents.send("GAME_SAVE_STATUS", status);
   }
+
 }
 gameData.itemGroupDefaultsCallback = function() {
   return {
@@ -277,6 +291,7 @@ gameData.itemGroupDefaultsCallback = function() {
 }
 
 ipcMain.on('GET_DATA_PATH', (event, payload) => {
+  mainAppReady = true;
   event.reply('GET_DATA_PATH', userDataPath);
 });
 
@@ -289,7 +304,8 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
 });
 
 ipcMain.on('BEGIN_CC_AUTH', async(event) => {
-  await createAuthWindow(agentRegistry.getAgent('crowdcontrol').connectionId);
+  let agent = agentRegistry.getAgent('crowdcontrol');
+  await createAuthWindow(agent.pubSub.connectionId);
 });
 
 ipcMain.on('SET_GAME', (event, payload) => {

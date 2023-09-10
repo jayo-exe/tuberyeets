@@ -10,7 +10,7 @@
           <button class="btn btn-sm btn-blurple ml-1" @click="copyOverlayLink">Copy Overlay Link</button>
         </div>
       </div>
-      <div>
+      <div v-if="agent_status.overlay.status === 'connected'">
         <div v-if="status_details.hasOwnProperty(calibrate_status)">
           <h2 id="status">{{ status_details[calibrate_status].title }}</h2>
           <div class="mb-3" id="statusDesc" v-html="status_details[calibrate_status].description"></div>
@@ -22,6 +22,17 @@
           <button @click="cancelCalibrate" class="mb-3 btn btn-red" v-else>Cancel Calibration</button>
         </div>
       </div>
+      <div class="section-panel" v-else>
+        <div class="section-heading">
+          <div class="section-title">
+            <h5>Overlay not Connected</h5>
+            <span class="cc-fs-sm">
+            <p>Target Calibration requires an active connection to the Overlay.</p>
+            <p>Enable the Overlay Connection, and set up a Browser Source.  You can get the URL for the TuberYeets Overlay by clicking the <strong> Copy Overlay Link</strong> button above</p>
+          </span>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -29,12 +40,11 @@
 <script>
 export default {
   name: 'CalibrationView',
-  props: ['calibrate_status'],
+  props: ['calibrate_status', 'agent_status'],
   data : function() {
     return {
       overlayPath: '',
       calibration_status: -2,
-      live_app_data: this.app_data,
       calibration_statuses: [3,4,7],
       status_details: {
         "-2": {title: "Undetermined", description:"Calibration is in an undetermined state"},
@@ -73,7 +83,6 @@ export default {
     this.$emit('unlock-game-change');
     this.$appData.getOverlayPath().then((result) => {
       this.overlayPath = result;
-      console.log('BOOP', this.overlayPath);
     });
   },
   beforeDestroy() {

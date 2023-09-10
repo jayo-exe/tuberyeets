@@ -1,5 +1,5 @@
 <template>
-  <div v-if="itemList" class="d-flex">
+  <div class="d-flex">
     <section id="overlayImages" style="flex: 1">
       <div class="section-heading">
         <div class="section-title">
@@ -21,7 +21,7 @@
             </label>
           </div>
         </div>
-        <ul class="asset-list with-endcap" style="margin-top: 56px; ">
+        <ul v-if="itemList" class="asset-list with-endcap" style="margin-top: 56px; ">
           <li v-for="(overlayItem, key) in itemList" :key="'bi_'+overlayItem.id+listKey" style="grid-template-columns: 5em 1fr 10em;">
             <div class="asset-endcap">
               <img class="imageImage img-pxl" :src="'file://'+getItemPath(overlayItem.location)" @click="testCustomItem(overlayItem.id)" v-b-tooltip.hover="'Test'"></img>

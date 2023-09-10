@@ -1,5 +1,5 @@
 <template>
-  <div v-if="itemList" class="d-flex">
+  <div class="d-flex">
     <section id="overlayImages" style="flex: 1">
       <div class="section-heading">
         <div class="section-title">
@@ -21,7 +21,7 @@
             </label>
           </div>
         </div>
-        <ul class="asset-list with-endcap" style="margin-top: 56px; ">
+        <ul v-if="itemList" class="asset-list with-endcap" style="margin-top: 56px; ">
           <li v-for="(itemGroupImpact, key) in itemList" :key="'bim_'+itemGroupImpact.id+listKey" style="grid-template-columns: 4em 1fr 10em;">
             <div class="asset-endcap">
               <i class="sound-icon fa-solid fa-volume-high" style="font-size: 29px; color: var(--cc-color-w300)"></i>
