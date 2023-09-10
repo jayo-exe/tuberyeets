@@ -379,12 +379,8 @@ class OverlayAgent {
     }
 
     agentDisabled() {
-        if(this.socketServer) {
-            if (this.socketServer.readyState !== WebSocket.CLOSED) {
-                this.socketServer.close();
-            }
-        }
         this.log("Agent Disabled.");
+        this.closeServer();
     }
 
     agentStatus() {
@@ -610,7 +606,7 @@ class OverlayAgent {
     }
 
     createServer() {
-        this.portInUse = false;
+        this.closeServer();
         let targetPort = this.agentRegistry.getAgentFieldData(this,'port');
         this.socketServer = new WebSocket.Server({ port: targetPort });
         this.socketServer.on("error", (err) => { this.socketServerHandleError(err) } );
@@ -620,9 +616,19 @@ class OverlayAgent {
         this.socketServer.on("connection", (ws) => { this.socketServerHandleConnection(ws) });
     }
 
+    closeServer() {
+        if(this.socketServer) {
+            if (this.socketServer.readyState !== WebSocket.CLOSED) {
+                this.socketServer.close();
+                this.portInUse = false;
+            }
+        }
+    }
+
     socketServerHandleError(err) {
         this.portInUse = true;
         this.log("[Overlay Agent] Socket Error: ", err)
+        this.closeServer();
         // Retry server creation after 3 seconds
         setTimeout(() => {
             this.createServer()
