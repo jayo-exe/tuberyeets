@@ -3,7 +3,7 @@ const axios = require("axios");
 
 class OverlayAgent {
 
-    constructor() {
+    constructor(agentRegistry) {
         this.socketServer = null;
         this.socketClient = null;
         this.portInUse = false;
@@ -12,7 +12,7 @@ class OverlayAgent {
         this.overlayConnected = false;
         this.itemStreams = {};
         this.stacks = {itemStream: {}};
-        this.agentRegistry = null;
+        this.agentRegistry = agentRegistry;
         this.agentName = 'Overlay';
         this.agentDescription = 'Throw items at your model, play sounds, and more!';
         this.agentKey = 'overlay';
@@ -164,210 +164,19 @@ class OverlayAgent {
         ];
         this.agentInputs = {};
         this.agentOutputs = {
-            throwItem: {
-                'key': 'throwItem',
-                'label': 'Throw an Item',
-                'description': 'Throw an item from the TuberYeets library',
-                'handler': "handleThrowItemOutput",
-                'infoRenderHandler': "handleThrowItemRender",
-                'requireAgentConnection': false,
-                'settings': [
-                    {
-                        'key': 'item',
-                        'label': 'Item',
-                        'type': 'list',
-                        'optionsLoader': "getThrowItemOutputOptions",
-                        'default': ''
-                    },
-                    {
-                        'key': 'match_quantity',
-                        'label': 'Match Quantity to Event Parameter',
-                        'type': 'toggle',
-                        'default': false
-                    },
-                    {
-                        'key': 'quantity',
-                        'label': 'Quantity',
-                        'type': 'integer',
-                        'hideIfToggled': "match_quantity",
-                        'default': 1
-                    },
-                    {
-                        'key': 'quantity_parameter',
-                        'label': 'Event Parameter',
-                        'type': 'parameter',
-                        'showIfToggled': "match_quantity",
-                        'default': 'quantity'
-                    },
-                ]
-            },
-            throwItemGroup: {
-                'key': 'throwItemGroup',
-                'label': 'Throw a Group of Items',
-                'description': 'Throw an Item Group from the TuberYeets library',
-                'handler': "handleThrowItemGroupOutput",
-                'infoRenderHandler': "handleThrowItemGroupRender",
-                'requireAgentConnection': false,
-                'settings': [
-                    {
-                        'key': 'itemGroup',
-                        'label': 'Item Group',
-                        'type': 'list',
-                        'optionsLoader': "getThrowItemGroupOutputOptions",
-                        'default': ''
-                    },
-                    {
-                        'key': 'match_quantity',
-                        'label': 'Match Quantity to Event Parameter',
-                        'type': 'toggle',
-                        'default': false
-                    },
-                    {
-                        'key': 'quantity_parameter',
-                        'label': 'Event Parameter',
-                        'type': 'parameter',
-                        'showIfToggled': "match_quantity",
-                        'default': 'quantity'
-                    }
-                ]
-            },
-            startItemStream: {
-                'key': 'startItemStream',
-                'label': 'Start throwing a Stream of Items',
-                'description': 'Start throwing a stream of items from an Item Group from the TuberYeets library',
-                'handler': "handleStartItemStreamOutput",
-                'infoRenderHandler': "handleStartItemStreamRender",
-                'requireAgentConnection': false,
-                'settings': [
-                    {
-                        'key': 'itemGroup',
-                        'label': 'Item Group',
-                        'type': 'list',
-                        'optionsLoader': "getThrowItemGroupOutputOptions",
-                        'default': ''
-                    },
-                    {
-                        'key': 'match_duration',
-                        'label': 'Match Duration to Event Parameter',
-                        'type': 'toggle',
-                        'default': false
-                    },
-                    {
-                        'key': 'duration',
-                        'label': 'Max Duration (ms)',
-                        'type': 'integer',
-                        'hideIfToggled': "match_duration",
-                        'default': 60000
-                    },
-                    {
-                        'key': 'duration_parameter',
-                        'label': 'Event Parameter',
-                        'type': 'parameter',
-                        'showIfToggled': "match_duration",
-                        'default': 'duration'
-                    }
-                ]
-            },
-            stopItemStream: {
-                'key': 'stopItemStream',
-                'label': 'Stop throwing a Stream of Items',
-                'description': 'Stop throwing a stream of items from an Item Group from the TuberYeets library',
-                'handler': "handleStopItemStreamOutput",
-                'infoRenderHandler': "handleStopItemStreamRender",
-                'requireAgentConnection': false,
-                'settings': [
-                    {
-                        'key': 'itemGroup',
-                        'label': 'Item Group',
-                        'type': 'list',
-                        'optionsLoader': "getThrowItemGroupOutputOptions",
-                        'default': ''
-                    }
-                ]
-            },
-            playSound: {
-                'key': 'playSound',
-                'label': 'Play a Sound',
-                'description': 'Play a Sound from the TuberYeets library',
-                'handler': "handlePlaySoundOutput",
-                'infoRenderHandler': "handlePlaySoundRender",
-                'requireAgentConnection': false,
-                'settings': [
-                    {
-                        'key': 'sound',
-                        'label': 'Sound',
-                        'type': 'list',
-                        'optionsLoader': "getPlaySoundOutputOptions",
-                        'default': ''
-                    }
-                ]
-            },
-            fireGetWebhook: {
-                'key': 'fireGetWebhook',
-                'label': 'Fire a GET Webhook',
-                'description': 'send a HTTP GET Request',
-                'handler': "handleFireGetWebhookOutput",
-                'infoRenderHandler': "handleFireGetWebhookRender",
-                'requireAgentConnection': false,
-                'settings': [
-
-                    {
-                        'key': 'description',
-                        'label': 'Webhook Description',
-                        'type': 'text',
-                        'default': 'My New Webhook'
-                    },
-                    {
-                        'key': 'url',
-                        'label': 'Webhook URL',
-                        'type': 'text',
-                        'default': ''
-                    },
-                ]
-            },
-            firePostWebhook: {
-                'key': 'firePostWebhook',
-                'label': 'Fire a POST Webhook',
-                'description': 'send a HTTP POST Request',
-                'handler': "handleFirePostWebhookOutput",
-                'infoRenderHandler': "handleFirePostWebhookRender",
-                'requireAgentConnection': false,
-                'settings': [
-
-                    {
-                        'key': 'description',
-                        'label': 'Webhook Description',
-                        'type': 'text',
-                        'default': 'My New Webhook'
-                    },
-                    {
-                        'key': 'url',
-                        'label': 'Webhook URL',
-                        'type': 'text',
-                        'default': ''
-                    },
-                    {
-                        'key': 'auto_payload',
-                        'label': 'Send Event Parameters as payload',
-                        'type': 'toggle',
-                        'default': true
-                    },
-                    {
-                        'key': 'json',
-                        'label': 'JSON Payload',
-                        'type': 'textarea',
-                        'hideIfToggled': 'auto_payload',
-                        'default': ''
-                    },
-                ]
-            },
+            throwItem: new ThrowItemOutput(this),
+            throwItemGroup: new ThrowItemGroupOutput(this),
+            startItemStream: new StartItemStreamOutput(this),
+            stopItemStream: new StopItemStreamOutput(this),
+            playSound: new PlaySoundOutput(this),
+            fireGetWebhook: new FireGetWebhookOutput(this),
+            firePostWebhook: new FirePostWebhookOutput(this)
         };
 
     }
 
-    agentRegistered(agentRegistry) {
+    agentRegistered() {
         this.log("running agentRegistered()...");
-        this.agentRegistry = agentRegistry;
         if(this.agentRegistry.getAgentFieldData(this,'enabled')) {
             this.agentEnabled();
         }
@@ -393,7 +202,7 @@ class OverlayAgent {
             status = 'port-in-use';
         }
         if(this.overlayConnected) {
-            if(this.overlayVTSConnected || vtsStatus == 'disabled') {
+            if(this.overlayVTSConnected || vtsStatus === 'disabled') {
                 status = 'connected';
             } else {
                 status = 'wait-for-vts';
@@ -408,201 +217,6 @@ class OverlayAgent {
             console.log(message);
         }
         console.groupEnd();
-    }
-
-    async getThrowItemOutputOptions() {
-        let item_list = this.agentRegistry.gameData.read(`items`);
-        let item_options = [];
-        for (const [key, item] of Object.entries(item_list)) {
-            item_options.push({'label': item.name, 'value': key});
-        }
-        return item_options;
-    }
-
-    handleThrowItemOutput(values) {
-        let throwDelay = this.agentRegistry.getAgentFieldData(this,'groupFrequency');
-        let throwCount = parseInt(values.quantity);
-        if(values.match_quantity && values.quantity_parameter) {
-            if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
-                this.log(values.__trigger.parameters[values.quantity_parameter]);
-                throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
-            } else {
-                this.log(`quantity_parameter not found`, values);
-            }
-        }
-        this.throwItems(values.item, throwCount);
-    }
-
-    handleThrowItemRender(settings) {
-        let itemName = '[Unknown]';
-        let item = this.agentRegistry.gameData.read(`items.${settings.item}`);
-        if (item && item.hasOwnProperty('name')) {
-            itemName = item.name;
-        }
-
-        let quantityDescription = `Manual - ${settings.quantity}`;
-        if(settings.match_quantity) {
-            quantityDescription = `Match Event Parameter - ${settings.quantity_parameter}`;
-        }
-
-        return `<ul>` +
-            `<li><strong>Item: </strong><span>${itemName}</span></li>` +
-            `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
-            `</ul>`;
-    }
-
-    async getThrowItemGroupOutputOptions() {
-        let item_group_list = this.agentRegistry.gameData.read('itemGroups');
-        let item_group_options = [];
-        for (const [key, item_group] of Object.entries(item_group_list)) {
-            item_group_options.push({'label': item_group.name, 'value': key});
-        }
-        return item_group_options;
-    }
-
-    handleThrowItemGroupOutput(values) {
-        this.log(`item group debug`, values);
-        let throwCount = parseInt(values.quantity);
-        if(values.match_quantity && values.quantity_parameter) {
-            if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
-                throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
-                this.throwItemGroup(values.itemGroup, throwCount);
-                return;
-            } else {
-                this.log(`quantity_parameter not found`, values);
-            }
-        }
-        this.throwItemGroup(values.itemGroup);
-    }
-
-    handleThrowItemGroupRender(settings) {
-        let itemGroupName = '[Unknown]';
-        let itemGroup = this.agentRegistry.gameData.read(`itemGroups.${settings.itemGroup}`);
-        if (itemGroup && itemGroup.hasOwnProperty('name')) {
-            itemGroupName = itemGroup.name;
-        }
-
-        let quantityDescription = 'Use Item Group Settings';
-        if(settings.match_quantity) {
-            quantityDescription = `Match Event Parameter - ${settings.quantity_parameter}`;
-        }
-
-        return `<ul>` +
-                `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
-                `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
-               `</ul>`;
-    }
-
-    handleStartItemStreamOutput(values) {
-        let throwDuration = parseInt(values.duration);
-        if(values.match_duration && values.duration_parameter) {
-            if(values.__trigger.parameters.hasOwnProperty(values.duration_parameter)) {
-                throwDuration = parseInt(values.__trigger.parameters[values.duration_parameter]);
-                this.startItemStream(values.itemGroup, throwDuration);
-                return;
-            } else {
-                this.log(`duration_parameter not found`, values);
-            }
-        }
-        this.startItemStream(values.itemGroup);
-    }
-
-    handleStartItemStreamRender(settings) {
-        let itemGroupName = '[Unknown]';
-        let itemGroup = this.agentRegistry.gameData.read(`itemGroups.${settings.itemGroup}`);
-        if (itemGroup && itemGroup.hasOwnProperty('name')) {
-            itemGroupName = itemGroup.name;
-        }
-
-        let durationDescription = `Manual - ${settings.duration}ms`;
-        if(settings.match_duration) {
-            durationDescription = `Match Event Parameter - ${settings.duration_parameter}`;
-        }
-
-        return `<ul>` +
-            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
-            `<li><strong>Max Duration: </strong><span>${durationDescription}</span></li>` +
-            `</ul>`;
-    }
-
-    handleStopItemStreamOutput(values) {
-        this.stopItemStream(values.itemGroup);
-    }
-
-    handleStopItemStreamRender(settings) {
-        let itemGroupName = '[Unknown]';
-        let itemGroup = this.agentRegistry.gameData.read(`itemGroups.${settings.itemGroup}`);
-        if (itemGroup && itemGroup.hasOwnProperty('name')) {
-            itemGroupName = itemGroup.name;
-        }
-
-        return `<ul>` +
-            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
-            `</ul>`;
-    }
-
-    handleFireGetWebhookOutput(values) {
-        this.log(`Firing webhook "${values.description}"`);
-        axios.get(values.url).then(response => {
-            this.log(`Successfully fired webhook "${values.description}"`, response);
-        }).catch(e => {
-            this.log(`Error firing webhook "${values.description}"`, e);
-        });
-    }
-
-    handleFireGetWebhookRender(settings) {
-
-        return `<ul>` +
-            `<li><strong>Description: </strong><span>${settings.description}</span></li>` +
-            `<li><strong>URL: </strong><span><em>(hidden for security purposes)</em></span></li>` +
-            `</ul>`;
-    }
-
-    handleFirePostWebhookOutput(values) {
-        this.log(`Firing webhook "${values.description}"`);
-        let payload = values.json;
-        if(values.auto_payload) {
-            payload = JSON.stringify(values);
-        }
-        this.log(`post hook payload`, payload);
-        axios.post(values.url, payload, {headers: {"content-type": "application/json"}}).then(response => {
-            this.log(`Successfully fired webhook "${values.description}"`, response);
-        }).catch(e => {
-            this.log(`Error firing webhook "${values.description}"`, e);
-        });
-    }
-
-    handleFirePostWebhookRender(settings) {
-
-        return `<ul>` +
-            `<li><strong>Description: </strong><span>${settings.description}</span></li>` +
-            `<li><strong>URL: </strong><span><em>(hidden for security purposes)</em></span></li>` +
-            `</ul>`;
-    }
-
-    async getPlaySoundOutputOptions() {
-        let sound_list = this.agentRegistry.gameData.read('sounds');
-        let sound_options = [];
-        for (const [key, sound] of Object.entries(sound_list)) {
-            sound_options.push({'label': sound.location, 'value': key});
-        }
-        return sound_options;
-    }
-
-    handlePlaySoundOutput(values) {
-        this.playSound(values.sound);
-    }
-
-    handlePlaySoundRender(settings) {
-        let soundName = '[Unknown]';
-        let sound = this.agentRegistry.gameData.read(`sounds.${settings.sound}`);
-        if (sound && sound.hasOwnProperty('location')) {
-            soundName = sound.location;
-        }
-
-        return `<ul>` +
-            `<li><strong>Sound: </strong><span>${soundName}</span></li>` +
-            `</ul>`;
     }
 
     createServer() {
@@ -760,8 +374,7 @@ class OverlayAgent {
 
     }
 
-    proceedCalibration()
-    {
+    proceedCalibration() {
         var request = {
             "type": "calibrating",
             "stage": this.calibrateStage
@@ -909,14 +522,486 @@ class OverlayAgent {
     }
 
 }
-class OverlayItem {
+class ThrowItemOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key =  'throwItem';
+        this.label = 'Throw an Item';
+        this.description = 'Throw an item from the TuberYeets library';
+        this.requireAgentConnection = false;
+        this.settings = [
+            {
+                'key': 'item',
+                'label': 'Item',
+                'type': 'list',
+                'optionsLoader': this.getItemOptions.bind(this),
+                'default': ''
+            },
+            {
+                'key': 'match_quantity',
+                'label': 'Match Quantity to Event Parameter',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'quantity',
+                'label': 'Quantity',
+                'type': 'integer',
+                'hideIfToggled': "match_quantity",
+                'default': 1
+            },
+            {
+                'key': 'quantity_parameter',
+                'label': 'Event Parameter',
+                'type': 'parameter',
+                'showIfToggled': "match_quantity",
+                'default': 'quantity'
+            },
+        ];
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > ThrowItemOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getItemOptions() {
+        let item_list = this.gdh.read(`items`);
+        let item_options = [];
+        for (const [key, item] of Object.entries(item_list)) {
+            item_options.push({'label': item.name, 'value': key});
+        }
+        return item_options;
+    }
+
+    handleOutput(values) {
+        let throwCount = parseInt(values.quantity);
+        if(values.match_quantity && values.quantity_parameter) {
+            if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
+                this.log(values.__trigger.parameters[values.quantity_parameter]);
+                throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
+            } else {
+                this.log(`quantity_parameter not found`, values);
+            }
+        }
+        this.agent.throwItems(values.item, throwCount);
+    }
+
+    handleRender(settings) {
+        let itemName = '[Unknown]';
+        let item = this.gdh.read(`items.${settings.item}`);
+        if (item && item.hasOwnProperty('name')) {
+            itemName = item.name;
+        }
+
+        let quantityDescription = `Manual - ${settings.quantity}`;
+        if(settings.match_quantity) {
+            quantityDescription = `Match Event Parameter - ${settings.quantity_parameter}`;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item: </strong><span>${itemName}</span></li>` +
+            `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
+            `</ul>`;
+    }
+}
+class StartItemStreamOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key =  'startItemStream';
+        this.label =  'Start throwing a Stream of Items';
+        this.description =  'Start throwing a stream of items from an Item Group from the TuberYeets library';
+        this.requireAgentConnection =  false;
+        this.settings =  [
+            {
+                'key': 'itemGroup',
+                'label': 'Item Group',
+                'type': 'list',
+                'optionsLoader': this.getItemGroupOptions.bind(this),
+                'default': ''
+            },
+            {
+                'key': 'match_duration',
+                'label': 'Match Duration to Event Parameter',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'duration',
+                'label': 'Max Duration (ms)',
+                'type': 'integer',
+                'hideIfToggled': "match_duration",
+                'default': 60000
+            },
+            {
+                'key': 'duration_parameter',
+                'label': 'Event Parameter',
+                'type': 'parameter',
+                'showIfToggled': "match_duration",
+                'default': 'duration'
+            }
+        ]
+
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > StartItemStreamOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getItemGroupOptions() {
+        let item_group_list = this.gdh.read('itemGroups');
+        let item_group_options = [];
+        for (const [key, item_group] of Object.entries(item_group_list)) {
+            item_group_options.push({'label': item_group.name, 'value': key});
+        }
+        return item_group_options;
+    }
+
+    handleOutput(values) {
+        let throwDuration = parseInt(values.duration);
+        if(values.match_duration && values.duration_parameter) {
+            if(values.__trigger.parameters.hasOwnProperty(values.duration_parameter)) {
+                throwDuration = parseInt(values.__trigger.parameters[values.duration_parameter]);
+                this.startItemStream(values.itemGroup, throwDuration);
+                return;
+            } else {
+                this.log(`duration_parameter not found`, values);
+            }
+        }
+        this.agent.startItemStream(values.itemGroup);
+    }
+
+    handleRender(settings) {
+        let itemGroupName = '[Unknown]';
+        let itemGroup = this.gdh.read(`itemGroups.${settings.itemGroup}`);
+        if (itemGroup && itemGroup.hasOwnProperty('name')) {
+            itemGroupName = itemGroup.name;
+        }
+
+        let durationDescription = `Manual - ${settings.duration}ms`;
+        if(settings.match_duration) {
+            durationDescription = `Match Event Parameter - ${settings.duration_parameter}`;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+            `<li><strong>Max Duration: </strong><span>${durationDescription}</span></li>` +
+            `</ul>`;
+    }
+
 
 }
-class OverlaySound {
+class StopItemStreamOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'stopItemStream';
+        this.label = 'Stop throwing a Stream of Items';
+        this.description = 'Stop throwing a stream of items from an Item Group from the TuberYeets library';
+        this.requireAgentConnection = false;
+        this.settings = [
+            {
+                'key': 'itemGroup',
+                'label': 'Item Group',
+                'type': 'list',
+                'optionsLoader': this.getItemGroupOptions.bind(this),
+                'default': ''
+            }
+        ]
+    }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > StopItemStreamOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getItemGroupOptions() {
+        let item_group_list = this.gdh.read('itemGroups');
+        let item_group_options = [];
+        for (const [key, item_group] of Object.entries(item_group_list)) {
+            item_group_options.push({'label': item_group.name, 'value': key});
+        }
+        return item_group_options;
+    }
+
+    handleOutput(values) {
+        this.agent.stopItemStream(values.itemGroup);
+    }
+
+    handleRender(settings) {
+        let itemGroupName = '[Unknown]';
+        let itemGroup = this.gdh.read(`itemGroups.${settings.itemGroup}`);
+        if (itemGroup && itemGroup.hasOwnProperty('name')) {
+            itemGroupName = itemGroup.name;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+            `</ul>`;
+    }
 }
-class OverlayItemGroup {
+class PlaySoundOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'playSound';
+        this.label = 'Play a Sound';
+        this.description = 'Play a Sound from the TuberYeets library';
+        this.requireAgentConnection = false;
+        this.settings = [
+            {
+                'key': 'sound',
+                'label': 'Sound',
+                'type': 'list',
+                'optionsLoader': this.getSoundOptions.bind(this),
+                'default': ''
+            }
+        ]
+    }
 
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > PlaySoundOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getSoundOptions() {
+        let sound_list = this.gdh.read('sounds');
+        let sound_options = [];
+        for (const [key, sound] of Object.entries(sound_list)) {
+            sound_options.push({'label': sound.location, 'value': key});
+        }
+        return sound_options;
+    }
+
+    handleOutput(values) {
+        this.playSound(values.sound);
+    }
+
+    handleRender(settings) {
+        let soundName = '[Unknown]';
+        let sound = this.agentRegistry.gameData.read(`sounds.${settings.sound}`);
+        if (sound && sound.hasOwnProperty('location')) {
+            soundName = sound.location;
+        }
+
+        return `<ul>` +
+            `<li><strong>Sound: </strong><span>${soundName}</span></li>` +
+            `</ul>`;
+    }
+}
+class FireGetWebhookOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'fireGetWebhook';
+        this.label = 'Fire a GET Webhook';
+        this.description = 'send a HTTP GET Request';
+        this.requireAgentConnection = false;
+        this.settings = [
+            {
+                'key': 'description',
+                'label': 'Webhook Description',
+                'type': 'text',
+                'default': 'My New Webhook'
+            },
+            {
+                'key': 'url',
+                'label': 'Webhook URL',
+                'type': 'text',
+                'default': ''
+            },
+        ]
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > FireGetWebhookOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    handleOutput(values) {
+        this.log(`Firing webhook "${values.description}"`);
+        axios.get(values.url).then(response => {
+            this.log(`Successfully fired webhook "${values.description}"`, response);
+        }).catch(e => {
+            this.log(`Error firing webhook "${values.description}"`, e);
+        });
+    }
+
+    handleRender(settings) {
+
+        return `<ul>` +
+            `<li><strong>Description: </strong><span>${settings.description}</span></li>` +
+            `<li><strong>URL: </strong><span><em>(hidden for security purposes)</em></span></li>` +
+            `</ul>`;
+    }
+}
+class FirePostWebhookOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'firePostWebhook';
+        this.label = 'Fire a POST Webhook';
+        this.description = 'send a HTTP POST Request';
+        this.requireAgentConnection = false;
+        this.settings = [
+            {
+                'key': 'description',
+                'label': 'Webhook Description',
+                'type': 'text',
+                'default': 'My New Webhook'
+            },
+            {
+                'key': 'url',
+                'label': 'Webhook URL',
+                'type': 'text',
+                'default': ''
+            },
+            {
+                'key': 'auto_payload',
+                'label': 'Send Event Parameters as payload',
+                'type': 'toggle',
+                'default': true
+            },
+            {
+                'key': 'json',
+                'label': 'JSON Payload',
+                'type': 'textarea',
+                'hideIfToggled': 'auto_payload',
+                'default': ''
+            },
+        ];
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > FirePostWebhookOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    handleOutput(values) {
+        this.log(`Firing webhook "${values.description}"`);
+        let payload = values.json;
+        if(values.auto_payload) {
+            payload = JSON.stringify(values);
+        }
+        this.log(`post hook payload`, payload);
+        axios.post(values.url, payload, {headers: {"content-type": "application/json"}}).then(response => {
+            this.log(`Successfully fired webhook "${values.description}"`, response);
+        }).catch(e => {
+            this.log(`Error firing webhook "${values.description}"`, e);
+        });
+    }
+
+    handleRender(settings) {
+
+        return `<ul>` +
+            `<li><strong>Description: </strong><span>${settings.description}</span></li>` +
+            `<li><strong>URL: </strong><span><em>(hidden for security purposes)</em></span></li>` +
+            `</ul>`;
+    }
+}
+class ThrowItemGroupOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'throwItemGroup';
+        this.label = 'Throw a Group of Items';
+        this.description = 'Throw an Item Group from the TuberYeets library';
+        this.requireAgentConnection = false;
+        this.settings = [
+            {
+                'key': 'itemGroup',
+                'label': 'Item Group',
+                'type': 'list',
+                'optionsLoader': this.getItemGroupOptions.bind(this),
+                'default': ''
+            },
+            {
+                'key': 'match_quantity',
+                'label': 'Match Quantity to Event Parameter',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'quantity_parameter',
+                'label': 'Event Parameter',
+                'type': 'parameter',
+                'showIfToggled': "match_quantity",
+                'default': 'quantity'
+            }
+        ]
+
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [OverlayAgent > ThrowItemGroupOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getItemGroupOptions() {
+        let item_group_list = this.gdh.read('itemGroups');
+        let item_group_options = [];
+        for (const [key, item_group] of Object.entries(item_group_list)) {
+            item_group_options.push({'label': item_group.name, 'value': key});
+        }
+        return item_group_options;
+    }
+
+    handleOutput(values) {
+        this.log(`item group debug`, values);
+        let throwCount = parseInt(values.quantity);
+        if(values.match_quantity && values.quantity_parameter) {
+            if(values.__trigger.parameters.hasOwnProperty(values.quantity_parameter)) {
+                throwCount = parseInt(values.__trigger.parameters[values.quantity_parameter]);
+                this.agent.throwItemGroup(values.itemGroup, throwCount);
+                return;
+            } else {
+                this.log(`quantity_parameter not found`, values);
+            }
+        }
+        this.agent.throwItemGroup(values.itemGroup);
+    }
+
+    handleRender(settings) {
+        let itemGroupName = '[Unknown]';
+        let itemGroup = this.gdh.read(`itemGroups.${settings.itemGroup}`);
+        if (itemGroup && itemGroup.hasOwnProperty('name')) {
+            itemGroupName = itemGroup.name;
+        }
+
+        let quantityDescription = 'Use Item Group Settings';
+        if(settings.match_quantity) {
+            quantityDescription = `Match Event Parameter - ${settings.quantity_parameter}`;
+        }
+
+        return `<ul>` +
+            `<li><strong>Item Group: </strong><span>${itemGroupName}</span></li>` +
+            `<li><strong>Quantity: </strong><span>${quantityDescription}</span></li>` +
+            `</ul>`;
+    }
 }
 class OverlayItemStream {
     constructor(refId, overlayAgent, itemGroupId, duration = null) {

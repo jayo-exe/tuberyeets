@@ -60,7 +60,7 @@ module.exports = class AgentRegistry {
 
         //fire agent init routine
         this.log(`Firing registry routine for agent ${agent.agentKey}...`);
-        agent.agentRegistered(this);
+        agent.agentRegistered();
     }
 
     activateAgent(agentKey) {
@@ -136,13 +136,13 @@ module.exports = class AgentRegistry {
     async getEventSettings(agentKey, eventKey) {
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
-        let event = agent.agentInputs[eventKey];
-        if (!event) { return false; }
-        let settings = {...event.settings};
+        let input = agent.agentInputs[eventKey];
+        if (!input) { return false; }
+        let settings = {...input.settings};
         for (const [settingKey, setting] of Object.entries(settings)) {
             if (setting.hasOwnProperty('optionsLoader')) {
-                let parsed_options = await agent[setting.optionsLoader]();
-                setting.options = parsed_options;
+                setting.options = await this.agents[agentKey].agentInputs[eventKey].settings[settingKey].optionsLoader();
+                delete setting.optionsLoader;
             }
         }
         this.log(settings)
@@ -179,8 +179,8 @@ module.exports = class AgentRegistry {
         let settings = {...action.settings};
         for (const [settingKey, setting] of Object.entries(settings)) {
             if (setting.hasOwnProperty('optionsLoader')) {
-                let parsed_options = await agent[setting.optionsLoader]();
-                setting.options = parsed_options;
+                setting.options = await this.agents[agentKey].agentOutputs[actionKey].settings[settingKey].optionsLoader();
+                delete setting.optionsLoader;
             }
         }
         this.log(settings)
@@ -193,22 +193,16 @@ module.exports = class AgentRegistry {
         if (!agent) { return false; }
         let action = agent.agentOutputs[actionKey];
         if (!action) { return false; }
-        if(!action.hasOwnProperty('infoRenderHandler')) {
-            return '';
-        }
-        return await agent[action.infoRenderHandler](values);
+        return await action.handleRender(values);
     }
 
     async getTriggerDetails(agentKey, triggerKey, values) {
         this.log(`getting trigger details for ${agentKey}:${triggerKey}`);
         let agent = this.agents[agentKey];
         if (!agent) { return false; }
-        let event = agent.agentInputs[triggerKey];
-        if (!event) { return false; }
-        if(!event.hasOwnProperty('infoRenderHandler')) {
-            return '';
-        }
-        return await agent[event.infoRenderHandler](values);
+        let input = agent.agentInputs[triggerKey];
+        if (!input) { return false; }
+        return await input.handleRender(values);
     }
 
     getAllAgentDetails() {

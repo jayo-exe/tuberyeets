@@ -1,7 +1,7 @@
 {
   "name": "tuberyeets",
   "description": "Integrate Crowd Control 2 with VTube Studio and more",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Jayo <me@jayo.ca>",
   "private": true,
   "repository": {

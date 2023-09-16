@@ -25,7 +25,7 @@ module.exports = class EventManager {
 
         if (!agent.agentOutputs.hasOwnProperty(actionKey)) { return false; }
         this.log('Handling Outgoing Action ' + agentKey + '.' + actionKey)
-        return agent[agent.agentOutputs[actionKey].handler](values);
+        return agent.agentOutputs[actionKey].handleOutput(values);
     }
 
     handleInputTrigger(agentKey,eventKey,scriptName,parameters) {

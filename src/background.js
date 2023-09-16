@@ -14,7 +14,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
 
 const userDataPath = app.getPath('userData');
-const uuid = require('uuid');
 
 let overlayRoot = (app.isPackaged ? '../' : '')+'../public/overlay';
 let overlayPath = path.resolve(__static, overlayRoot+'/overlay.html');
@@ -29,9 +28,9 @@ let gameData = new GameDataHelper(userDataPath,__static);
 //load connections
 let agentRegistry = new AgentRegistry(appData,gameData);
 let agents = [
-    new CrowdControlAgent,
-    new VtubeStudioAgent,
-    new OverlayAgent,
+    new CrowdControlAgent(agentRegistry),
+    new VtubeStudioAgent(agentRegistry),
+    new OverlayAgent(agentRegistry),
 ];
 
 gameData.setAgentRegistry(agentRegistry);
@@ -42,7 +41,6 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let mainWindow;
-let authWindow;
 let mainAppReady = false;
 
 async function createWindow() {
@@ -233,7 +231,7 @@ setInterval(() => {
       status = 3;
     else if (calibrateStage === 2 || calibrateStage === 3)
       status = 4;
-    else if (overlayStatus == 'waiting-for-vts')
+    else if (overlayStatus === 'waiting-for-vts')
       status = 5;
     else if (calibrateStage === -1)
       status = 7;
@@ -290,12 +288,12 @@ gameData.itemGroupDefaultsCallback = function() {
   }
 }
 
-ipcMain.on('GET_DATA_PATH', (event, payload) => {
+ipcMain.on('GET_DATA_PATH', (event) => {
   mainAppReady = true;
   event.reply('GET_DATA_PATH', userDataPath);
 });
 
-ipcMain.on('LOAD_DATA', (event, payload) => {
+ipcMain.on('LOAD_DATA', (event) => {
   try {
     appData.loadData();
     appData.update('overlayPath', overlayPath);
@@ -303,7 +301,7 @@ ipcMain.on('LOAD_DATA', (event, payload) => {
   event.reply('LOAD_DATA', appData.getAllData());
 });
 
-ipcMain.on('BEGIN_CC_AUTH', async(event) => {
+ipcMain.on('BEGIN_CC_AUTH', async() => {
   let agent = agentRegistry.getAgent('crowdcontrol');
   await createAuthWindow(agent.pubSub.connectionId);
 });
@@ -315,13 +313,12 @@ ipcMain.on('SET_GAME', (event, payload) => {
   agent.loadGameMenu(gameId, packId);
 });
 
-ipcMain.on('GET_GAME', (event, payload) => {
+ipcMain.on('GET_GAME', () => {
   agentRegistry.getAgent('crowdcontrol').onGamePackLoad();
 });
 
 
 ipcMain.on('SAVE_GAME_DATA', (event, payload) => {
-  let save_data = payload.data;
   event.reply('SAVE_GAME_DATA', save_success);
 });
 
@@ -337,13 +334,10 @@ ipcMain.handle('APP_CRUD', async (event, operation, payload) => {
   switch(operation) {
     case "read":
       return appData.read(payload.field);
-      break;
     case "update":
       return appData.update(payload.field, payload.value, payload.create);
-      break;
     case "delete":
       return appData.delete(payload.field);
-      break;
   }
 });
 
@@ -351,13 +345,10 @@ ipcMain.handle('GAME_CRUD', async (event, operation, payload) => {
   switch(operation) {
     case "read":
       return gameData.read(payload.field);
-      break;
     case "update":
       return gameData.update(payload.field, payload.value, payload.create);
-      break;
     case "delete":
       return gameData.delete(payload.field);
-      break;
   }
 });
 
@@ -412,7 +403,7 @@ ipcMain.handle('UPLOAD_WINDUP', async (event, payload) => {
   return gameData.uploadWindup(payload.filePath,payload.filename,payload.itemGroupId);
 });
 
-ipcMain.handle('CREATE_ITEM_GROUP', async (event) => {
+ipcMain.handle('CREATE_ITEM_GROUP', async () => {
   return gameData.createItemGroup();
 });
 ipcMain.handle('CLEAR_ITEM_GROUP', async (event, payload) => {
@@ -422,7 +413,7 @@ ipcMain.handle('CREATE_TRIGGER', async (event, payload) => {
   let newEvent = gameData.eventData.createTrigger(payload.agentKey, payload.eventKey);
   return {success:true, item:newEvent}
 });
-ipcMain.handle('GET_EVENT_TYPES', async (event) => {
+ipcMain.handle('GET_EVENT_TYPES', async () => {
   return agentRegistry.getAvailableEvents();
 });
 ipcMain.handle('GET_EVENT_SETTINGS', async (event,payload) => {
@@ -433,7 +424,7 @@ ipcMain.handle('CREATE_COMMAND', async (event, payload) => {
   let newCommand = gameData.eventData.createTriggerCommand(payload.triggerId, payload.scriptName, payload.agentKey, payload.actionKey);
   return {success:true, item:newCommand}
 });
-ipcMain.handle('GET_ACTION_TYPES', async (event) => {
+ipcMain.handle('GET_ACTION_TYPES', async () => {
   return agentRegistry.getAvailableActions();
 });
 ipcMain.handle('GET_ACTION_SETTINGS', async (event,payload) => {
@@ -447,11 +438,11 @@ ipcMain.handle('GET_TRIGGER_DETAILS', async (event,payload) => {
   return await agentRegistry.getTriggerDetails(payload.agentKey, payload.triggerKey, payload.values);
 });
 
-ipcMain.handle('GET_AGENT_DETAILS', async (event) => {
+ipcMain.handle('GET_AGENT_DETAILS', async () => {
   return agentRegistry.getAllAgentDetails();
 });
 
-ipcMain.handle('GET_OVERLAY_PATH', async (event) => {
+ipcMain.handle('GET_OVERLAY_PATH', async () => {
   return 'file://'+overlayPath+'?port='+agentRegistry.getAgentFieldData(agentRegistry.getAgent('overlay'),'port');
 });
 
@@ -471,7 +462,7 @@ ipcMain.handle('RESTART_AGENT', async (event, payload) => {
   return agentRegistry.reloadAgent(payload.agentKey);
 });
 
-ipcMain.on('OPEN_GAME_FOLDER', async (event, payload) => {
+ipcMain.on('OPEN_GAME_FOLDER', async () => {
   await shell.openPath(gameData.gameDataFolder);
 });
 
@@ -493,7 +484,7 @@ ipcMain.on("CALIBRATE_CANCEL", () => cancelCalibrate());
 
 function startCalibrate()
 {
-  if(agentRegistry.getAgentStatus('vtubestudio') == 'connected' && agentRegistry.getAgentStatus('overlay') == 'connected') {
+  if(agentRegistry.getAgentStatus('vtubestudio') === 'connected' && agentRegistry.getAgentStatus('overlay') === 'connected') {
     return agentRegistry.getAgent('overlay').startCalibration();
   }
 
@@ -501,14 +492,14 @@ function startCalibrate()
 
 function nextCalibrate()
 {
-  if(agentRegistry.getAgentStatus('vtubestudio') == 'connected' && agentRegistry.getAgentStatus('overlay') == 'connected') {
+  if(agentRegistry.getAgentStatus('vtubestudio') === 'connected' && agentRegistry.getAgentStatus('overlay') === 'connected') {
     return agentRegistry.getAgent('overlay').nextCalibration();
   }
 }
 
 function cancelCalibrate()
 {
-  if(agentRegistry.getAgentStatus('vtubestudio') == 'connected' && agentRegistry.getAgentStatus('overlay') == 'connected') {
+  if(agentRegistry.getAgentStatus('vtubestudio') === 'connected' && agentRegistry.getAgentStatus('overlay') === 'connected') {
     return agentRegistry.getAgent('overlay').cancelCalibration();
   }
 }
@@ -523,15 +514,15 @@ ipcMain.on("TEST_ITEM_GROUP", (_, message) => { console.log('testing item group 
 
 function testItem(_, item)
 {
-  if(agentRegistry.getAgentStatus('overlay') == 'connected') {
+  if(agentRegistry.getAgentStatus('overlay') === 'connected') {
     return agentRegistry.eventManager.handleOutputAction('overlay','throwItem',{item: item, quantity: 1});
   }
 }
 
 // A custom item group test
-function custom(customName,customCount=null)
+function custom(customName)
 {
-  if(agentRegistry.getAgentStatus('overlay') == 'connected') {
+  if(agentRegistry.getAgentStatus('overlay') === 'connected') {
     return agentRegistry.eventManager.handleOutputAction('overlay','throwItemGroup',{itemGroup: customName});
   }
 }

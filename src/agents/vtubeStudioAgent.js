@@ -1,10 +1,9 @@
 const { WebSocket } = require("ws");
 const { ApiClient } = require("vtubestudio");
 const Base64Icon = require('../base64Icon');
-const Vue = require("vue");
-module.exports = class VtubeStudioAgent {
+class VtubeStudioAgent {
 
-    constructor() {
+    constructor(agentRegistry) {
         let icon = new Base64Icon;
         this.apiClient = null;
         this.apiOptions = {
@@ -19,7 +18,7 @@ module.exports = class VtubeStudioAgent {
         this.stacks = {"expression" : {}, "hotkey" : {}};
         this.hotkeyStacks = {};
 
-        this.agentRegistry = null;
+        this.agentRegistry = agentRegistry;
         this.agentName = 'VTube Studio';
         this.agentKey = 'vtubestudio';
         this.agentLabel = 'VTube Studio';
@@ -52,81 +51,15 @@ module.exports = class VtubeStudioAgent {
         ];
         this.agentInputs = {};
         this.agentOutputs = {
-            expression: {
-                'key': 'expression',
-                'label': 'Change Expression',
-                'description': 'Activate or Deactivate a VTS expression',
-                'handler': "handleExpressionOutput",
-                'infoRenderHandler': "handleExpressionRender",
-                'requireAgentConnection': true,
-                'settings': [
-                    {
-                        'key': 'type',
-                        'label': 'Action',
-                        'type': 'list',
-                        'options':  [
-                            {'label': 'Activate', 'value': 'activate'},
-                            {'label': 'Deactivate', 'value': 'deactivate'},
-                        ],
-                        'default': 'activate'
-                    },
-                    {
-                        'key': 'name',
-                        'label': 'VTS Expression',
-                        'type': 'list',
-                        'optionsLoader': "getExpressionOutputOptions",
-                        'default': ''
-                    }
-                ]
-            },
-            hotkey: {
-                'key': 'hotkey',
-                'label': 'Activate Hotkey',
-                'description': 'Activate a VTS Hotkey',
-                'handler': "handleHotkeyOutput",
-                'infoRenderHandler': "handleHotkeyRender",
-                'requireAgentConnection': true,
-                'settings': [
-                    {
-                        'key': 'name',
-                        'label': 'VTS Hotkey',
-                        'type': 'list',
-                        'optionsLoader': "getHotkeyOutputOptions",
-                        'default': ''
-                    }
-                ]
-            },
-            negateHotkey: {
-                'key': 'negateHotkey',
-                'label': 'Negate Hotkey',
-                'description': 'Negate a VTS Hotkey with another Hotkey',
-                'handler': "handleNegateHotkeyOutput",
-                'infoRenderHandler': "handleNegateHotkeyRender",
-                'requireAgentConnection': true,
-                'settings': [
-                    {
-                        'key': 'target',
-                        'label': 'Hotkey to Negate',
-                        'type': 'list',
-                        'optionsLoader': "getHotkeyOutputOptions",
-                        'default': ''
-                    },
-                    {
-                        'key': 'name',
-                        'label': 'Hotkey to Use',
-                        'type': 'list',
-                        'optionsLoader': "getHotkeyOutputOptions",
-                        'default': ''
-                    }
-                ]
-            }
+            expression: new ExpressionOutput(this),
+            hotkey: new HotkeyOutput(this),
+            negateHotkey: new NegateHotkeyOutput(this)
         };
 
     }
 
-    agentRegistered(agentRegistry) {
+    agentRegistered() {
         this.log("running agentRegistered()...");
-        this.agentRegistry = agentRegistry;
         if(this.agentRegistry.getAgentFieldData(this,'enabled')) {
             this.agentEnabled();
         }
@@ -179,78 +112,6 @@ module.exports = class VtubeStudioAgent {
             console.log(message);
         }
         console.groupEnd();
-    }
-
-    async getExpressionOutputOptions() {
-        let expression_options = [];
-        if(!this.vtsReady) return [];
-        let expression_names = await this.getExpressions();
-        expression_names.forEach((expression_name) => {
-            expression_options.push({'label': expression_name, 'value': expression_name});
-        });
-        return expression_options;
-    }
-
-    handleExpressionOutput(values) {
-        if(values.type == 'activate') {
-            if(this.incrementStack('expression', values.name) === 1) {
-                this.activateExpression(values.name);
-            }
-        } else {
-            if(this.decrementStack('expression', values.name) === 0) {
-                this.deactivateExpression(values.name);
-            }
-        }
-    }
-
-    handleExpressionRender(settings) {
-
-        return `<ul>` +
-            `<li><span><strong>${settings.type === 'activate' ? 'Activate' : 'Deactivate'}</strong> the <strong>${settings.name}</strong> expression</span></li>` +
-            `</ul>`;
-    }
-
-    async getHotkeyOutputOptions() {
-        let hotkey_options = [];
-        if(!this.vtsReady) return [];
-        let hotkey_names = await this.getHotkeys();
-        hotkey_names.forEach((hotkey_name) => {
-            hotkey_options.push({'label': hotkey_name, 'value': hotkey_name});
-        });
-        return hotkey_options;
-    }
-
-    handleHotkeyOutput(values) {
-        if(this.incrementStack('hotkey', values.name) === 1) {
-            this.triggerHotkey(values.name);
-        }
-    }
-
-    handleHotkeyRender(settings) {
-        return `<ul>` +
-            `<li><span>Trigger hotkey <strong>${settings.name} </strong></span></li>` +
-            `</ul>`;
-    }
-
-    handleNegateHotkeyOutput(values) {
-        if(this.decrementStack('hotkey', values.target) === 0) {
-            this.triggerHotkey(values.name);
-        }
-    }
-
-    handleNegateHotkeyRender(settings) {
-        return `<ul>` +
-            `<li><span>Negate hotkey <strong>${settings.target}</strong> with hotkey <strong>${settings.name}</strong></span></li>` +
-            `</ul>`;
-    }
-
-    setPort(new_port) {
-        var old_port = this.port;
-        this.port = new_port;
-        if(old_port != new_port) {
-            this.connectSocket();
-        }
-
     }
 
     getAuthToken() {
@@ -383,4 +244,183 @@ module.exports = class VtubeStudioAgent {
             this.log(`Could not find Hotkey: ${hotkey_name}`);
         }
     }
-};
+}
+class ExpressionOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'expression';
+        this.label = 'Change Expression';
+        this.description = 'Activate or Deactivate a VTS expression';
+        this.requireAgentConnection = true;
+        this.settings = [
+            {
+                'key': 'type',
+                'label': 'Action',
+                'type': 'list',
+                'options':  [
+                    {'label': 'Activate', 'value': 'activate'},
+                    {'label': 'Deactivate', 'value': 'deactivate'},
+                ],
+                'default': 'activate'
+            },
+            {
+                'key': 'name',
+                'label': 'VTS Expression',
+                'type': 'list',
+                'optionsLoader': this.getExpressionOptions.bind(this),
+                'default': ''
+            }
+        ]
+
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [VTubeStudioAgent > ExpressionOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getExpressionOptions() {
+        let expression_options = [];
+        if(!this.agent.vtsReady) return [];
+        let expression_names = await this.agent.getExpressions();
+        expression_names.forEach((expression_name) => {
+            expression_options.push({'label': expression_name, 'value': expression_name});
+        });
+        return expression_options;
+    }
+
+    handleOutput(values) {
+        if(values.type === 'activate') {
+            if(this.agent.incrementStack('expression', values.name) === 1) {
+                this.agent.activateExpression(values.name);
+            }
+        } else {
+            if(this.agent.decrementStack('expression', values.name) === 0) {
+                this.agent.deactivateExpression(values.name);
+            }
+        }
+    }
+
+    handleRender(settings) {
+
+        return `<ul>` +
+            `<li><span><strong>${settings.type === 'activate' ? 'Activate' : 'Deactivate'}</strong> the <strong>${settings.name}</strong> expression</span></li>` +
+            `</ul>`;
+    }
+
+
+
+}
+class HotkeyOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'hotkey';
+        this.label = 'Activate Hotkey';
+        this.description = 'Activate a VTS Hotkey';
+        this.requireAgentConnection = true;
+        this.settings = [
+            {
+                'key': 'name',
+                'label': 'VTS Hotkey',
+                'type': 'list',
+                'optionsLoader': this.getHotkeyOptions.bind(this),
+                'default': ''
+            }
+        ]
+
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [VTubeStudioAgent > HotkeyOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getHotkeyOptions() {
+        let hotkey_options = [];
+        if(!this.agent.vtsReady) return [];
+        let hotkey_names = await this.agent.getHotkeys();
+        hotkey_names.forEach((hotkey_name) => {
+            hotkey_options.push({'label': hotkey_name, 'value': hotkey_name});
+        });
+        return hotkey_options;
+    }
+
+    handleOutput(values) {
+        if(this.agent.incrementStack('hotkey', values.name) === 1) {
+            this.agent.triggerHotkey(values.name);
+        }
+    }
+
+    handleRender(settings) {
+        return `<ul>` +
+            `<li><span>Trigger hotkey <strong>${settings.name} </strong></span></li>` +
+            `</ul>`;
+    }
+
+}
+class NegateHotkeyOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'negateHotkey';
+        this.label = 'Negate Hotkey';
+        this.description = 'Negate a VTS Hotkey with another Hotkey';
+        this.requireAgentConnection = true;
+        this.settings = [
+            {
+                'key': 'target',
+                'label': 'Hotkey to Negate',
+                'type': 'list',
+                'optionsLoader': this.getHotkeyOptions.bind(this),
+                'default': ''
+            },
+            {
+                'key': 'name',
+                'label': 'Hotkey to Use',
+                'type': 'list',
+                'optionsLoader': this.getHotkeyOptions.bind(this),
+                'default': ''
+            }
+        ]
+
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [VTubeStudioAgent > NegateHotkeyOutput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getHotkeyOptions() {
+        let hotkey_options = [];
+        if(!this.agent.vtsReady) return [];
+        let hotkey_names = await this.agent.getHotkeys();
+        hotkey_names.forEach((hotkey_name) => {
+            hotkey_options.push({'label': hotkey_name, 'value': hotkey_name});
+        });
+        return hotkey_options;
+    }
+
+    handleOutput(values) {
+        if(this.agent.decrementStack('hotkey', values.target) === 0) {
+            this.agent.triggerHotkey(values.name);
+        }
+    }
+
+    handleRender(settings) {
+        return `<ul>` +
+            `<li><span>Negate hotkey <strong>${settings.target}</strong> with hotkey <strong>${settings.name}</strong></span></li>` +
+            `</ul>`;
+    }
+}
+module.exports = VtubeStudioAgent;

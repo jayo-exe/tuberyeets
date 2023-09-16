@@ -1,17 +1,16 @@
-const { io } = require("socket.io-client");
 const { WebSocket } = require("ws");
 const axios = require("axios");
 
 module.exports = class CrowdControlAgent {
 
-    constructor() {
+    constructor(agentRegistry) {
 
         this.trpc = new CrowdControlTRPC(this);
         this.pubSub = new CrowdControlPubSub(this);
         this.effectQueue = {};
         this.currentGame = {};
         this.currentPack = {};
-        this.agentRegistry = null;
+        this.agentRegistry = agentRegistry;
         this.ccUID = '';
         this.token = null;
         this.tokenData = null;
@@ -62,49 +61,15 @@ module.exports = class CrowdControlAgent {
             }
         ];
         this.agentInputs = {
-            effect: {
-                'key': 'effect',
-                'label': 'In-Game Effect',
-                'description': 'A game effect is sent from Crowd Control',
-                'infoRenderHandler': "handleEffectInputRender",
-                'settings': [
-                    {
-                        'key': 'effectId',
-                        'label': 'Effect',
-                        'type': 'advancedList',
-                        'optionsLoader': 'getEffectInputOptions',
-                        'settable': true
-                    },
-                    {
-                        'key': 'quantity',
-                        'label': 'Quantity',
-                        'type': 'number',
-                        'step': '1',
-                        'default': 1,
-                        'settable': false
-                    },
-                    {
-                        'key': 'duration',
-                        'label': 'Duration',
-                        'type': 'number',
-                        'step': '1',
-                        'default': 0,
-                        'settable': false
-                    }
-                ],
-                'triggerScripts' : [
-                    'completed', 'begin', 'pause', 'resume', 'end'
-                ]
-            }
+            effect: new InGameEffectInput(this)
         };
         this.agentOutputs = {
         };
 
     }
 
-    agentRegistered(agentRegistry) {
+    agentRegistered() {
         this.log("running agentRegistered()...");
-        this.agentRegistry = agentRegistry;
         if(this.agentRegistry.getAgentFieldData(this,'enabled')) {
             this.agentEnabled();
         }
@@ -144,46 +109,6 @@ module.exports = class CrowdControlAgent {
             console.log(message);
         }
         console.groupEnd();
-    }
-
-    async getEffectInputOptions() {
-        let effectList = this.currentPack.effects.game;
-        let gameID = this.currentPack.game.gameID;
-        let gamePackID = this.currentPack.gamePackID;
-        let effectOptions = {};
-        for(const [effectId, effect] of Object.entries(effectList)) {
-
-            let groupName = effect.hasOwnProperty('category') ? effect.category[0] : '';
-            let effectName = effect.name;
-            if(typeof effect.name === "object" && effect.name.hasOwnProperty('public')) {
-                effectName = effect.name.public;
-            }
-            let imageKey = effect.hasOwnProperty('image') ? effect.image : effectId;
-            let effectImage = `https://resources.crowdcontrol.live/images/${gameID}/${gamePackID}/icons/${imageKey}.png`;
-
-            effectOptions[effectId] = {
-                value: effectId,
-                label: effectName,
-                category: groupName,
-                image: effectImage
-            };
-        }
-
-        return effectOptions;
-    }
-
-    handleEffectInputRender(settings) {
-        let effectList = this.currentPack.effects.game;
-        let effectName = '[Unknown]';
-        for(const [effectId, effect] of Object.entries(effectList)) {
-            if(effectId === settings.effectId) {
-                effectName = effect.name;
-            }
-        }
-
-        return `<ul>` +
-            `<li><strong>Effect: </strong><span>${effectName}</span></li>` +
-            `</ul>`;
     }
 
     getGameSession() {
@@ -285,7 +210,6 @@ module.exports = class CrowdControlAgent {
 
     handleEffectSuccess(payload) {
         this.log(`Inbound Effect Success [${payload.effect.effectID}] (${payload.requestID})`, payload.quantity);
-        let effect = payload.effect;
         let requestID = payload.requestID;
         if (!this.effectQueue.hasOwnProperty(requestID)) {
             this.log(`Update for unknown effect: "${requestID}"`);
@@ -301,7 +225,6 @@ module.exports = class CrowdControlAgent {
 
     handleTimedEffectUpdate(payload) {
         this.log(`Inbound Timed Effect Update [${payload.effect.effectID}] (${payload.requestID}) : ${payload.status}, time remaining: ${parseInt(payload.timeRemaining * 1000)}ms`);
-        let effect = payload.effect;
         let requestID = payload.requestID;
         if (!this.effectQueue.hasOwnProperty(requestID)) {
             this.log(`Update for unknown effect: "${requestID}"`);
@@ -318,12 +241,12 @@ module.exports = class CrowdControlAgent {
     }
 
     handleGameSessionStart(payload) {
-        this.log('Detected start of a Game Session');
+        this.log('Detected start of a Game Session', payload);
         this.getGameSession();
     }
 
     handleGameSessionStop(payload) {
-        this.log('Detected end of the current Game Session');
+        this.log('Detected end of the current Game Session', payload);
         this.gameSessionId = null;
         this.gameSession = {};
     }
@@ -358,7 +281,6 @@ class CrowdControlTRPC {
         });
     }
 }
-
 class CrowdControlPubSub {
     constructor(agent) {
         this.agent = agent;
@@ -481,5 +403,91 @@ class CrowdControlPubSub {
     handlePublicMessage(message) {
         if(message.type === "game-session-start") this.agent.handleGameSessionStart(message.payload);
         else if(message.type === "game-session-stop") this.agent.handleGameSessionStop(message.payload);
+    }
+}
+class InGameEffectInput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+
+        this.key =  'effect';
+        this.label =  'In-Game Effect';
+        this.description =  'A game effect is sent from Crowd Control';
+        this.settings =  [
+            {
+                'key': 'effectId',
+                'label': 'Effect',
+                'type': 'advancedList',
+                'optionsLoader': this.getEffectOptions.bind(this),
+                'settable': true
+            },
+            {
+                'key': 'quantity',
+                'label': 'Quantity',
+                'type': 'number',
+                'step': '1',
+                'default': 1,
+                'settable': false
+            },
+            {
+                'key': 'duration',
+                'label': 'Duration',
+                'type': 'number',
+                'step': '1',
+                'default': 0,
+                'settable': false
+            }
+        ];
+        this.triggerScripts = [
+            'completed', 'begin', 'pause', 'resume', 'end'
+        ];
+    }
+
+    log(...messages) {
+        console.group(`${new Date().toISOString()} [CrowdControlAgent > InGameEffectInput]`);
+        for (const message of messages) {
+            console.log(message);
+        }
+        console.groupEnd();
+    }
+
+    async getEffectOptions() {
+        let effectList = this.agent.currentPack.effects.game;
+        let gameID = this.agent.currentPack.game.gameID;
+        let gamePackID = this.agent.currentPack.gamePackID;
+        let effectOptions = {};
+        for(const [effectId, effect] of Object.entries(effectList)) {
+
+            let groupName = effect.hasOwnProperty('category') ? effect.category[0] : '';
+            let effectName = effect.name;
+            if(typeof effect.name === "object" && effect.name.hasOwnProperty('public')) {
+                effectName = effect.name.public;
+            }
+            let imageKey = effect.hasOwnProperty('image') ? effect.image : effectId;
+            let effectImage = `https://resources.crowdcontrol.live/images/${gameID}/${gamePackID}/icons/${imageKey}.png`;
+
+            effectOptions[effectId] = {
+                value: effectId,
+                label: effectName,
+                category: groupName,
+                image: effectImage
+            };
+        }
+
+        return effectOptions;
+    }
+
+    handleRender(settings) {
+        let effectList = this.agent.currentPack.effects.game;
+        let effectName = '[Unknown]';
+        for(const [effectId, effect] of Object.entries(effectList)) {
+            if(effectId === settings.effectId) {
+                effectName = effect.name;
+            }
+        }
+
+        return `<ul>` +
+            `<li><strong>Effect: </strong><span>${effectName}</span></li>` +
+            `</ul>`;
     }
 }
