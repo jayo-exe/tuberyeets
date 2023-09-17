@@ -426,9 +426,7 @@ class OverlayAgent {
     sendWithTargeting(request) {
         if(this.agentRegistry.getAgentStatus('vtubestudio') === "connected") {
             this.agentRegistry.getAgent('vtubestudio').getModelId().then(currentModelId => {
-                this.log('current model:',currentModelId);
                 if(currentModelId) {
-                    this.log('current model:',currentModelId);
                     request.modelCalibration = {
                         "faceWidthMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[0],
                         "faceHeightMin": this.agentRegistry.getAgentFieldData(this,`${currentModelId}Min`)[1],
@@ -671,7 +669,7 @@ class StartItemStreamOutput {
         if(values.match_duration && values.duration_parameter) {
             if(values.__trigger.parameters.hasOwnProperty(values.duration_parameter)) {
                 throwDuration = parseInt(values.__trigger.parameters[values.duration_parameter]);
-                this.startItemStream(values.itemGroup, throwDuration);
+                this.agent.startItemStream(values.itemGroup, throwDuration);
                 return;
             } else {
                 this.log(`duration_parameter not found`, values);

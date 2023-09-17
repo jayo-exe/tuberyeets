@@ -167,7 +167,7 @@ module.exports = class ItemGroupEventHelper {
             if(newItem) {
                 itemsForGroup.push(newItem);
                 i = (i + (newItem.value - 1));
-                this.log(`Item selected with a value of ${newItem.value}. Only need to find items for ${customCount - i} more units`);
+                //this.log(`Item selected with a value of ${newItem.value}. Only need to find items for ${customCount - i} more units`);
             }
         }
 

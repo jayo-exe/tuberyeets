@@ -17,6 +17,7 @@ class VtubeStudioAgent {
         };
         this.stacks = {"expression" : {}, "hotkey" : {}};
         this.hotkeyStacks = {};
+        this.savedPositions = {};
 
         this.agentRegistry = agentRegistry;
         this.agentName = 'VTube Studio';
@@ -54,7 +55,9 @@ class VtubeStudioAgent {
             expression: new ExpressionOutput(this),
             hotkey: new HotkeyOutput(this),
             negateHotkey: new NegateHotkeyOutput(this),
-            moveModel: new MoveModelOutput(this)
+            moveModel: new MoveModelOutput(this),
+            saveModelPosition: new SaveModelPositionOutput(this),
+            loadModelPosition: new LoadModelPositionOutput(this)
         };
 
     }
@@ -140,6 +143,15 @@ class VtubeStudioAgent {
         return model.modelLoaded ? model.modelID : false;
     }
 
+    async getModelPosition() {
+        if(!this.vtsReady) return;
+        const model = await this.apiClient.currentModel();
+        if(model.modelLoaded) {
+            return model.modelPosition;
+        }
+        return false;
+    }
+
     async getHotkeys() {
         if(!this.vtsReady) return;
         const hotkeys = await this.apiClient.hotkeysInCurrentModel();
@@ -207,6 +219,42 @@ class VtubeStudioAgent {
         return this.stacks[type][name];
     }
 
+    async saveModelPosition(name) {
+        const position = await this.getModelPosition();
+        if(!position) {
+            this.log(`Could not get model position to save for ${name}!`);
+            return false;
+        }
+        this.savedPositions[name] = position;
+        return true;
+    }
+
+    async loadModelPosition(name, timeInSeconds, loadPositionX = true, loadPositionY = true, loadSize = true, loadRotation = true) {
+        if(!this.savedPositions.hasOwnProperty(name)) {
+            this.log(`Could not find saved position with name: ${name}`);
+            return false;
+        }
+        let targetPosition = {...this.savedPositions[name]};
+        if (!loadPositionX) {
+            targetPosition.positionX = null;
+        }
+        if (!loadPositionY) {
+            targetPosition.positionY = null;
+        }
+        if (!loadSize) {
+            targetPosition.size = null;
+        }
+        if (!loadRotation) {
+            targetPosition.rotation = null;
+        }
+        const moved = await this.moveModel(targetPosition.positionX, targetPosition.positionY, targetPosition.size, targetPosition.rotation, timeInSeconds, false);
+        if(!moved) {
+            this.log(`Could not set model position for saved position ${name}!`);
+            return false;
+        }
+        return true;
+    }
+
     async activateExpression(expression_name) {
         if(!this.vtsReady) return;
         const expressions = await this.apiClient.expressionState();
@@ -249,25 +297,26 @@ class VtubeStudioAgent {
     async moveModel(positionX = null, positionY = null, size = null, rotation = null, timeInSeconds = 0.00, valuesAreRelativeToModel = false) {
         if(!this.vtsReady) return;
         let requestPayload = {
-            timeInSeconds: timeInSeconds,
+            timeInSeconds: parseFloat(timeInSeconds),
             valuesAreRelativeToModel: valuesAreRelativeToModel
         };
-        if(positionX) {
+        if(positionX !== null) {
             requestPayload.positionX = positionX;
         }
-        if(positionY) {
+        if(positionY !== null) {
             requestPayload.positionY = positionY;
         }
         if(size) {
             requestPayload.size = size;
         }
-        if(rotation) {
+        if(rotation !== null) {
             requestPayload.rotation = rotation;
         }
         const moveResult = await this.apiClient.moveModel(requestPayload);
 
-        if(moveResult) {
-            this.log(`VTS: Model Movement triggered`);
+        if(moveResult !== null) {
+            this.log(`VTS: Model Movement triggered`, requestPayload);
+            return moveResult;
         } else {
             this.log(`Could not move model!`);
         }
@@ -554,7 +603,7 @@ class MoveModelOutput {
     }
 
     handleRender(settings) {
-        let relativeTo = settings.valuesAreRelativeToModel ? 'Model' : 'Stage';
+        let relativeTo = settings.valuesAreRelativeToModel ? 'Relative to Model' : 'to Absolute Position';
 
         let positionXItem = '';
         if(settings.changePositionX) {
@@ -573,8 +622,129 @@ class MoveModelOutput {
             rotationItem = `<li><span>Rotation <strong>${settings.rotation}</strong></span></li>`;
         }
         return `<ul>` +
-            `<li><span>Relative to <strong>${relativeTo}</strong></span></li>` +
-            `<li><span>Move in <strong>${settings.timeInSeconds}</strong>s</span></li>` +
+            `<li><span>Move <strong>${relativeTo}</strong> over <strong>${settings.timeInSeconds}</strong>s</span></li>` +
+            `${positionXItem}` +
+            `${positionYItem}` +
+            `${sizeItem}` +
+            `${rotationItem}` +
+            `</ul>`;
+    }
+
+}
+class SaveModelPositionOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'saveModelPosition';
+        this.label = 'Save Model Position';
+        this.description = 'Save the current VTS Model position to be used later';
+        this.requireAgentConnection = true;
+        this.settings = [
+            {
+                'key': 'name',
+                'label': 'Saved Position Name',
+                'type': 'text',
+                'default': 'my_saved_position'
+            }
+        ]
+    }
+
+    handleOutput(values) {
+        this.agent.saveModelPosition(values.name);
+    }
+
+    handleRender(settings) {
+        let relativeTo = settings.valuesAreRelativeToModel ? 'Relative to Model' : 'to Absolute Position';
+
+        return `<ul>` +
+            `<li><span>Save Model position as <strong>${settings.name}</strong></span></li>` +
+            `</ul>`;
+    }
+
+}
+class LoadModelPositionOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'loadModelPosition';
+        this.label = 'Load Model Position';
+        this.description = 'Return the VTS Model to a previously saved position';
+        this.requireAgentConnection = true;
+        this.settings = [
+            {
+                'key': 'name',
+                'label': 'Saved Position Name',
+                'type': 'text',
+                'default': 'my_saved_position'
+            },
+            {
+                'key': 'timeInSeconds',
+                'label': 'Movement Time',
+                'type': 'number',
+                'min': 0.00,
+                'max': 2.00,
+                'step': 0.01,
+                'default': 0.00
+            },
+            {
+                'key': 'loadPositionX',
+                'label': 'Load X Position',
+                'type': 'toggle',
+                'default': true
+            },
+            {
+                'key': 'loadPositionY',
+                'label': 'Load Y Position',
+                'type': 'toggle',
+                'default': true
+            },
+            {
+                'key': 'loadSize',
+                'label': 'Load Size',
+                'type': 'toggle',
+                'default': true
+            },
+            {
+                'key': 'loadRotation',
+                'label': 'Load Rotation',
+                'type': 'toggle',
+                'default': true
+            },
+
+        ]
+    }
+
+    handleOutput(values) {
+        this.agent.loadModelPosition(
+            values.name,
+            values.timeInSeconds,
+            values.loadPositionX,
+            values.loadPositionY,
+            values.loadSize,
+            values.loadRotation
+        );
+    }
+
+    handleRender(settings) {
+
+        let positionXItem = '';
+        if(settings.loadPositionX) {
+            positionXItem = `<li><span>Load <strong>X Position</strong></span></li>`;
+        }
+        let positionYItem = '';
+        if(settings.loadPositionY) {
+            positionYItem = `<li><span>Load <strong>Y Position</strong></span></li>`;
+        }
+        let sizeItem = '';
+        if(settings.loadSize) {
+            sizeItem = `<li><span>Load <strong>Size</strong></span></li>`;
+        }
+        let rotationItem = '';
+        if(settings.loadRotation) {
+            rotationItem = `<li><span>Load <strong>Rotation</strong></span></li>`;
+        }
+        return `<ul>` +
+            `<li><span>Restore saved position <strong>${settings.name}</strong> over <strong>${settings.timeInSeconds}</strong>s</span></li>` +
             `${positionXItem}` +
             `${positionYItem}` +
             `${sizeItem}` +
