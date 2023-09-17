@@ -53,7 +53,8 @@ class VtubeStudioAgent {
         this.agentOutputs = {
             expression: new ExpressionOutput(this),
             hotkey: new HotkeyOutput(this),
-            negateHotkey: new NegateHotkeyOutput(this)
+            negateHotkey: new NegateHotkeyOutput(this),
+            moveModel: new MoveModelOutput(this)
         };
 
     }
@@ -244,6 +245,33 @@ class VtubeStudioAgent {
             this.log(`Could not find Hotkey: ${hotkey_name}`);
         }
     }
+
+    async moveModel(positionX = null, positionY = null, size = null, rotation = null, timeInSeconds = 0.00, valuesAreRelativeToModel = false) {
+        if(!this.vtsReady) return;
+        let requestPayload = {
+            timeInSeconds: timeInSeconds,
+            valuesAreRelativeToModel: valuesAreRelativeToModel
+        };
+        if(positionX) {
+            requestPayload.positionX = positionX;
+        }
+        if(positionY) {
+            requestPayload.positionY = positionY;
+        }
+        if(size) {
+            requestPayload.size = size;
+        }
+        if(rotation) {
+            requestPayload.rotation = rotation;
+        }
+        const moveResult = await this.apiClient.moveModel(requestPayload);
+
+        if(moveResult) {
+            this.log(`VTS: Model Movement triggered`);
+        } else {
+            this.log(`Could not move model!`);
+        }
+    }
 }
 class ExpressionOutput {
     constructor(agent) {
@@ -422,5 +450,137 @@ class NegateHotkeyOutput {
             `<li><span>Negate hotkey <strong>${settings.target}</strong> with hotkey <strong>${settings.name}</strong></span></li>` +
             `</ul>`;
     }
+}
+class MoveModelOutput {
+    constructor(agent) {
+        this.agent = agent;
+        this.gdh = this.agent.agentRegistry.gameData;
+        this.key = 'moveModel';
+        this.label = 'Move Model';
+        this.description = 'Move the VTS Model to a specified position';
+        this.requireAgentConnection = true;
+        this.settings = [
+            {
+                'key': 'valuesAreRelativeToModel',
+                'label': 'Relative to Current Position',
+                'type': 'toggle',
+                'default': true
+            },
+            {
+                'key': 'timeInSeconds',
+                'label': 'Movement Time',
+                'type': 'number',
+                'min': 0.00,
+                'max': 2.00,
+                'step': 0.01,
+                'default': 0.00
+            },
+            {
+                'key': 'changePositionX',
+                'label': 'Change X Position',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'positionX',
+                'label': 'X Position',
+                'type': 'number',
+                'min': -3.000,
+                'max': 3.000,
+                'step': 0.001,
+                'default': 0.000,
+                'showIfToggled': 'changePositionX'
+            },
+            {
+                'key': 'changePositionY',
+                'label': 'Change Y Position',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'positionY',
+                'label': 'Y Position',
+                'type': 'number',
+                'min': -3.000,
+                'max': 3.000,
+                'step': 0.001,
+                'default': 0.000,
+                'showIfToggled': 'changePositionY'
+            },
+            {
+                'key': 'changeSize',
+                'label': 'Change Size',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'size',
+                'label': 'Size',
+                'type': 'number',
+                'min': -100.00,
+                'max': 100.00,
+                'step': 0.01,
+                'default': 0.00,
+                'showIfToggled': 'changeSize'
+            },
+            {
+                'key': 'changeRotation',
+                'label': 'Change Rotation',
+                'type': 'toggle',
+                'default': false
+            },
+            {
+                'key': 'rotation',
+                'label': 'Rotation',
+                'type': 'number',
+                'min': -360.0,
+                'max': 360.0,
+                'step': 0.1,
+                'default': 0.0,
+                'showIfToggled': 'changeRotation'
+            },
+        ]
+    }
+
+    handleOutput(values) {
+        this.agent.moveModel(
+            values.changePositionX ? values.positionX : null,
+            values.changePositionY ? values.positionY : null,
+            values.changeSize ? values.size : null,
+            values.changeRotation ? values.rotation : null,
+            values.timeInSeconds,
+            values.valuesAreRelativeToModel
+        );
+    }
+
+    handleRender(settings) {
+        let relativeTo = settings.valuesAreRelativeToModel ? 'Model' : 'Stage';
+
+        let positionXItem = '';
+        if(settings.changePositionX) {
+            positionXItem = `<li><span>X <strong>${settings.positionX}</strong></span></li>`;
+        }
+        let positionYItem = '';
+        if(settings.changePositionY) {
+            positionYItem = `<li><span>Y <strong>${settings.positionY}</strong></span></li>`;
+        }
+        let sizeItem = '';
+        if(settings.changeSize) {
+            sizeItem = `<li><span>Size <strong>${settings.size}</strong></span></li>`;
+        }
+        let rotationItem = '';
+        if(settings.changeRotation) {
+            rotationItem = `<li><span>Rotation <strong>${settings.rotation}</strong></span></li>`;
+        }
+        return `<ul>` +
+            `<li><span>Relative to <strong>${relativeTo}</strong></span></li>` +
+            `<li><span>Move in <strong>${settings.timeInSeconds}</strong>s</span></li>` +
+            `${positionXItem}` +
+            `${positionYItem}` +
+            `${sizeItem}` +
+            `${rotationItem}` +
+            `</ul>`;
+    }
+
 }
 module.exports = VtubeStudioAgent;
