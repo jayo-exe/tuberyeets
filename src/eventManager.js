@@ -29,6 +29,7 @@ module.exports = class EventManager {
     }
 
     handleInputTrigger(agentKey,eventKey,scriptName,parameters) {
+        this.log(`Incoming Event: ${agentKey}.${eventKey}.${scriptName}`);
         let agent = this.agentRegistry.getAgent(agentKey);
         if (!agent) { return false; }
 
@@ -37,7 +38,7 @@ module.exports = class EventManager {
 
         if (!agent.agentInputs.hasOwnProperty(eventKey)) { return false; }
 
-        this.log('Handling Incoming Event ' + agentKey + '.' + eventKey)
+
 
         let matchedTriggers = this.eventData.findTriggersForScript(agentKey, eventKey, scriptName, parameters)
 

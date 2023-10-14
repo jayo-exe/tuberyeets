@@ -1,5 +1,5 @@
 <template>
-  <div class="script-container">
+  <div class="script-container" v-if="commandList && actionTypeList">
     <div class="d-flex mb-4">
       <div class="section-title">
         <h6>Commands for <em>{{script.name}}</em></h6>

@@ -61,6 +61,15 @@
                       </template>
                     </v-select>
                   </template>
+                  <template v-else-if="setting.type === 'toggle'">
+                    <input type="checkbox" class="form-input" v-model="itemData.settings[setting.key]" @change=itemCommand('settings')" >
+                  </template>
+                  <template v-else-if="setting.type === 'number'">
+                    <input type="number" :step="setting.step ?? 1" :min="setting.min ?? ''" :max="setting.max ?? ''" class="form-input" v-model="itemData.settings[setting.key]" @input="updateItem('settings')">
+                  </template>
+                  <template v-else-if="setting.type === 'text'">
+                    <input type="text" class="form-input" v-model="itemData.settings[setting.key]" @input="updateItem('settings')">
+                  </template>
 
                 </div>
               </div>

@@ -10,6 +10,7 @@ import AgentRegistry from './agentRegistry';
 import CrowdControlAgent from './agents/crowdControlAgent';
 import VtubeStudioAgent from './agents/vtubeStudioAgent';
 import OverlayAgent from './agents/overlayAgent';
+import MidiAgent from './agents/midiAgent';
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const { autoUpdater } = require('electron-updater');
 
@@ -31,6 +32,7 @@ let agents = [
     new CrowdControlAgent(agentRegistry),
     new VtubeStudioAgent(agentRegistry),
     new OverlayAgent(agentRegistry),
+    new MidiAgent(agentRegistry),
 ];
 
 gameData.setAgentRegistry(agentRegistry);

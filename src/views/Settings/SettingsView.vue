@@ -48,6 +48,7 @@
 import CrowdControlSettings from '@/views/Settings/CrowdControlSettings.vue'
 import OverlaySettings from '@/views/Settings/OverlaySettings.vue'
 import VtubeStudioSettings from '@/views/Settings/VtubeStudioSettings.vue'
+import DefaultSettings from '@/views/Settings/DefaultSettings.vue'
 
 export default {
   name: 'SettingList',
@@ -55,7 +56,8 @@ export default {
   components: {
     CrowdControlSettings,
     OverlaySettings,
-    VtubeStudioSettings
+    VtubeStudioSettings,
+    DefaultSettings
   },
   data : function() {
     return {
